@@ -6,6 +6,7 @@
 #include <boost/program_options.hpp>
 
 #include "Network.h"
+#include "blastinfo.h"
 using namespace std;
 namespace po = boost::program_options;
 
@@ -24,7 +25,8 @@ private:
 	string errMsg;
 };
 
-typedef tuple<po::variables_map, Network*, Network*> argRetVals; 
+typedef tuple<po::variables_map, Network*, Network*,
+              BLASTDict, BLASTDict> argRetVals; 
 
 
 argRetVals handleArgs(int ac, char* av[]){
@@ -131,8 +133,25 @@ argRetVals handleArgs(int ac, char* av[]){
 		throw ArgError("outprefix must be specified.");
 	}
 
+	if(vm.count("bitscores") && vm.count("evalues")){
+		throw ArgError("Currently only one of bitscores and E-values"
+			           " can be optimized, not both.");
+	}
+
 	net1 = new Network(vm["net1"].as<string>());
 	net2 = new Network(vm["net2"].as<string>());
 
-	return argRetVals(vm,net1,net2);
+	BLASTDict bitscores;
+
+	if(vm.count("bitscores")){
+		bitscores = loadBLASTInfo(net1,net2,vm["bitscores"].as<string>());
+	}
+
+	BLASTDict evalues;
+
+	if(vm.count("evalues")){
+		evalues = loadBLASTInfo(net1,net2,vm["evalues"].as<string>());
+	}
+
+	return argRetVals(vm,net1,net2,bitscores,evalues);
 }

@@ -1,6 +1,7 @@
 #include <iostream>
 #include <string>
 #include <tuple>
+#include <array>
 #include <boost/program_options.hpp>
 
 #include "argParsing.h"
@@ -12,7 +13,6 @@ namespace po = boost::program_options;
 int main(int ac, char* av[])
 {
 	try{
-		
 		argRetVals vals = handleArgs(ac,av);
 		po::variables_map vm = get<0>(vals);
 		Network* net1 = get<1>(vals);

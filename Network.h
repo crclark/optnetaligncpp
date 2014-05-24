@@ -5,7 +5,24 @@
 #include <unordered_map>
 using namespace std;
 
-#define node unsigned int
+typedef unsigned int node;
+
+//for giving parse errors
+class LineReadException: public exception
+{
+
+public:
+	LineReadException(string msg){
+		wt = msg;
+	}
+
+	virtual const char* what() const throw()
+	{
+	return wt.c_str();
+	}
+
+	string wt;
+};
 
 //Edges are undirected, so they are always normalized such that
 //the first node is a smaller int than the second.

@@ -7,21 +7,6 @@
 #include <sstream>
 using namespace std;
 
-class NetReadException: public exception
-{
-
-public:
-	NetReadException(string msg){
-		wt = msg;
-	}
-
-	virtual const char* what() const throw()
-	{
-	return wt.c_str();
-	}
-
-	string wt;
-};
 
 Network::Network(string filename){
 	unsigned int count = 0;
@@ -36,7 +21,7 @@ Network::Network(string filename){
 		node u, v;
 
 		if (!(iss >> a >> b)){
-			throw NetReadException(string("Parse error in network: ") + filename +
+			throw LineReadException(string("Parse error in network: ") + filename +
 				                   string("on line: ") + line + "\n");
 		}
 
