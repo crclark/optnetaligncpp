@@ -1,5 +1,6 @@
 #include <iostream>
 #include <string>
+#include <tuple>
 #include <boost/program_options.hpp>
 
 #include "argParsing.h"
@@ -12,7 +13,11 @@ int main(int ac, char* av[])
 {
 	try{
 		
-		po::variables_map vm = handleArgs(ac, av);
+		argRetVals vals = handleArgs(ac,av);
+		po::variables_map vm = get<0>(vals);
+		Network* net1 = get<1>(vals);
+		Network* net2 = get<2>(vals);
+		net1->edges.size();
 
 	}
 	catch(exception& e){

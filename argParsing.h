@@ -2,7 +2,10 @@
 
 #include <exception>
 #include <string>
+#include <tuple>
 #include <boost/program_options.hpp>
+
+#include "Network.h"
 using namespace std;
 namespace po = boost::program_options;
 
@@ -21,22 +24,22 @@ private:
 	string errMsg;
 };
 
-//todo: this is a terrible crime, but I am going to use globals for 
-//the networks, bit scores, E-values, and annotations. Put them here.
+typedef tuple<po::variables_map, Network*, Network*> argRetVals; 
 
-po::variables_map handleArgs(int ac, char* av[]){
+
+argRetVals handleArgs(int ac, char* av[]){
+	Network *net1, *net2;
 	po::options_description desc("Options");
 	//todo: add to help descriptions to indicate which args optional.
 	desc.add_options()
 		("help", "Displays this help message.")
-		("int", po::value<int>(), "this is an int.")
 		("net1", po::value<string>(), "Path to first network file. "
 			                          "One interaction per line,"
 			                          "represented as two protein names separated "
 			                          "by whitespace. See documentation for an "
 			                          "example. The network may at most have as "
 			                          "many nodes as net2.")
-		("net1", po::value<string>(), "Path to the second network file. "
+		("net2", po::value<string>(), "Path to the second network file. "
 			                          "Same format expected as first network "
 			                          "file.")
 		("outprefix", po::value<string>(), "Prefix for all output files.")
@@ -105,27 +108,31 @@ po::variables_map handleArgs(int ac, char* av[]){
 
 	if(!(vm.count("ics") || vm.count("bitscores") || vm.count("evalues")
 		|| (vm.count("annotations1") && vm.count("annotations2")) )){
-		throw ArgError("At least one objective must be specified!")
+		throw ArgError("At least one objective must be specified!");
 	}
 
 	if((vm.count("annotations1") && !vm.count("annotations2")) ||
 	   (vm.count("annotations2") && !vm.count("annotations1"))){
 		throw ArgError("Please specify annotations for both networks "
-			           "or neither.")
+			           "or neither.");
 	}
 
 	if(vm.count("seeding") && !(vm.count("bitscores") || vm.count("evalues"))){
-		throw ArgError("Seeding requires either bitscore or E-value data.")
+		throw ArgError("Seeding requires either bitscore or E-value data.");
 	}
 
-	
-	if(!vm.count("int")){
-		throw ArgError("testtesttest");
+
+	if(!vm.count("net1") || !vm.count("net2")){
+		throw ArgError("Both net1 and net2 must be specified.");
+		//throw ArgError(vm["net1"].as<string>;
 	}
 
-	if(vm.count("net1")){
-		throw ArgError(vm["net1"].as<string>());
+	if(!vm.count("outprefix")){
+		throw ArgError("outprefix must be specified.");
 	}
 
-	return vm;
+	net1 = new Network(vm["net1"].as<string>());
+	net2 = new Network(vm["net2"].as<string>());
+
+	return argRetVals(vm,net1,net2);
 }
