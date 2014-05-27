@@ -13,9 +13,9 @@
 using namespace std;
 
 //todo: note these assume net2 is larger. Ensure that when loading nets.
-Alignment::Alignment(const Network& net1, const Network& net2, bool random){
+Alignment::Alignment(const Network& net1, const Network& net2){
 	unsigned int size = net2.nodeToNodeName.size();
-
+	cout<<"In random alignment constructor."<<endl;
 	aln = vector<node>(size,-1);
 	fitnessValid = false;
 	
@@ -23,13 +23,7 @@ Alignment::Alignment(const Network& net1, const Network& net2, bool random){
 		aln[i] = i;
 	}
 
-	if(random){
-		random_shuffle(aln.begin(),aln.end());
-	}
-	else{
-		//todo: add seeding. For now just arbitrary alignment.
-		random_shuffle(aln.begin(),aln.end());
-	}
+	random_shuffle(aln.begin(),aln.end());
 }
 
 Alignment::Alignment(const Network& net1, const Network& net2, 
@@ -37,20 +31,26 @@ Alignment::Alignment(const Network& net1, const Network& net2,
 	int size = net2.nodeNameToNode.size();
 	aln = vector<node>(size,-1);
 	fitnessValid = false;
-
 	ifstream infile(filename);
-
 	string line;
 	while(getline(infile,line)){
+		//cout<<"parsing line: "<<line<<endl;
 		istringstream iss(line);
 		string a, b;
 		node u, v;
 
 		if (!(iss >> a >> b)){
-			u = net1.nodeNameToNode.at(a);
-			v = net2.nodeNameToNode.at(b);
-			aln[u] = v;
+			throw LineReadException(string("Parse error in network: ") + filename +
+				                   string("on line: ") + line + "\n");
+		
 		}
+		
+		u = net1.nodeNameToNode.at(a);
+		v = net2.nodeNameToNode.at(b);
+		aln[u] = v;
+		//cout<<"node "<<a<<" (int: "<<u<<") aligned to node "
+		//    <<b<<" (int: "<<v<<")"<<endl;
+	
 	}
 }
 

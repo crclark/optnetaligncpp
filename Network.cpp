@@ -27,10 +27,10 @@ Network::Network(string filename){
 
 		if(!alreadySeen.count(a)){
 			alreadySeen.insert(a);
-			count++;
 			nodeToNodeName[count] = a;
 			nodeNameToNode[a] = count;
 			u = count;
+			count++;
 		}
 		else{
 			u = nodeNameToNode[a];
@@ -38,10 +38,10 @@ Network::Network(string filename){
 
 		if(!alreadySeen.count(b)){
 			alreadySeen.insert(b);
-			count++;
 			nodeToNodeName[count] = b;
 			nodeNameToNode[b] = count;
 			v = count;
+			count++;
 		}
 		else{
 			v = nodeNameToNode[b];

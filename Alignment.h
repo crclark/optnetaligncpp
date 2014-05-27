@@ -10,7 +10,7 @@
 
 class Alignment{
 public:	
-	Alignment(const Network& net1, const Network& net2, bool random = true);
+	Alignment(const Network& net1, const Network& net2);
 	Alignment(const Network& net1, const Network& net2, string filename);
 	void mutate(mt19937& prng, float mutswappb);
 	void becomeChild(mt19937& prng, float cxswappb, 
@@ -24,7 +24,7 @@ public:
 	vector<node> aln;
 	bool fitnessValid;
 	vector<double> fitness; //all fitnesses stored s.t. larger is better.
-private:
+
 	double ics(const Network& net1, const Network& net2) const;
 	double sumBLAST(const Network& net1,
 		            const Network& net2,
