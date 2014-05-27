@@ -5,7 +5,7 @@
 #include <unordered_map>
 using namespace std;
 
-typedef unsigned int node;
+typedef int node;
 
 //for giving parse errors
 class LineReadException: public exception

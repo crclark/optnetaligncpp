@@ -13,7 +13,10 @@ Network::Network(string filename){
 	set<string> alreadySeen;
 
 	ifstream infile(filename);
-
+	if(!infile){
+		throw LineReadException(string("Given network file ")+filename+
+			                    string(" failed to open!"));
+	}
 	string line;
 	while(getline(infile,line)){
 		istringstream iss(line);

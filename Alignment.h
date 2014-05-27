@@ -21,6 +21,9 @@ public:
 		                const BLASTDict d,
 		                const vector<string> fitnessNames, 
 		                const vector<double> fitnessWeights);
+	void save(const Network& net1,
+		      const Network& net2,
+		      string filename) const;
 	vector<node> aln;
 	bool fitnessValid;
 	vector<double> fitness; //all fitnesses stored s.t. larger is better.

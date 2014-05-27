@@ -15,7 +15,6 @@ using namespace std;
 //todo: note these assume net2 is larger. Ensure that when loading nets.
 Alignment::Alignment(const Network& net1, const Network& net2){
 	unsigned int size = net2.nodeToNodeName.size();
-	cout<<"In random alignment constructor."<<endl;
 	aln = vector<node>(size,-1);
 	fitnessValid = false;
 	
@@ -32,12 +31,27 @@ Alignment::Alignment(const Network& net1, const Network& net2,
 	aln = vector<node>(size,-1);
 	fitnessValid = false;
 	ifstream infile(filename);
+	cout<<"loading from "<<filename<<endl;
+	if(!infile){
+		throw LineReadException(string("Alignment file ")+filename+
+			                    string(" failed to open!"));
+	}
 	string line;
+	//keep track of which nodes in V2 aren't aligned so we can
+	//add them to the permutation somewhere after loading the file.
+	set<node> v2Unaligned;
+	for(int i = 0; i < net2.nodeToNodeName.size(); i++){
+		v2Unaligned.insert(i);
+	}
+
+	//process each line
 	while(getline(infile,line)){
 		//cout<<"parsing line: "<<line<<endl;
 		istringstream iss(line);
 		string a, b;
 		node u, v;
+
+		
 
 		if (!(iss >> a >> b)){
 			throw LineReadException(string("Parse error in network: ") + filename +
@@ -46,11 +60,27 @@ Alignment::Alignment(const Network& net1, const Network& net2,
 		}
 		
 		u = net1.nodeNameToNode.at(a);
+		if(!net2.nodeNameToNode.count(b)){
+			cout<<"node "<<b<<" not found in net2!"<<endl;
+		}
 		v = net2.nodeNameToNode.at(b);
+		
 		aln[u] = v;
+		v2Unaligned.erase(v);
 		//cout<<"node "<<a<<" (int: "<<u<<") aligned to node "
 		//    <<b<<" (int: "<<v<<")"<<endl;
 	
+	}
+
+	//look for unaligned nodes in V1 and align them to unaligned nodes
+	//in V2. TODO: once we support partial alignments, need to set
+	//alignment bit to 0 for each of these pairs.
+	for(int i = 0; i < aln.size(); i++){
+		if(aln[i] == -1){
+			node arbNode = *(v2Unaligned.begin());
+			aln[i] = arbNode;
+			v2Unaligned.erase(arbNode);
+		}
 	}
 }
 
@@ -193,4 +223,15 @@ double Alignment::sumBLAST(const Network& net1,
 	}
 
 	return toReturn;
+}
+
+void Alignment::save(const Network& net1,
+	                 const Network& net2,
+	                 string filename) const{
+	ofstream ofile(filename);
+	for(int i = 0; i < net1.nodeToNodeName.size(); i++){
+		string u = net1.nodeToNodeName.at(i);
+		string v = net2.nodeToNodeName.at(aln[i]);
+		ofile<<u<<' '<<v<<endl;
+	}
 }
