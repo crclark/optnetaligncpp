@@ -16,6 +16,7 @@
 #include <cmath>
 #include <iostream>
 #include <set>
+#include <random>
 #include "Alignment.h"
 #include "Network.h"
 #include "blastinfo.h"
@@ -177,6 +178,53 @@ BOOST_AUTO_TEST_CASE( ics_match_4 )
 	Alignment aln(net1,net2,"../optnetalign/tests/cg1.aln");
 	double ics = aln.ics(net1,net2);
 	BOOST_CHECK(approxEqual(ics,0.8253323173313013));
+}
+
+BOOST_AUTO_TEST_CASE( ics_match_5 )
+{
+	Network net1("../optnetalign/tests/cg1a.net");
+	Network net2("../optnetalign/tests/cg1b.net");
+	Alignment aln(net1,net2,"../optnetalign/tests/cg1partial.aln");
+	double ics = aln.ics(net1,net2);
+	BOOST_CHECK(approxEqual(ics,0.920399546905571));
+}
+
+BOOST_AUTO_TEST_CASE( consistent_after_mutate )
+{
+	Network net1("../optnetalign/tests/cg1a.net");
+	Network net2("../optnetalign/tests/cg1b.net");
+	Alignment aln(net1,net2,"../optnetalign/tests/cg1.aln");
+	mt19937 g1(12);
+	aln.mutate(g1, 0.3);
+	set<node> v2Set;
+	for(int i = 0; i < aln.aln.size(); i++){
+		v2Set.insert(aln.aln[i]);
+		BOOST_CHECK(aln.aln[i] >=0 && 
+			        aln.aln[i] < net2.nodeToNodeName.size());
+	}
+
+	BOOST_CHECK(v2Set.size() == aln.aln.size());
+
+}
+
+BOOST_AUTO_TEST_CASE( consistent_after_crossover )
+{
+	Network net1("../optnetalign/tests/cg1a.net");
+	Network net2("../optnetalign/tests/cg1b.net");
+	Alignment aln(net1,net2,"../optnetalign/tests/cg1.aln");
+	Alignment aln2(net1,net2,"../optnetalign/tests/cg1partial.aln");
+	Alignment child(net1,net2);
+	mt19937 g1(12);
+	child.becomeChild(g1, 0.3, aln, aln2);
+	set<node> v2Set;
+	for(int i = 0; i < aln.aln.size(); i++){
+		v2Set.insert(aln.aln[i]);
+		BOOST_CHECK(aln.aln[i] >=0 && 
+			        aln.aln[i] < net2.nodeToNodeName.size());
+	}
+
+	BOOST_CHECK(v2Set.size() == aln.aln.size());
+
 }
 
 //____________________________________________________________________________//

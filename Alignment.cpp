@@ -16,6 +16,7 @@ using namespace std;
 Alignment::Alignment(const Network& net1, const Network& net2){
 	unsigned int size = net2.nodeToNodeName.size();
 	aln = vector<node>(size,-1);
+	alnMask = vector<bool>(size,true);
 	fitnessValid = false;
 	
 	for(int i = 0; i < size; i++){
@@ -29,6 +30,7 @@ Alignment::Alignment(const Network& net1, const Network& net2,
 	                 string filename){
 	int size = net2.nodeNameToNode.size();
 	aln = vector<node>(size,-1);
+	alnMask = vector<bool>(size,true);
 	fitnessValid = false;
 	ifstream infile(filename);
 	cout<<"loading from "<<filename<<endl;
@@ -73,16 +75,18 @@ Alignment::Alignment(const Network& net1, const Network& net2,
 	}
 
 	//look for unaligned nodes in V1 and align them to unaligned nodes
-	//in V2. TODO: once we support partial alignments, need to set
-	//alignment bit to 0 for each of these pairs.
+	//in V2. 
 	for(int i = 0; i < aln.size(); i++){
 		if(aln[i] == -1){
 			node arbNode = *(v2Unaligned.begin());
 			aln[i] = arbNode;
+			alnMask[i] = false;
 			v2Unaligned.erase(arbNode);
 		}
 	}
 }
+
+//todo: add secondary mutate op for changing mask
 
 void Alignment::mutate(mt19937& prng, float mutswappb){
 	int size = aln.size();
@@ -97,6 +101,10 @@ void Alignment::mutate(mt19937& prng, float mutswappb){
 			int temp = aln[swapIndex];
 			aln[swapIndex] = aln[i];
 			aln[i] = temp;
+
+			bool tempb = alnMask[swapIndex];
+			alnMask[swapIndex] = alnMask[i];
+			alnMask[i] = tempb;
 		}
 	}
 	fitnessValid = false;
@@ -108,7 +116,11 @@ alignment becomes the child of two alignments. Standard UPMX modifies the
 two existing alignments in-place. Since our algorithm is elitist, however,
 we need those old alignments. Instead, the given alignment becomes what one
 of those two resulting alignment would be without modifying the parents.
-Which modified parent to become is chosen at random. 
+Which modified parent to become is chosen at random.
+
+todo: add secondary crossover op for changing mask. Or something.
+todo: this currently ignores the mask of the parents and maintains
+      the mask of the current alignment.
 */
 void Alignment::becomeChild(mt19937& prng, float cxswappb, 
 	                        const Alignment& p1,
@@ -142,6 +154,12 @@ void Alignment::becomeChild(mt19937& prng, float cxswappb,
 			aln[i] = temp2;
 			aln[par1Indices[temp2]] = temp1;
 
+			//swap mask bools
+			//todo: add tests that this is right
+			bool tempb = alnMask[i];
+			alnMask[i] = par2->alnMask[i];
+			alnMask[par1Indices[temp2]] = tempb;
+
 			//swap index records 
 			int itemp = par1Indices[temp1];
 			par1Indices[temp1] = par1Indices[temp2];
@@ -174,12 +192,19 @@ void Alignment::computeFitness(const Network& net1,
 
 double Alignment::ics(const Network& net1, const Network& net2) const{
 
-	//todo: make this work with partial alignments (not yet implemented)
-	set<node> v1Unaligned; //todo:currently always empty
+
+	set<node> v1Unaligned;
 	set<node> v2Unaligned; //set of unaligned nodes in V2
-	for(int i = net1.nodeNameToNode.size(); i < net2.nodeNameToNode.size();
-		i++){
-		v2Unaligned.insert(aln[i]);
+	for(int i = 0; i < aln.size(); i++){
+		if(!alnMask[i]){
+			v1Unaligned.insert(i);
+			v2Unaligned.insert(aln[i]);
+		}
+		//second way for a node in V2 to be unaligned: by
+		//being aligned to a dummy node.
+		if(i > net1.nodeToNodeName.size()){
+			v2Unaligned.insert(aln[i]);
+		}
 	}
 
 	//induced subgraph of net2 that has been mapped to:
@@ -217,7 +242,8 @@ double Alignment::sumBLAST(const Network& net1,
 		            const BLASTDict d) const{
 	double toReturn = 0.0;
 	for(node i = 0; i < net1.nodeNameToNode.size(); i++){
-		if(d.count(i) && d.at(i).count(aln[i])){
+		if(d.count(i) && d.at(i).count(aln[i]) &&
+		   alnMask[i]){
 			toReturn += d.at(i).at(aln[i]);
 		}
 	}
@@ -230,8 +256,57 @@ void Alignment::save(const Network& net1,
 	                 string filename) const{
 	ofstream ofile(filename);
 	for(int i = 0; i < net1.nodeToNodeName.size(); i++){
-		string u = net1.nodeToNodeName.at(i);
-		string v = net2.nodeToNodeName.at(aln[i]);
-		ofile<<u<<' '<<v<<endl;
+		if(alnMask[i]){
+			string u = net1.nodeToNodeName.at(i);
+			string v = net2.nodeToNodeName.at(aln[i]);
+			ofile<<u<<' '<<v<<endl;
+		}
 	}
+}
+
+vector<vector<Alignment*> > nonDominatedSort(vector<Alignment*> in){
+	vector<Alignment*> temp = in;
+	sort(temp.begin(), temp.end(), dominates);
+
+	//do domination counts (naively-- O(n^2))
+	vector<int> domCount(temp.size(),0);
+	for(int i = 0; i < temp.size(); i++){
+		for(int j = 0; j < i; j++){
+			if(dominates(temp[j], temp[i])){
+				domCount[i]++;
+			}
+		}
+	}
+
+	//use domination counts to gather results
+	vector<vector<Alignment*> > toReturn;
+	int lastDomCount = -1;
+	for(int i = 0; i < temp.size(); i++){
+		if(domCount[i] == lastDomCount){
+			toReturn.back().push_back(temp[i]);
+		}
+		else{
+			toReturn.push_back(vector<Alignment*>());
+			lastDomCount = domCount[i];
+			toReturn.back().push_back(temp[i]);
+		}
+	}
+
+	return toReturn;
+}
+
+bool dominates(Alignment* aln1, Alignment* aln2){
+
+	bool oneBigger = false;
+
+	for(int i = 0; i < aln1->fitness.size(); i++){
+		if(aln1->fitness[i] < aln2->fitness[i]){
+			return false;
+		}
+		if(aln1->fitness[i] > aln2->fitness[i]){
+			oneBigger = true;
+		}
+	}
+
+	return oneBigger;
 }
