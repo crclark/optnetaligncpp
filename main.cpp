@@ -47,6 +47,7 @@ int main(int ac, char* av[])
 		int generations = vm["generations"].as<int>();
 		for(int gen = 0; gen < generations; gen++){
 
+			//combinedPtrs is R_t from Deb et al. 2002
 			vector<Alignment*> combinedPtrs(2*popsize);
 			for(int i = 0; i < popsize; i++){
 				combinedPtrs[i] = &pop[i];
@@ -57,6 +58,7 @@ int main(int ac, char* av[])
 			
 			vector<vector<Alignment*> > fronts = nonDominatedSort(combinedPtrs);
 
+			//started with best front, add to new population front-by-front
 			vector<Alignment*> popNew;
 			popNew.reserve(popsize);
 			int i = 0;
@@ -66,13 +68,23 @@ int main(int ac, char* av[])
 				i++;
 			}
 
-			
+			//add the least-crowded members of the front that doesn't
+			//completely fit given our popsize.
 			int numLeftToInsert = popsize - popNew.size();
 			if(!numLeftToInsert){
 				sort(fronts[i].begin(),fronts[i].end(),crowdedComp);
 				popNew.insert(popNew.end(), fronts[i].begin(), 
 				          fronts[i].begin() + numLeftToInsert);
 			}
+
+			//todo: set pop = popNew
+
+			//todo: create new kids
+			//idea: create a constructor for a non-random arbitrary aln
+			//allocate kids using that constructor. Then,
+			//in parallel for: binary select tournament, crossover, mutate
+			//and evaluate fitness. Maybe also have a chance to just copy
+			//and mutate without crossover, too.
 
 		}
 
