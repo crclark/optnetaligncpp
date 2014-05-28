@@ -10,6 +10,7 @@
 #include <fstream>
 #include <sstream>
 #include <set>
+#include <limits>
 using namespace std;
 
 //todo: note these assume net2 is larger. Ensure that when loading nets.
@@ -264,6 +265,9 @@ void Alignment::save(const Network& net1,
 	}
 }
 
+
+//this function assumes fitnesses have already been assigned
+//todo: add check that that's the case.
 vector<vector<Alignment*> > nonDominatedSort(vector<Alignment*> in){
 	vector<Alignment*> temp = in;
 	sort(temp.begin(), temp.end(), dominates);
@@ -284,15 +288,51 @@ vector<vector<Alignment*> > nonDominatedSort(vector<Alignment*> in){
 	for(int i = 0; i < temp.size(); i++){
 		if(domCount[i] == lastDomCount){
 			toReturn.back().push_back(temp[i]);
+			temp[i]->domCount = domCount[i];
 		}
 		else{
 			toReturn.push_back(vector<Alignment*>());
 			lastDomCount = domCount[i];
 			toReturn.back().push_back(temp[i]);
+			temp[i]->domCount = domCount[i];
 		}
 	}
 
 	return toReturn;
+}
+
+
+//takes a front as input and assigns crowdDist to each element
+//note: results meaningless if input is not non-dominated set
+void setCrowdingDists(vector<Alignment*>& in){
+	//init all to zero
+	for(auto i : in){
+		i->crowdDist = 0.0;
+	}
+
+	int numObjs = in[0]->fitness.size();
+	int numAlns = in.size();
+
+	//for each objective m
+	for(int m = 0; m < numObjs; m++){
+		//sort by objective m
+		sort(in.begin(), in.end(),
+			[m](const Alignment* a, const Alignment* b){
+				return a->fitness[m] < b->fitness[m];
+			});
+
+		//set boundary points to max dist
+		in[0]->crowdDist = numeric_limits<double>::max();
+		in[numAlns-1]->crowdDist = numeric_limits<double>::max();
+
+		//increment crowding dist for the current objective
+		for(int i = 1; i< (numAlns-1); i++){
+			double numerator = in[i+1]->fitness[m] - in[i-1]->fitness[m];
+			double denom = in[numAlns-1]->fitness[m] - in[0]->fitness[m];
+			in[i]-> crowdDist += (numerator/denom);
+		}
+
+	}
 }
 
 bool dominates(Alignment* aln1, Alignment* aln2){

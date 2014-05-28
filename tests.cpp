@@ -17,6 +17,7 @@
 #include <iostream>
 #include <set>
 #include <random>
+#include <limits>
 #include "Alignment.h"
 #include "Network.h"
 #include "blastinfo.h"
@@ -225,6 +226,83 @@ BOOST_AUTO_TEST_CASE( consistent_after_crossover )
 
 	BOOST_CHECK(v2Set.size() == aln.aln.size());
 
+}
+
+BOOST_AUTO_TEST_CASE( nondominated_sort )
+{
+	Network net1("../optnetalign/tests/cg1a.net");
+	Network net2("../optnetalign/tests/cg1b.net");
+	Alignment aln1(net1,net2,"../optnetalign/tests/cg1.aln");
+	aln1.fitness.push_back(0.7);
+	aln1.fitness.push_back(0.8);
+	Alignment aln2(net1,net2);
+	aln2.fitness.push_back(0.75);
+	aln2.fitness.push_back(0.75);
+	Alignment aln3(net1,net2);
+	aln3.fitness.push_back(0.8);
+	aln3.fitness.push_back(0.7);
+	Alignment aln4(net1,net2);
+	aln4.fitness.push_back(0.4);
+	aln4.fitness.push_back(0.6);
+	Alignment aln5(net1,net2);
+	aln5.fitness.push_back(0.5);
+	aln5.fitness.push_back(0.5);
+	Alignment aln6(net1,net2);
+	aln6.fitness.push_back(0.6);
+	aln6.fitness.push_back(0.4);
+	vector<Alignment*> toSort;
+	toSort.push_back(&aln3);
+	toSort.push_back(&aln2);
+	toSort.push_back(&aln4);
+	toSort.push_back(&aln1);
+	toSort.push_back(&aln6);
+	toSort.push_back(&aln5);
+	vector<vector<Alignment*> > fronts = nonDominatedSort(toSort);
+	//ensure we have the right number of fronts
+	BOOST_CHECK(fronts.size()==2);
+	//and they are the right sizes
+	BOOST_CHECK(fronts[0].size() == 3);
+	BOOST_CHECK(fronts[1].size() == 3);
+	//and they each contain the fitnesses we think they should
+	for(int i = 0; i < 3; i++){
+		BOOST_CHECK(fronts[0][i]->fitness[0] > 0.6);
+		BOOST_CHECK(fronts[0][i]->fitness[1] > 0.6);
+	}
+	for(int i = 0; i < 3; i++){
+		BOOST_CHECK(fronts[1][i]->fitness[0] < 0.7);
+		BOOST_CHECK(fronts[1][i]->fitness[1] < 0.7);
+	}
+}
+
+BOOST_AUTO_TEST_CASE( crowding_dist_assignment )
+{
+	Network net1("../optnetalign/tests/cg1a.net");
+	Network net2("../optnetalign/tests/cg1b.net");
+	Alignment aln1(net1,net2);
+	aln1.fitness.push_back(0.6);
+	aln1.fitness.push_back(0.9);
+	Alignment aln2(net1,net2);
+	aln2.fitness.push_back(0.7);
+	aln2.fitness.push_back(0.8);
+	Alignment aln3(net1,net2);
+	aln3.fitness.push_back(0.75);
+	aln3.fitness.push_back(0.75);
+	Alignment aln4(net1,net2);
+	aln4.fitness.push_back(0.8);
+	aln4.fitness.push_back(0.7);
+	Alignment aln5(net1,net2);
+	aln5.fitness.push_back(0.9);
+	aln5.fitness.push_back(0.6);
+	vector<Alignment*> front;
+	front.push_back(&aln1);
+	front.push_back(&aln2);
+	front.push_back(&aln3);
+	front.push_back(&aln4);
+	front.push_back(&aln5);
+	setCrowdingDists(front);
+	for(auto p : front){
+		cout<<p->crowdDist<<endl;
+	}
 }
 
 //____________________________________________________________________________//

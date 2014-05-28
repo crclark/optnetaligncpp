@@ -45,9 +45,17 @@ public:
 	double sumBLAST(const Network& net1,
 		            const Network& net2,
 		            const BLASTDict d) const;
+
+	unsigned int domCount;
+	double crowdDist;
 };
 
+//todo: consider passing vector by reference
+//todo: add more pass-by-reference in general
 vector<vector<Alignment*> > nonDominatedSort(vector<Alignment*> in);
+
+//in is assumed to be a front produced by nonDominatedSort
+void setCrowdingDists(vector<Alignment*>& in);
 
 //returns true iff aln1 dominates aln2
 bool dominates(Alignment* aln1, Alignment* aln2);
