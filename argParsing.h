@@ -26,7 +26,7 @@ private:
 };
 
 typedef tuple<po::variables_map, Network*, Network*,
-              BLASTDict, BLASTDict> argRetVals; 
+              BLASTDict, BLASTDict, vector<string> > argRetVals; 
 
 
 argRetVals handleArgs(int ac, char* av[]){
@@ -141,17 +141,25 @@ argRetVals handleArgs(int ac, char* av[]){
 	net1 = new Network(vm["net1"].as<string>());
 	net2 = new Network(vm["net2"].as<string>());
 
+	vector<string> fitnessNames;
+
+	if(vm.count("ics")){
+		fitnessNames.push_back("ICS");
+	}
+
 	BLASTDict bitscores;
 
 	if(vm.count("bitscores")){
 		bitscores = loadBLASTInfo(net1,net2,vm["bitscores"].as<string>());
+		fitnessNames.push_back("BitscoreSum");
 	}
 
 	BLASTDict evalues;
 
 	if(vm.count("evalues")){
 		evalues = loadBLASTInfo(net1,net2,vm["evalues"].as<string>());
+		fitnessNames.push_back("EvalsSum");
 	}
 
-	return argRetVals(vm,net1,net2,bitscores,evalues);
+	return argRetVals(vm,net1,net2,bitscores,evalues, fitnessNames);
 }

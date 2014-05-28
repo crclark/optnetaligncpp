@@ -171,21 +171,24 @@ void Alignment::becomeChild(mt19937& prng, float cxswappb,
 	fitnessValid = false;
 }
 
+
+//todo: add support for GO annotations
+//todo: maybe something more principled than fitnessNames (so ad hoc!)
 void Alignment::computeFitness(const Network& net1,
 	                const Network& net2,
-	                const BLASTDict d,
-	                const vector<string> fitnessNames, 
-		            const vector<double> fitnessWeights){
+	                const BLASTDict& bitscores,
+	                const BLASTDict& evalues,
+	                const vector<string>& fitnessNames){
 	fitness = vector<double>(fitnessNames.size(),0.0);
 	for(int i = 0; i < fitnessNames.size(); i++){
 		if(fitnessNames.at(i) == "ICS"){
 			fitness.at(i) = ics(net1,net2);
 		}
 		if(fitnessNames.at(i) == "BitscoreSum"){
-			fitness.at(i) = sumBLAST(net1,net2,d);
+			fitness.at(i) = sumBLAST(net1,net2,bitscores);
 		}
 		if(fitnessNames.at(i) == "EvalsSum"){
-			fitness.at(i) = -1.0*sumBLAST(net1,net2,d);
+			fitness.at(i) = -1.0*sumBLAST(net1,net2,evalues);
 		}
 	}
 	fitnessValid = true;
@@ -240,7 +243,7 @@ double Alignment::ics(const Network& net1, const Network& net2) const{
 
 double Alignment::sumBLAST(const Network& net1,
 		            const Network& net2,
-		            const BLASTDict d) const{
+		            const BLASTDict& d) const{
 	double toReturn = 0.0;
 	for(node i = 0; i < net1.nodeNameToNode.size(); i++){
 		if(d.count(i) && d.at(i).count(aln[i]) &&
@@ -268,7 +271,7 @@ void Alignment::save(const Network& net1,
 
 //this function assumes fitnesses have already been assigned
 //todo: add check that that's the case.
-vector<vector<Alignment*> > nonDominatedSort(vector<Alignment*> in){
+vector<vector<Alignment*> > nonDominatedSort(const vector<Alignment*>& in){
 	vector<Alignment*> temp = in;
 	sort(temp.begin(), temp.end(), dominates);
 
@@ -335,6 +338,7 @@ void setCrowdingDists(vector<Alignment*>& in){
 	}
 }
 
+//returns true if aln1 Pareto dominates aln2
 bool dominates(Alignment* aln1, Alignment* aln2){
 
 	bool oneBigger = false;
@@ -349,4 +353,38 @@ bool dominates(Alignment* aln1, Alignment* aln2){
 	}
 
 	return oneBigger;
+}
+
+bool crowdedComp(Alignment* aln1, Alignment* aln2){
+	return (aln1->domCount < aln2->domCount)
+	        || (aln1->domCount == aln2->domCount &&
+	        	aln1->crowdDist > aln2->crowdDist);
+}
+
+
+//preconditions: tournSize smaller than in
+//all in elems have crowdDist and domCount calculated
+//returns two alignment pointers
+vector<Alignment*> binSel(mt19937& prng,
+	                      const vector<Alignment*>& in, 
+	                      unsigned int tournSize){
+	vector<unsigned int> indices(in.size());
+	
+	for(int i = 0; i < in.size(); i++){
+		indices[i] = i;
+	}
+
+	shuffle(indices.begin(),indices.end(), prng);
+
+	//grab the best of a random subset of in
+	sort(indices.begin(),indices.begin()+tournSize,
+		[&in](unsigned int a, unsigned int b){
+			return crowdedComp(in.at(a),in.at(b));
+		});
+
+	vector<Alignment*> toReturn;
+	toReturn.push_back(in.at(indices[0]));
+	toReturn.push_back(in.at(indices[1]));
+
+	return toReturn;
 }

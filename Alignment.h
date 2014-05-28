@@ -18,9 +18,9 @@ public:
 		             const Alignment& p2);
 	void computeFitness(const Network& net1,
 		                const Network& net2,
-		                const BLASTDict d,
-		                const vector<string> fitnessNames, 
-		                const vector<double> fitnessWeights);
+		                const BLASTDict& bitscores,
+		                const BLASTDict& evalues,
+		                const vector<string>& fitnessNames);
 	void save(const Network& net1,
 		      const Network& net2,
 		      string filename) const;
@@ -44,18 +44,34 @@ public:
 	double ics(const Network& net1, const Network& net2) const;
 	double sumBLAST(const Network& net1,
 		            const Network& net2,
-		            const BLASTDict d) const;
+		            const BLASTDict& d) const;
 
 	unsigned int domCount;
 	double crowdDist;
 };
 
+/*
+The functions below, taken together, can be used to implement
+all of NSGA-II. This entails:
+-doing a non-dominated sort of the population
+-for each front, assigning crowding distances
+-sorting by the crowded comparison operator
+-selecting the individuals to populate the next generation (todo)
+*/
+
 //todo: consider passing vector by reference
 //todo: add more pass-by-reference in general
-vector<vector<Alignment*> > nonDominatedSort(vector<Alignment*> in);
+vector<vector<Alignment*> > nonDominatedSort(const vector<Alignment*>& in);
 
 //in is assumed to be a front produced by nonDominatedSort
 void setCrowdingDists(vector<Alignment*>& in);
 
 //returns true iff aln1 dominates aln2
 bool dominates(Alignment* aln1, Alignment* aln2);
+
+//implements crowded-comparison operator from Deb et al. 2002
+bool crowdedComp(Alignment* aln1, Alignment* aln2);
+
+//precondition: in alns have crowdDist, domCount set.
+vector<Alignment*> binSel(mt19937& prng,
+	                      const vector<Alignment*>& in, unsigned int tournSize);
