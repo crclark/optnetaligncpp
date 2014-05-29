@@ -2,6 +2,7 @@
 #include "blastinfo.h"
 #include "Network.h"
 
+#include <cmath>
 #include <vector>
 #include <algorithm>
 #include <random>
@@ -87,8 +88,8 @@ Alignment::Alignment(const Network& net1, const Network& net2,
 	}
 }
 
-void Alignment::shuf(){
-	random_shuffle(aln.begin(),aln.end());
+void Alignment::shuf(mt19937& prng){
+	shuffle(aln.begin(),aln.end(), prng);
 }
 
 //todo: add secondary mutate op for changing mask
@@ -277,11 +278,9 @@ void Alignment::save(const Network& net1,
 //todo: add check that that's the case.
 vector<vector<Alignment*> > nonDominatedSort(const vector<Alignment*>& in){
 	vector<Alignment*> temp = in;
-	cout<<"doing call to sort"<<endl;
 	sort(temp.begin(), temp.end(), dominates);
 
 	//do domination counts (naively-- O(n^2))
-	cout<<"dom counts"<<endl;
 	vector<int> domCount(temp.size(),0);
 	for(int i = 0; i < temp.size(); i++){
 		for(int j = 0; j < i; j++){
@@ -292,7 +291,6 @@ vector<vector<Alignment*> > nonDominatedSort(const vector<Alignment*>& in){
 	}
 
 	//use domination counts to gather results
-	cout<<"gathering into fronts"<<endl;
 	vector<vector<Alignment*> > toReturn;
 	int lastDomCount = -1;
 	for(int i = 0; i < temp.size(); i++){
@@ -399,4 +397,35 @@ vector<Alignment*> binSel(mt19937& prng,
 	toReturn.push_back(in.at(indices[1]));
 
 	return toReturn;
+}
+
+void reportStats(const vector<Alignment*>& in){
+
+	for(int i =0; i < in[0]->fitness.size(); i++){
+		double sum = 0.0;
+		double max = 0.0;
+		double mean;
+
+		for(auto p : in){
+			double temp = p->fitness[i];
+			if(temp > max)
+				max = temp;
+			sum += p->fitness[i];
+		}
+		cout<<"Max of objective "<<i<<" is "<<max<<endl;
+		mean = sum/double(in.size());
+		cout<<"Mean of objective "<<i<<" is "<<mean<<endl;
+
+		double std_dev = 0.0;
+
+		for(auto p : in){
+			double temp = p->fitness[i] - mean;
+			std_dev += temp*temp;
+		}
+
+		std_dev /= double(in.size());
+		std_dev = sqrt(std_dev);
+		cout<<"Std. Dev. of objective "<<i<<" is "<<std_dev<<endl;
+	}
+
 }

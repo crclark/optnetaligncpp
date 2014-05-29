@@ -28,13 +28,18 @@ int main(int ac, char* av[])
 		const int nthreads = vm["nthreads"].as<int>();
 		const float mutswappb = vm["mutswappb"].as<float>();
 		const float cxswappb = vm["cxswappb"].as<float>();
+		const bool verbose = vm.count("verbose");
+		const bool tournsel = vm.count("tournsel");
+
+		mt19937 g(14);
+
 		//initialize population
 		cout<<"creating initial population"<<endl;
 		const unsigned int popsize = vm["popsize"].as<int>();
 		vector<Alignment*> pop;
 		for(int i = 0; i < popsize; i++){	
 			Alignment* aln = new Alignment(*net1,*net2);
-			aln->shuf();
+			aln->shuf(g);
 			aln->computeFitness(*net1,*net2,bitscores,evalues,fitnessNames);
 			pop.push_back(aln);
 		}
@@ -43,7 +48,7 @@ int main(int ac, char* av[])
 		vector<Alignment*> kids;
 		for(int i = 0; i < popsize; i++){
 			Alignment* aln = new Alignment(*net1,*net2);
-			aln->shuf();
+			aln->shuf(g);
 			aln->computeFitness(*net1,*net2,bitscores,evalues,fitnessNames);
 			kids.push_back(aln);
 		}
@@ -101,13 +106,34 @@ int main(int ac, char* av[])
 			kids.clear();
 
 			if(nthreads == 1){
-				mt19937 g(14);
-
 				for(int i = 0; i < popsize; i++){
+					uniform_real_distribution<double> dist(0.0,1.0);
+					double prob = dist(g);
 					Alignment * aln = new Alignment(*net1,*net2);
-					vector<Alignment*> parents = binSel(g, pop, (popsize/10));
-					aln->becomeChild(g, cxswappb, *parents[0], *parents[1]);
-					aln->mutate(g, mutswappb);
+					if(prob <= 0.7){
+						vector<Alignment*> parents;
+						if(tournsel){
+						 	parents = binSel(g, pop, (popsize/10));
+						}
+						else{
+							uniform_int_distribution<int> rint(0,popsize-1);
+							int par1 = rint(g);
+							int par2 = par1;
+							while(par2 == par1){
+								par2 = rint(g);
+							}
+							parents.push_back(pop[par1]);
+							parents.push_back(pop[par2]);
+						}
+						aln->becomeChild(g, cxswappb, *parents[0], *parents[1]);
+						if(prob > 0.2){
+							aln->mutate(g, mutswappb);
+						}
+					}
+					else{
+						vector<Alignment*> parents = binSel(g,pop,(popsize/10));
+						aln->becomeChild(g,0.0,*parents[0], *parents[0]);
+					}
 					aln->computeFitness(*net1,*net2,bitscores,evalues,fitnessNames);
 					kids.push_back(aln);
 				}
@@ -123,6 +149,9 @@ int main(int ac, char* av[])
 			//and evaluate fitness. Maybe also have a chance to just copy
 			//and mutate without crossover, too.
 			cout<<"finished generation "<<gen<<endl;
+			if(verbose){
+				reportStats(pop);
+			}
 		}
 
 

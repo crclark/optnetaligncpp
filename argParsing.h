@@ -93,7 +93,7 @@ argRetVals handleArgs(int ac, char* av[]){
 			        "alignments to serve as the initial population. "
 			        "Must be used in conjunction with bit scores or E-"
 			        "values.")
-		("tournsel", "When set, use domination-based tournament selection "
+		("tournsel", "When set, use tournament selection "
 			         "to choose parents for crossover. Otherwise, uses "
 			         "random selection.")
 	;
