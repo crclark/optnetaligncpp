@@ -14,6 +14,8 @@
 using namespace std;
 
 //todo: note these assume net2 is larger. Ensure that when loading nets.
+//this constructor just creates an arbitrary non-random alignment.
+//Make it a random one by calling shuf()
 Alignment::Alignment(const Network& net1, const Network& net2){
 	unsigned int size = net2.nodeToNodeName.size();
 	aln = vector<node>(size,-1);
@@ -23,8 +25,6 @@ Alignment::Alignment(const Network& net1, const Network& net2){
 	for(int i = 0; i < size; i++){
 		aln[i] = i;
 	}
-
-	random_shuffle(aln.begin(),aln.end());
 }
 
 Alignment::Alignment(const Network& net1, const Network& net2, 
@@ -85,6 +85,10 @@ Alignment::Alignment(const Network& net1, const Network& net2,
 			v2Unaligned.erase(arbNode);
 		}
 	}
+}
+
+void Alignment::shuf(){
+	random_shuffle(aln.begin(),aln.end());
 }
 
 //todo: add secondary mutate op for changing mask
@@ -273,9 +277,11 @@ void Alignment::save(const Network& net1,
 //todo: add check that that's the case.
 vector<vector<Alignment*> > nonDominatedSort(const vector<Alignment*>& in){
 	vector<Alignment*> temp = in;
+	cout<<"doing call to sort"<<endl;
 	sort(temp.begin(), temp.end(), dominates);
 
 	//do domination counts (naively-- O(n^2))
+	cout<<"dom counts"<<endl;
 	vector<int> domCount(temp.size(),0);
 	for(int i = 0; i < temp.size(); i++){
 		for(int j = 0; j < i; j++){
@@ -286,6 +292,7 @@ vector<vector<Alignment*> > nonDominatedSort(const vector<Alignment*>& in){
 	}
 
 	//use domination counts to gather results
+	cout<<"gathering into fronts"<<endl;
 	vector<vector<Alignment*> > toReturn;
 	int lastDomCount = -1;
 	for(int i = 0; i < temp.size(); i++){
@@ -340,7 +347,12 @@ void setCrowdingDists(vector<Alignment*>& in){
 
 //returns true if aln1 Pareto dominates aln2
 bool dominates(Alignment* aln1, Alignment* aln2){
-
+	if(!(aln1->fitnessValid && aln2->fitnessValid)){
+		cout<<"danger: dominates called on alns with invalid fitness"<<endl;
+	}
+	if(aln1->fitness.size() != aln2->fitness.size()){
+		cout<<"danger: fitness sizes not equal!"<<endl;
+	}
 	bool oneBigger = false;
 
 	for(int i = 0; i < aln1->fitness.size(); i++){

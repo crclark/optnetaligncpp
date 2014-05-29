@@ -12,6 +12,7 @@ class Alignment{
 public:	
 	Alignment(const Network& net1, const Network& net2);
 	Alignment(const Network& net1, const Network& net2, string filename);
+	void shuf(); //shuffles the alignment to make it completely random
 	void mutate(mt19937& prng, float mutswappb);
 	void becomeChild(mt19937& prng, float cxswappb, 
 		             const Alignment& p1,
@@ -24,6 +25,10 @@ public:
 	void save(const Network& net1,
 		      const Network& net2,
 		      string filename) const;
+	double ics(const Network& net1, const Network& net2) const;
+	double sumBLAST(const Network& net1,
+		            const Network& net2,
+		            const BLASTDict& d) const;	
 	vector<node> aln;
 	vector<bool> alnMask; //indicates whether the corresponding node
 	                      //of V2 is allowed to be aligned to.
@@ -40,12 +45,6 @@ public:
 	                      //workable.
 	bool fitnessValid;
 	vector<double> fitness; //all fitnesses stored s.t. larger is better.
-
-	double ics(const Network& net1, const Network& net2) const;
-	double sumBLAST(const Network& net1,
-		            const Network& net2,
-		            const BLASTDict& d) const;
-
 	unsigned int domCount;
 	double crowdDist;
 };
