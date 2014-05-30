@@ -258,6 +258,16 @@ BOOST_AUTO_TEST_CASE( nondominated_sort )
 	toSort.push_back(&aln6);
 	toSort.push_back(&aln5);
 	vector<vector<Alignment*> > fronts = nonDominatedSort(toSort);
+	for(int i = 0; i < fronts.size(); i++){
+		cout<<"FRONT "<<i<<endl;
+		cout<<"------------"<<endl;
+		for(int j = 0; j <fronts[i].size(); j++){
+			for(int k = 0; k < fronts[i][j]->fitness.size(); k++){
+				cout<<fronts[i][j]->fitness[k]<<" "<<endl;
+			}
+			cout<<endl;
+		}
+	}
 	//ensure we have the right number of fronts
 	BOOST_CHECK(fronts.size()==2);
 	//and they are the right sizes

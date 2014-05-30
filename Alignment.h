@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <random>
 #include <string>
+#include <unordered_set>
 
 #include "blastinfo.h"
 #include "Network.h"
@@ -45,7 +46,9 @@ public:
 	                      //workable.
 	bool fitnessValid;
 	vector<double> fitness; //all fitnesses stored s.t. larger is better.
-	int domCount;
+	int domRank; //which front this aln is in. 0 is best, 1 is 2nd best, etc.
+	int numThatDominate; //how many others in the population dominate this one.
+	unordered_set<Alignment*> dominated;//set of alns this aln dominates.
 	double crowdDist;
 };
 

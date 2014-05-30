@@ -28,7 +28,7 @@ Alignment::Alignment(const Network& net1, const Network& net2){
 		aln[i] = i;
 	}
 
-	domCount = -1;
+	domRank = -1;
 	crowdDist = -1.0;
 }
 
@@ -292,42 +292,63 @@ void Alignment::save(const Network& net1,
 //this function assumes fitnesses have already been assigned
 //todo: add check that that's the case.
 vector<vector<Alignment*> > nonDominatedSort(const vector<Alignment*>& in){
-	vector<Alignment*> temp = in;
-	sort(temp.begin(), temp.end(), dominates);
-
-	//do domination counts (naively-- O(n^2))
-	vector<int> domCount(temp.size(),0);
-	for(int i = 0; i < temp.size(); i++){
-		for(int j = 0; j < i; j++){
-			if(dominates(temp[j], temp[i])){
-				domCount[i]++;
+	vector<vector<Alignment*> > fronts(1); //know there is at least one front.
+	for(int i = 0; i < in.size(); i++){
+		in[i]->numThatDominate = 0;
+		in[i]->dominated.clear();
+		for(int j = 0; j < in.size(); j++){
+			if(i == j){
+				continue;
+			}
+			if(dominates(in[i],in[j])){
+				in[i]->dominated.insert(in[j]);
+			}
+			else if(dominates(in[j],in[i])){
+				in[i]->numThatDominate++;
 			}
 		}
+
+		if(in[i]->numThatDominate == 0){
+			in[i]->domRank = 0;
+			fronts[0].push_back(in[i]);
+		}
 	}
 
-	//use domination counts to gather results
-	vector<vector<Alignment*> > toReturn;
-	int lastDomCount = -1;
-	for(int i = 0; i < temp.size(); i++){
-		if(domCount[i] == lastDomCount){
-			toReturn.back().push_back(temp[i]);
+	int i = 0;
+	while(!(fronts.size() == i || fronts[i].empty())){
+		vector<Alignment*> nextFront;
+
+		for(int j = 0; j < fronts[i].size(); j++){
+			for(auto q : fronts[i][j]->dominated){
+				q->numThatDominate--;
+				if(q->numThatDominate == 0){
+					q->domRank = i+1;
+					nextFront.push_back(q);
+				}
+			}
 		}
-		else{
-			toReturn.push_back(vector<Alignment*>());
-			lastDomCount = domCount[i];
-			toReturn.back().push_back(temp[i]);
+		i++;
+		if(!nextFront.empty()){
+			fronts.push_back(nextFront);
 		}
-		temp[i]->domCount = domCount[i];
 	}
 
-	return toReturn;
+	int frontsTotal = 0;
+	for(int i = 0; i<fronts.size(); i++){
+		frontsTotal += fronts[i].size();
+	}
+
+	assert(frontsTotal == in.size());
+
+	return fronts;
+
 }
 
 
 //takes a front as input and assigns crowdDist to each element
 //note: results meaningless if input is not non-dominated set
 void setCrowdingDists(vector<Alignment*>& in){
-
+	/*
 	//debug check: no one in input should dominate anyone else
 	for(auto i : in){
 		for(auto j : in){
@@ -343,7 +364,7 @@ void setCrowdingDists(vector<Alignment*>& in){
 				assert(0==1);
 			}
 		}
-	}
+	}*/
 
 	//init all to zero
 	for(auto i : in){
@@ -377,12 +398,14 @@ void setCrowdingDists(vector<Alignment*>& in){
 
 //returns true if aln1 Pareto dominates aln2
 bool dominates(Alignment* aln1, Alignment* aln2){
+	/*
 	if(!(aln1->fitnessValid && aln2->fitnessValid)){
 		cout<<"danger: dominates called on alns with invalid fitness"<<endl;
 	}
 	if(aln1->fitness.size() != aln2->fitness.size()){
 		cout<<"danger: fitness sizes not equal!"<<endl;
 	}
+	*/
 	bool oneBigger = false;
 
 	for(int i = 0; i < aln1->fitness.size(); i++){
@@ -398,14 +421,14 @@ bool dominates(Alignment* aln1, Alignment* aln2){
 }
 
 bool crowdedComp(Alignment* aln1, Alignment* aln2){
-	if(aln1->domCount == -1 || aln2->domCount == -1){
-		cout<<"Danger: domCount uninitialized in crowdedComp!"<<endl;
+	if(aln1->domRank == -1 || aln2->domRank == -1){
+		cout<<"Danger: domRank uninitialized in crowdedComp!"<<endl;
 	}
 	if(aln1->crowdDist < 0.0 || aln2->crowdDist < 0.0){
 		cout<<"Danger: crowdDist uninitialized in crowdedComp!"<<endl;
 	}
-	return (aln1->domCount < aln2->domCount)
-	        || (aln1->domCount == aln2->domCount &&
+	return (aln1->domRank < aln2->domRank)
+	        || (aln1->domRank == aln2->domRank &&
 	        	aln1->crowdDist > aln2->crowdDist);
 }
 
