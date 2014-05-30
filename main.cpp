@@ -104,6 +104,12 @@ int main(int ac, char* av[])
 			assert(pop.size() == popNew.size());
 			copy(popNew.begin(), popNew.end(), pop.begin());
 
+			//check that pop has sane contents
+			assert(pop.size() == popsize);
+			for(int i = 0; i < pop.size(); i++){
+				assert(popNew.count(pop[i]));
+			}
+
 			//create new kids.
 			kids.clear();
 			
