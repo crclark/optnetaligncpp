@@ -4,6 +4,8 @@
 #include <array>
 #include <algorithm>
 #include <unordered_set>
+#include <ctime>
+#include <boost/thread/thread.hpp>
 #include <assert.h>
 #include <boost/program_options.hpp>
 
@@ -32,7 +34,6 @@ int main(int ac, char* av[])
 		const bool tournsel = vm.count("tournsel");
 
 		mt19937 g(14);
-
 		//initialize population
 		cout<<"creating initial population"<<endl;
 		const unsigned int popsize = vm["popsize"].as<int>();
@@ -55,7 +56,7 @@ int main(int ac, char* av[])
 
 		//main loop
 		cout<<"starting main loop"<<endl;
-		int generations = vm["generations"].as<int>();
+		const int generations = vm["generations"].as<int>();
 		for(int gen = 0; gen < generations; gen++){
 
 			//combinedPtrs is R_t from Deb et al. 2002
@@ -86,6 +87,7 @@ int main(int ac, char* av[])
 			//completely fit given our popsize.
 			int numLeftToInsert = popsize - popNew.size();
 			if(numLeftToInsert > 0){
+				setCrowdingDists(fronts[i]);
 				assert(fronts[i].size() >= numLeftToInsert);
 				sort(fronts[i].begin(),fronts[i].end(),crowdedComp);
 				popNew.insert(fronts[i].begin(), 
@@ -104,43 +106,69 @@ int main(int ac, char* av[])
 
 			//create new kids.
 			kids.clear();
+			
+			//do multithreaded version of kids creation
+			//first allocate the desired number of alignments in kids
+			for(int i = 0; i < popsize; i++){
+				Alignment* aln = new Alignment(*net1,*net2);
+				kids.push_back(aln);
+			}
 
-			if(nthreads == 1){
-				for(int i = 0; i < popsize; i++){
+			//this will be executed by each thread.
+			auto worker = [&](vector<Alignment*>::iterator begin,
+				              vector<Alignment*>::iterator end,
+				              int seed){
+				mt19937 tg(seed + clock());
+				for(auto it = begin; it != end; ++it){
 					uniform_real_distribution<double> dist(0.0,1.0);
-					double prob = dist(g);
-					Alignment * aln = new Alignment(*net1,*net2);
+					double prob = dist(tg);
 					if(prob <= 0.7){
 						vector<Alignment*> parents;
 						if(tournsel){
-						 	parents = binSel(g, pop, (popsize/10));
+							parents = binSel(tg,pop,(popsize/10));
 						}
 						else{
 							uniform_int_distribution<int> rint(0,popsize-1);
-							int par1 = rint(g);
+							int par1 = rint(tg);
 							int par2 = par1;
 							while(par2 == par1){
-								par2 = rint(g);
+								par2 = rint(tg);
 							}
 							parents.push_back(pop[par1]);
 							parents.push_back(pop[par2]);
 						}
-						aln->becomeChild(g, cxswappb, *parents[0], *parents[1]);
+						(*it)->becomeChild(tg,cxswappb,*parents[0],
+							               *parents[1]);
 						if(prob > 0.2){
-							aln->mutate(g, mutswappb);
+							(*it)->mutate(tg,mutswappb);
 						}
 					}
 					else{
-						vector<Alignment*> parents = binSel(g,pop,(popsize/10));
-						aln->becomeChild(g,0.0,*parents[0], *parents[0]);
+						vector<Alignment*> parents = binSel(tg,pop,(popsize/10));
+						(*it)->becomeChild(tg,0.0,*parents[0],*parents[0]);
 					}
-					aln->computeFitness(*net1,*net2,bitscores,evalues,fitnessNames);
-					kids.push_back(aln);
+					(*it)->computeFitness(*net1,*net2,bitscores,evalues,fitnessNames);
 				}
 
-			}
-			else{ //do multithreaded version of kids creation
+			};
 
+			const int grainsize = popsize / nthreads;
+			if(nthreads == 1){
+				worker(kids.begin(), kids.end(),g());
+			}
+			else{
+				vector<boost::thread> threads(nthreads);
+				auto work_iter = kids.begin();
+				for(int i = 0; i < threads.size() - 1; i++){
+					threads[i] = boost::thread(worker, work_iter, work_iter + grainsize,
+						                i);
+				    work_iter += grainsize;									
+				}
+				threads.back() = boost::thread(worker, work_iter, kids.end(), nthreads);
+
+				for(auto&& i : threads){
+					i.join();
+				}
 			}
 
 			//idea: create a constructor for a non-random arbitrary aln
@@ -148,6 +176,7 @@ int main(int ac, char* av[])
 			//in parallel for: binary select tournament, crossover, mutate
 			//and evaluate fitness. Maybe also have a chance to just copy
 			//and mutate without crossover, too.
+			cout<<"size of kids is "<<kids.size()<<endl;
 			cout<<"finished generation "<<gen<<endl;
 			if(verbose){
 				reportStats(pop);

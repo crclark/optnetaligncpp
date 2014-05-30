@@ -1,6 +1,6 @@
 #include "Network.h"
 
-#include <set>
+#include <unordered_set>
 #include <string>
 #include <iostream>
 #include <fstream>
@@ -10,7 +10,7 @@ using namespace std;
 
 Network::Network(string filename){
 	unsigned int count = 0;
-	set<string> alreadySeen;
+	unordered_set<string> alreadySeen;
 
 	ifstream infile(filename);
 	if(!infile){

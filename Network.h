@@ -1,6 +1,6 @@
 #pragma once
 
-#include <set>
+#include <unordered_set>
 #include <string>
 #include <unordered_map>
 using namespace std;
@@ -56,7 +56,7 @@ public:
 	}
 
 	bool operator<(const Edge& other) const{
-		if(n1 < other.n1){
+		/*if(n1 < other.n1){
 			return true;
 		}
 		else if(n1 == other.n1){
@@ -64,12 +64,22 @@ public:
 		}
 		else{
 			return false;
-		}
+		}*/
+		return (n1 < other.n1) || (n1 == other.n1 && n2 < other.n2);
 	}
+
+	friend class EdgeHash;
 
 private:
 	node n1;
 	node n2;
+};
+
+class EdgeHash{
+public:
+	size_t operator()(const Edge& e) const {
+		return e.n1 ^ e.n2;
+	}
 };
 
 //A network is, for now, just a set of edges. If we
@@ -79,7 +89,8 @@ private:
 class Network{
 public:
 	Network(string filename);
-	set<Edge> edges;
+	//set<Edge> edges;
+	unordered_set<Edge, EdgeHash> edges;
 	unordered_map<node,string> nodeToNodeName;
 	unordered_map<string,node> nodeNameToNode;
 };

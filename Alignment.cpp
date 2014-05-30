@@ -10,7 +10,7 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
-#include <set>
+#include <unordered_set>
 #include <limits>
 using namespace std;
 
@@ -26,6 +26,9 @@ Alignment::Alignment(const Network& net1, const Network& net2){
 	for(int i = 0; i < size; i++){
 		aln[i] = i;
 	}
+
+	domCount = -1;
+	crowdDist = -1.0;
 }
 
 Alignment::Alignment(const Network& net1, const Network& net2, 
@@ -43,7 +46,7 @@ Alignment::Alignment(const Network& net1, const Network& net2,
 	string line;
 	//keep track of which nodes in V2 aren't aligned so we can
 	//add them to the permutation somewhere after loading the file.
-	set<node> v2Unaligned;
+	unordered_set<node> v2Unaligned;
 	for(int i = 0; i < net2.nodeToNodeName.size(); i++){
 		v2Unaligned.insert(i);
 	}
@@ -202,8 +205,8 @@ void Alignment::computeFitness(const Network& net1,
 double Alignment::ics(const Network& net1, const Network& net2) const{
 
 
-	set<node> v1Unaligned;
-	set<node> v2Unaligned; //set of unaligned nodes in V2
+	unordered_set<node> v1Unaligned;
+	unordered_set<node> v2Unaligned; //set of unaligned nodes in V2
 	for(int i = 0; i < aln.size(); i++){
 		if(!alnMask[i]){
 			v1Unaligned.insert(i);
@@ -217,14 +220,14 @@ double Alignment::ics(const Network& net1, const Network& net2) const{
 	}
 
 	//induced subgraph of net2 that has been mapped to:
-	set<Edge> inducedES;
+	unordered_set<Edge, EdgeHash> inducedES;
 	for(Edge e : net2.edges){
 		if(!(v2Unaligned.count(e.u()) || v2Unaligned.count(e.v()))){
 			inducedES.insert(e);
 		}
 	}
 
-	set<Edge> mappedNet1ES;
+	unordered_set<Edge, EdgeHash> mappedNet1ES;
 	for(Edge e : net1.edges){
 		if(!(v1Unaligned.count(e.u()) || v1Unaligned.count(e.v()))){
 			Edge mapped(aln[e.u()],aln[e.v()]);
@@ -237,10 +240,21 @@ double Alignment::ics(const Network& net1, const Network& net2) const{
 		return 0.0;
 	}
 	else{
-		set<Edge> intersect;
-		set_intersection(inducedES.begin(), inducedES.end(),
-			             mappedNet1ES.begin(), mappedNet1ES.end(),
-			             inserter(intersect,intersect.begin()));
+		unordered_set<Edge,EdgeHash> intersect;
+		if(mappedNet1ES.size() < inducedES.size()){
+			for(auto it = mappedNet1ES.begin(); it != mappedNet1ES.end(); it++){
+				if(inducedES.count(*it)){
+					intersect.insert(*it);
+				}
+			}
+		}
+		else{
+			for(auto it = inducedES.begin(); it != inducedES.end(); it++){
+				if(mappedNet1ES.count(*it)){
+					intersect.insert(*it);
+				}
+			}
+		}
 		double numerator = double(intersect.size());
 		return numerator/denominator;
 	}
@@ -296,14 +310,13 @@ vector<vector<Alignment*> > nonDominatedSort(const vector<Alignment*>& in){
 	for(int i = 0; i < temp.size(); i++){
 		if(domCount[i] == lastDomCount){
 			toReturn.back().push_back(temp[i]);
-			temp[i]->domCount = domCount[i];
 		}
 		else{
 			toReturn.push_back(vector<Alignment*>());
 			lastDomCount = domCount[i];
 			toReturn.back().push_back(temp[i]);
-			temp[i]->domCount = domCount[i];
 		}
+		temp[i]->domCount = domCount[i];
 	}
 
 	return toReturn;
@@ -366,6 +379,12 @@ bool dominates(Alignment* aln1, Alignment* aln2){
 }
 
 bool crowdedComp(Alignment* aln1, Alignment* aln2){
+	if(aln1->domCount == -1 || aln2->domCount == -1){
+		cout<<"Danger: domCount uninitialized in crowdedComp!"<<endl;
+	}
+	if(aln1->crowdDist < 0.0 || aln2->crowdDist < 0.0){
+		cout<<"Danger: crowdDist uninitialized in crowdedComp!"<<endl;
+	}
 	return (aln1->domCount < aln2->domCount)
 	        || (aln1->domCount == aln2->domCount &&
 	        	aln1->crowdDist > aln2->crowdDist);

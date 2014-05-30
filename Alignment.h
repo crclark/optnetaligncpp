@@ -45,7 +45,7 @@ public:
 	                      //workable.
 	bool fitnessValid;
 	vector<double> fitness; //all fitnesses stored s.t. larger is better.
-	unsigned int domCount;
+	int domCount;
 	double crowdDist;
 };
 
