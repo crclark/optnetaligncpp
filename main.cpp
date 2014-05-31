@@ -111,15 +111,9 @@ int main(int ac, char* av[])
 				assert(popNew.count(pop[i]));
 			}
 
-			//create new kids.
-			kids.clear();
-			
 			//do multithreaded version of kids creation
-			//first allocate the desired number of alignments in kids
-			for(int i = 0; i < popsize; i++){
-				Alignment* aln = new Alignment(*net1,*net2);
-				kids.push_back(aln);
-			}
+			//first resize kids to the proper size
+			kids = vector<Alignment*>(popsize);
 
 			//this will be executed by each thread.
 			auto worker = [&](vector<Alignment*>::iterator begin,
@@ -144,6 +138,7 @@ int main(int ac, char* av[])
 							parents.push_back(pop[par1]);
 							parents.push_back(pop[par2]);
 						}
+						*it = new Alignment(*parents[0]);
 						(*it)->becomeChild(tg,cxswappb,*parents[0],
 							               *parents[1], total);
 						if(prob > 0.2){
@@ -152,8 +147,8 @@ int main(int ac, char* av[])
 					}
 					else{
 						vector<Alignment*> parents = binSel(tg,pop,(popsize/10));
-						(*it)->becomeChild(tg,0.0,*parents[0],*parents[0],
-							               total);
+						(*it) = new Alignment(*parents[0]);
+						(*it)->mutate(tg,mutswappb,total);
 					}
 					(*it)->computeFitness(*net1,*net2,bitscores,evalues,fitnessNames);
 				}
