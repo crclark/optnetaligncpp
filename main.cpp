@@ -32,6 +32,7 @@ int main(int ac, char* av[])
 		const float cxswappb = vm["cxswappb"].as<float>();
 		const bool verbose = vm.count("verbose");
 		const bool tournsel = vm.count("tournsel");
+		const bool total = vm.count("total");
 
 		mt19937 g(14);
 		//initialize population
@@ -40,7 +41,7 @@ int main(int ac, char* av[])
 		vector<Alignment*> pop;
 		for(int i = 0; i < popsize; i++){	
 			Alignment* aln = new Alignment(*net1,*net2);
-			aln->shuf(g);
+			aln->shuf(g, total);
 			aln->computeFitness(*net1,*net2,bitscores,evalues,fitnessNames);
 			pop.push_back(aln);
 		}
@@ -49,7 +50,7 @@ int main(int ac, char* av[])
 		vector<Alignment*> kids;
 		for(int i = 0; i < popsize; i++){
 			Alignment* aln = new Alignment(*net1,*net2);
-			aln->shuf(g);
+			aln->shuf(g, total);
 			aln->computeFitness(*net1,*net2,bitscores,evalues,fitnessNames);
 			kids.push_back(aln);
 		}
@@ -144,14 +145,15 @@ int main(int ac, char* av[])
 							parents.push_back(pop[par2]);
 						}
 						(*it)->becomeChild(tg,cxswappb,*parents[0],
-							               *parents[1]);
+							               *parents[1], total);
 						if(prob > 0.2){
-							(*it)->mutate(tg,mutswappb);
+							(*it)->mutate(tg,mutswappb,total);
 						}
 					}
 					else{
 						vector<Alignment*> parents = binSel(tg,pop,(popsize/10));
-						(*it)->becomeChild(tg,0.0,*parents[0],*parents[0]);
+						(*it)->becomeChild(tg,0.0,*parents[0],*parents[0],
+							               total);
 					}
 					(*it)->computeFitness(*net1,*net2,bitscores,evalues,fitnessNames);
 				}

@@ -161,5 +161,9 @@ argRetVals handleArgs(int ac, char* av[]){
 		fitnessNames.push_back("EvalsSum");
 	}
 
+	if(!vm.count("total")){
+		fitnessNames.push_back("Size");
+	}
+
 	return argRetVals(vm,net1,net2,bitscores,evalues, fitnessNames);
 }

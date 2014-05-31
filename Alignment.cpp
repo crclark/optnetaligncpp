@@ -94,13 +94,21 @@ Alignment::Alignment(const Network& net1, const Network& net2,
 	}
 }
 
-void Alignment::shuf(mt19937& prng){
+void Alignment::shuf(mt19937& prng, bool total){
 	shuffle(aln.begin(),aln.end(), prng);
+	if(!total){
+		uniform_int_distribution<int> coinFlip(0,1);
+		for(int i =0; i < alnMask.size(); i++){
+			if(coinFlip(prng)){
+				alnMask[i] = false;
+			}
+		}
+	}
 }
 
 //todo: add secondary mutate op for changing mask
 
-void Alignment::mutate(mt19937& prng, float mutswappb){
+void Alignment::mutate(mt19937& prng, float mutswappb, bool total){
 	int size = aln.size();
 	uniform_real_distribution<float> fltgen(0.0,1.0);
 	uniform_int_distribution<int> intgen(0,size-2); 
@@ -117,6 +125,13 @@ void Alignment::mutate(mt19937& prng, float mutswappb){
 			bool tempb = alnMask[swapIndex];
 			alnMask[swapIndex] = alnMask[i];
 			alnMask[i] = tempb;
+		}
+	}
+	if(!total){
+		for(int i = 0; i < alnMask.size(); i++){
+			if(fltgen(prng) < mutswappb){
+				alnMask[i] = !alnMask[i];
+			}
 		}
 	}
 	fitnessValid = false;
@@ -136,7 +151,8 @@ todo: this currently ignores the mask of the parents and maintains
 */
 void Alignment::becomeChild(mt19937& prng, float cxswappb, 
 	                        const Alignment& p1,
-		                    const Alignment& p2){
+		                    const Alignment& p2,
+		                    bool total){
 	const Alignment* par1;
 	const Alignment* par2;
 	int size = aln.size();
@@ -167,11 +183,24 @@ void Alignment::becomeChild(mt19937& prng, float cxswappb,
 			aln[par1Indices[temp2]] = temp1;
 
 			//swap mask bools
-			//todo: add tests that this is right
-			bool tempb = alnMask[i];
-			alnMask[i] = par2->alnMask[i];
-			alnMask[par1Indices[temp2]] = tempb;
-
+			//todo: if total, don't need to do anything. Always all 1.
+			if(total){
+				bool tempb = alnMask[i];
+				alnMask[i] = par2->alnMask[i];
+				alnMask[par1Indices[temp2]] = tempb;
+			}
+			else{ //if partial alns allowed, either | or & the bit here.
+				bool temp1Mask = alnMask[i];
+				bool par1bool = alnMask[par1Indices[temp2]];
+				bool par2bool = par2->alnMask[i];
+				alnMask[par1Indices[temp2]] = temp1Mask;
+				if(coinFlip(prng)){
+					alnMask[i] = par1bool && par2bool;
+				}
+				else{
+					alnMask[i] = par1bool || par2bool;
+				}
+			}
 			//swap index records 
 			int itemp = par1Indices[temp1];
 			par1Indices[temp1] = par1Indices[temp2];
@@ -200,6 +229,9 @@ void Alignment::computeFitness(const Network& net1,
 		}
 		if(fitnessNames.at(i) == "EvalsSum"){
 			fitness.at(i) = -1.0*sumBLAST(net1,net2,evalues);
+		}
+		if(fitnessNames.at(i) == "Size"){
+			fitness.at(i) = alnSize();
 		}
 	}
 	fitnessValid = true;
@@ -274,6 +306,16 @@ double Alignment::sumBLAST(const Network& net1,
 		}
 	}
 
+	return toReturn;
+}
+
+double Alignment::alnSize() const{
+	double toReturn = 0.0;
+	for(int i = 0; i < alnMask.size(); i++){
+		if(alnMask[i]){
+			toReturn += 1.0;
+		}
+	}
 	return toReturn;
 }
 

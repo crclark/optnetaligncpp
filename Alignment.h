@@ -13,11 +13,12 @@ class Alignment{
 public:	
 	Alignment(const Network& net1, const Network& net2);
 	Alignment(const Network& net1, const Network& net2, string filename);
-	void shuf(mt19937& prng); //shuffles the alignment to make it completely random
-	void mutate(mt19937& prng, float mutswappb);
+	void shuf(mt19937& prng, bool total =true); //shuffles the alignment to make it completely random
+	void mutate(mt19937& prng, float mutswappb, bool total = true);
 	void becomeChild(mt19937& prng, float cxswappb, 
 		             const Alignment& p1,
-		             const Alignment& p2);
+		             const Alignment& p2,
+		             bool total = true);
 	void computeFitness(const Network& net1,
 		                const Network& net2,
 		                const BLASTDict& bitscores,
@@ -29,7 +30,8 @@ public:
 	double ics(const Network& net1, const Network& net2) const;
 	double sumBLAST(const Network& net1,
 		            const Network& net2,
-		            const BLASTDict& d) const;	
+		            const BLASTDict& d) const;
+	double alnSize() const;	
 	vector<node> aln;
 	vector<bool> alnMask; //indicates whether the corresponding node
 	                      //of V2 is allowed to be aligned to.
