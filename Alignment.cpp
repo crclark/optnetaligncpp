@@ -38,6 +38,8 @@ Alignment::Alignment(const Network& net1, const Network& net2,
 	aln = vector<node>(size,-1);
 	alnMask = vector<bool>(size,true);
 	fitnessValid = false;
+	domRank = -1;
+	crowdDist = -1.0;
 	ifstream infile(filename);
 	cout<<"loading from "<<filename<<endl;
 	if(!infile){
