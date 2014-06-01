@@ -34,13 +34,15 @@ int main(int ac, char* av[])
 		const bool tournsel = vm.count("tournsel");
 		const bool total = vm.count("total");
 
+		const BLASTDict* bitPtr = vm.count("bitscores") ? &bitscores : nullptr;
+
 		mt19937 g(14);
 		//initialize population
 		cout<<"creating initial population"<<endl;
 		const unsigned int popsize = vm["popsize"].as<int>();
 		vector<Alignment*> pop;
 		for(int i = 0; i < popsize; i++){	
-			Alignment* aln = new Alignment(*net1,*net2);
+			Alignment* aln = new Alignment(*net1,*net2, bitPtr);
 			aln->shuf(g, total);
 			aln->computeFitness(*net1,*net2,bitscores,evalues,fitnessNames);
 			pop.push_back(aln);
@@ -49,7 +51,7 @@ int main(int ac, char* av[])
 		cout<<"creating initial children"<<endl;
 		vector<Alignment*> kids;
 		for(int i = 0; i < popsize; i++){
-			Alignment* aln = new Alignment(*net1,*net2);
+			Alignment* aln = new Alignment(*net1,*net2, bitPtr);
 			aln->shuf(g, total);
 			aln->computeFitness(*net1,*net2,bitscores,evalues,fitnessNames);
 			kids.push_back(aln);
@@ -138,8 +140,7 @@ int main(int ac, char* av[])
 							parents.push_back(pop[par1]);
 							parents.push_back(pop[par2]);
 						}
-						*it = new Alignment(*parents[0]);
-						(*it)->becomeChild(tg,cxswappb,*parents[0],
+						*it = new Alignment(tg,cxswappb,*parents[0],
 							               *parents[1], total);
 						if(prob > 0.2){
 							(*it)->mutate(tg,mutswappb,total);

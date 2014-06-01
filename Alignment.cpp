@@ -18,7 +18,8 @@ using namespace std;
 //todo: note these assume net2 is larger. Ensure that when loading nets.
 //this constructor just creates an arbitrary non-random alignment.
 //Make it a random one by calling shuf()
-Alignment::Alignment(const Network& net1, const Network& net2){
+Alignment::Alignment(const Network& net1, const Network& net2,
+	                 const BLASTDict* bit){
 	unsigned int size = net2.nodeToNodeName.size();
 	aln = vector<node>(size,-1);
 	alnMask = vector<bool>(size,true);
@@ -30,16 +31,21 @@ Alignment::Alignment(const Network& net1, const Network& net2){
 
 	domRank = -1;
 	crowdDist = -1.0;
+	bitscores = bit;
+	actualSize = net1.nodeToNodeName.size();
 }
 
 Alignment::Alignment(const Network& net1, const Network& net2, 
-	                 string filename){
+	                 string filename,
+	                 const BLASTDict* bit){
 	int size = net2.nodeNameToNode.size();
 	aln = vector<node>(size,-1);
 	alnMask = vector<bool>(size,true);
 	fitnessValid = false;
 	domRank = -1;
 	crowdDist = -1.0;
+	bitscores = bit;
+	actualSize = net1.nodeToNodeName.size();
 	ifstream infile(filename);
 	cout<<"loading from "<<filename<<endl;
 	if(!infile){
@@ -94,49 +100,6 @@ Alignment::Alignment(const Network& net1, const Network& net2,
 	}
 }
 
-void Alignment::shuf(mt19937& prng, bool total){
-	shuffle(aln.begin(),aln.end(), prng);
-	if(!total){
-		uniform_int_distribution<int> coinFlip(0,1);
-		for(int i =0; i < alnMask.size(); i++){
-			if(coinFlip(prng)){
-				alnMask[i] = false;
-			}
-		}
-	}
-}
-
-//todo: add secondary mutate op for changing mask
-
-void Alignment::mutate(mt19937& prng, float mutswappb, bool total){
-	int size = aln.size();
-	uniform_real_distribution<float> fltgen(0.0,1.0);
-	uniform_int_distribution<int> intgen(0,size-2); 
-	for(int i = 0; i < aln.size(); i++){
-		if(fltgen(prng) < mutswappb){
-			int swapIndex = intgen(prng);
-			if(swapIndex >= i){
-				swapIndex++;
-			}
-			int temp = aln[swapIndex];
-			aln[swapIndex] = aln[i];
-			aln[i] = temp;
-
-			bool tempb = alnMask[swapIndex];
-			alnMask[swapIndex] = alnMask[i];
-			alnMask[i] = tempb;
-		}
-	}
-	if(!total){
-		for(int i = 0; i < alnMask.size(); i++){
-			if(fltgen(prng) < mutswappb){
-				alnMask[i] = !alnMask[i];
-			}
-		}
-	}
-	fitnessValid = false;
-}
-
 /*
 This does UPMX crossover in a (hopefully) more efficient way. An existing
 alignment becomes the child of two alignments. Standard UPMX modifies the
@@ -149,13 +112,13 @@ todo: add secondary crossover op for changing mask. Or something.
 todo: this currently ignores the mask of the parents and maintains
       the mask of the current alignment.
 */
-void Alignment::becomeChild(mt19937& prng, float cxswappb, 
+Alignment::Alignment(mt19937& prng, float cxswappb, 
 	                        const Alignment& p1,
 		                    const Alignment& p2,
 		                    bool total){
 	const Alignment* par1;
 	const Alignment* par2;
-	int size = aln.size();
+	int size = p1.aln.size();
 	uniform_int_distribution<int> coinFlip(0,1);
 	uniform_real_distribution<float> fltgen(0.0,1.0);
 	if(coinFlip(prng)){
@@ -172,7 +135,16 @@ void Alignment::becomeChild(mt19937& prng, float cxswappb,
 		par1Indices[par1->aln[i]] = i;
 	}
 
+	//do standard initialization
 	aln = par1->aln;
+	alnMask = par1->alnMask;
+	fitnessValid = false;
+	domRank = -1;
+	numThatDominate = -1;
+	crowdDist = -1.0;
+	bitscores = par1->bitscores;
+	actualSize = par1->actualSize;
+	currBitscore = par1->currBitscore;
 
 	for(int i = 0; i<size; i++){
 		if(fltgen(prng) < cxswappb){
@@ -182,17 +154,11 @@ void Alignment::becomeChild(mt19937& prng, float cxswappb,
 			aln[i] = temp2;
 			aln[par1Indices[temp2]] = temp1;
 
+			bool temp1Mask = alnMask[i];
+			bool par1bool = alnMask[par1Indices[temp2]];
+			bool par2bool = par2->alnMask[i];
 			//swap mask bools
-			//todo: if total, don't need to do anything. Always all 1.
-			if(total){
-				bool tempb = alnMask[i];
-				alnMask[i] = par2->alnMask[i];
-				alnMask[par1Indices[temp2]] = tempb;
-			}
-			else{ //if partial alns allowed, either | or & the bit here.
-				bool temp1Mask = alnMask[i];
-				bool par1bool = alnMask[par1Indices[temp2]];
-				bool par2bool = par2->alnMask[i];
+			if(!total){ //if partial alns allowed, either | or & the bit here.
 				alnMask[par1Indices[temp2]] = temp1Mask;
 				if(coinFlip(prng)){
 					alnMask[i] = par1bool && par2bool;
@@ -201,6 +167,12 @@ void Alignment::becomeChild(mt19937& prng, float cxswappb,
 					alnMask[i] = par1bool || par2bool;
 				}
 			}
+
+			//update currBitscore
+			updateBitscore(i,temp1,temp2,temp1Mask,alnMask[i]);
+			updateBitscore(par1Indices[temp2],temp2,temp1,
+				           par1bool, alnMask[par1Indices[temp2]]);
+
 			//swap index records 
 			int itemp = par1Indices[temp1];
 			par1Indices[temp1] = par1Indices[temp2];
@@ -209,6 +181,67 @@ void Alignment::becomeChild(mt19937& prng, float cxswappb,
 
 	}
 	fitnessValid = false;
+}
+
+void Alignment::shuf(mt19937& prng, bool total){
+	shuffle(aln.begin(),aln.end(), prng);
+	if(!total){
+		uniform_int_distribution<int> coinFlip(0,1);
+		for(int i =0; i < alnMask.size(); i++){
+			if(coinFlip(prng)){
+				alnMask[i] = false;
+			}
+		}
+	}
+	if(bitscores)
+		currBitscore = sumBLAST();
+}
+
+//todo: add secondary mutate op for changing mask
+
+void Alignment::mutate(mt19937& prng, float mutswappb, bool total){
+	int size = aln.size();
+	uniform_real_distribution<float> fltgen(0.0,1.0);
+	uniform_int_distribution<int> intgen(0,size-2); 
+	for(int i = 0; i < aln.size(); i++){
+		//swap probabilistically
+		if(fltgen(prng) < mutswappb){
+			int swapIndex = intgen(prng);
+			if(swapIndex >= i){
+				swapIndex++;
+			}
+			doSwap(i,swapIndex);
+		}
+		//switch mask bit on/off probabilistically
+		if(!total && fltgen(prng) < mutswappb){
+			alnMask[i] = !alnMask[i];
+			updateBitscore(i, aln[i], aln[i], !alnMask[i],
+		                   alnMask[i]);
+		}
+	}
+	if(!total){
+		for(int i = 0; i < alnMask.size(); i++){
+			if(fltgen(prng) < mutswappb){
+				alnMask[i] = !alnMask[i];
+			}
+		}
+	}
+	fitnessValid = false;
+}
+
+//takes 2 nodes from V1 and swaps the nodes they are aligned to in V2.
+//updates currBitscore accordingly.
+void Alignment::doSwap(node x, node y){
+	node temp = aln[x];
+	aln[x] = aln[y];
+	aln[y] = temp;
+
+	bool tempb = alnMask[x];
+	alnMask[x] = alnMask[y];
+	alnMask[y] = tempb;
+
+	updateBitscore(x, aln[y], aln[x], alnMask[y], alnMask[x]);
+	updateBitscore(y, aln[x], aln[y], alnMask[x], alnMask[y]);
 }
 
 
@@ -225,10 +258,10 @@ void Alignment::computeFitness(const Network& net1,
 			fitness.at(i) = ics(net1,net2);
 		}
 		if(fitnessNames.at(i) == "BitscoreSum"){
-			fitness.at(i) = sumBLAST(net1,net2,bitscores);
+			fitness.at(i) = currBitscore; //sumBLAST();
 		}
 		if(fitnessNames.at(i) == "EvalsSum"){
-			fitness.at(i) = -1.0*sumBLAST(net1,net2,evalues);
+			fitness.at(i) = -1.0*sumBLAST();
 		}
 		if(fitnessNames.at(i) == "Size"){
 			fitness.at(i) = alnSize();
@@ -295,23 +328,23 @@ double Alignment::ics(const Network& net1, const Network& net2) const{
 	}
 }
 
-double Alignment::sumBLAST(const Network& net1,
-		            const Network& net2,
-		            const BLASTDict& d) const{
+double Alignment::sumBLAST() const{
 	double toReturn = 0.0;
-	for(node i = 0; i < net1.nodeNameToNode.size(); i++){
-		if(d.count(i) && d.at(i).count(aln[i]) &&
+	for(node i = 0; i < actualSize; i++){
+		if(bitscores->count(i) && bitscores->at(i).count(aln[i]) &&
 		   alnMask[i]){
-			toReturn += d.at(i).at(aln[i]);
+		   	//cout<<i<<" "<<aln[i]<<" "<<bitscores->at(i).at(aln[i])<<endl;
+			toReturn += bitscores->at(i).at(aln[i]);
 		}
 	}
-
+	//cout<<"total: "<<toReturn<<endl;
 	return toReturn;
 }
 
+//todo: make this show number of nodes in V1 that are currently aligned
 double Alignment::alnSize() const{
 	double toReturn = 0.0;
-	for(int i = 0; i < alnMask.size(); i++){
+	for(int i = 0; i < actualSize; i++){
 		if(alnMask[i]){
 			toReturn += 1.0;
 		}
@@ -330,6 +363,34 @@ void Alignment::save(const Network& net1,
 			ofile<<u<<' '<<v<<endl;
 		}
 	}
+}
+
+inline void Alignment::updateBitscore(node n1, node n2old, node n2new, bool oldMask, 
+	                bool newMask){
+	if(!bitscores)
+		return;
+
+	double oldScore = 0.0;
+
+	//set oldScore
+	if(bitscores->count(n1) && bitscores->at(n1).count(n2old) && oldMask)
+		oldScore = bitscores->at(n1).at(n2old);
+
+	double newScore = 0.0;
+
+	//set newScore
+	if(bitscores->count(n1) && bitscores->at(n1).count(n2new) && newMask)
+		newScore = bitscores->at(n1).at(n2new);
+
+	double delta = newScore - oldScore;
+	currBitscore += delta;
+	/*
+	cout<<"node "<<n1<<" was aligned to "<<n2old<<" with bitscore "<<
+	       oldScore<<endl;
+	cout<<"node "<<n1<<" now aligned to "<<n2new<<" with bitscore "<<
+	       newScore<<endl;
+	cout<<"Score improvement is "<<delta<<endl;
+	*/
 }
 
 

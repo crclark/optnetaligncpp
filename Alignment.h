@@ -11,14 +11,17 @@
 
 class Alignment{
 public:	
-	Alignment(const Network& net1, const Network& net2);
-	Alignment(const Network& net1, const Network& net2, string filename);
-	void shuf(mt19937& prng, bool total =true); //shuffles the alignment to make it completely random
-	void mutate(mt19937& prng, float mutswappb, bool total = true);
-	void becomeChild(mt19937& prng, float cxswappb, 
+	Alignment(const Network& net1, const Network& net2, 
+		      const BLASTDict* bit);
+	Alignment(const Network& net1, const Network& net2, string filename,
+		      const BLASTDict* bit);
+	Alignment(mt19937& prng, float cxswappb, 
 		             const Alignment& p1,
 		             const Alignment& p2,
 		             bool total = true);
+	void shuf(mt19937& prng, bool total =true); //shuffles the alignment to make it completely random
+	void mutate(mt19937& prng, float mutswappb, bool total = true);
+	void doSwap(node x, node y);
 	void computeFitness(const Network& net1,
 		                const Network& net2,
 		                const BLASTDict& bitscores,
@@ -28,9 +31,7 @@ public:
 		      const Network& net2,
 		      string filename) const;
 	double ics(const Network& net1, const Network& net2) const;
-	double sumBLAST(const Network& net1,
-		            const Network& net2,
-		            const BLASTDict& d) const;
+	double sumBLAST() const;
 	double alnSize() const;	
 	vector<node> aln;
 	vector<bool> alnMask; //indicates whether the corresponding node
@@ -48,10 +49,17 @@ public:
 	                      //workable.
 	bool fitnessValid;
 	vector<double> fitness; //all fitnesses stored s.t. larger is better.
+	int actualSize; //number of nodes in net1
 	int domRank; //which front this aln is in. 0 is best, 1 is 2nd best, etc.
 	int numThatDominate; //how many others in the population dominate this one.
 	unordered_set<Alignment*> dominated;//set of alns this aln dominates.
 	double crowdDist;
+
+	//new fitness system
+	double currBitscore;
+	const BLASTDict* bitscores;
+	void updateBitscore(node n1, node n2old, node n2new, bool oldMask,
+		                bool newMask);
 };
 
 /*
