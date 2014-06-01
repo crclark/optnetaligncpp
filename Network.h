@@ -89,8 +89,9 @@ public:
 class Network{
 public:
 	Network(string filename);
-	//set<Edge> edges;
 	unordered_set<Edge, EdgeHash> edges;
 	unordered_map<node,string> nodeToNodeName;
 	unordered_map<string,node> nodeNameToNode;
+
+	unordered_map<node, unordered_set<node> > adjList;
 };

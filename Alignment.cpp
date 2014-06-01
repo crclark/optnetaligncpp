@@ -231,6 +231,7 @@ void Alignment::mutate(mt19937& prng, float mutswappb, bool total){
 
 //takes 2 nodes from V1 and swaps the nodes they are aligned to in V2.
 //updates currBitscore accordingly.
+//todo: add this to crossover constructor
 void Alignment::doSwap(node x, node y){
 	node temp = aln[x];
 	aln[x] = aln[y];
@@ -393,6 +394,7 @@ inline void Alignment::updateBitscore(node n1, node n2old, node n2new, bool oldM
 	*/
 }
 
+//todo: move all GA algorithms to separate file
 
 //this function assumes fitnesses have already been assigned
 //todo: add check that that's the case.

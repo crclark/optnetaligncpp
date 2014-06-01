@@ -54,6 +54,9 @@ Network::Network(string filename){
 
 		edges.insert(e);
 
+		//update adjacency list:
+		adjList[u].insert(v);
+		adjList[v].insert(u);
 	}
 
 	cout<<"Network "<<filename<<" has "<<count<<" nodes and "
