@@ -18,9 +18,9 @@ using namespace std;
 //todo: note these assume net2 is larger. Ensure that when loading nets.
 //this constructor just creates an arbitrary non-random alignment.
 //Make it a random one by calling shuf()
-Alignment::Alignment(const Network& net1, const Network& net2,
+Alignment::Alignment(const Network* n1, const Network* n2,
 	                 const BLASTDict* bit){
-	unsigned int size = net2.nodeToNodeName.size();
+	unsigned int size = n2->nodeToNodeName.size();
 	aln = vector<node>(size,-1);
 	alnMask = vector<bool>(size,true);
 	fitnessValid = false;
@@ -29,23 +29,28 @@ Alignment::Alignment(const Network& net1, const Network& net2,
 		aln[i] = i;
 	}
 
+	net1 = n1;
+	net2 = n2;
 	domRank = -1;
 	crowdDist = -1.0;
 	bitscores = bit;
-	actualSize = net1.nodeToNodeName.size();
+
+	actualSize = net1->nodeToNodeName.size();
 }
 
-Alignment::Alignment(const Network& net1, const Network& net2, 
+Alignment::Alignment(const Network* n1, const Network* n2, 
 	                 string filename,
 	                 const BLASTDict* bit){
-	int size = net2.nodeNameToNode.size();
+	int size = n2->nodeNameToNode.size();
 	aln = vector<node>(size,-1);
 	alnMask = vector<bool>(size,true);
 	fitnessValid = false;
 	domRank = -1;
 	crowdDist = -1.0;
 	bitscores = bit;
-	actualSize = net1.nodeToNodeName.size();
+	net1 = n1;
+	net2 = n2;
+	actualSize = net1->nodeToNodeName.size();
 	ifstream infile(filename);
 	cout<<"loading from "<<filename<<endl;
 	if(!infile){
@@ -56,7 +61,7 @@ Alignment::Alignment(const Network& net1, const Network& net2,
 	//keep track of which nodes in V2 aren't aligned so we can
 	//add them to the permutation somewhere after loading the file.
 	unordered_set<node> v2Unaligned;
-	for(int i = 0; i < net2.nodeToNodeName.size(); i++){
+	for(int i = 0; i < net2->nodeToNodeName.size(); i++){
 		v2Unaligned.insert(i);
 	}
 
@@ -75,11 +80,11 @@ Alignment::Alignment(const Network& net1, const Network& net2,
 		
 		}
 		
-		u = net1.nodeNameToNode.at(a);
-		if(!net2.nodeNameToNode.count(b)){
+		u = net1->nodeNameToNode.at(a);
+		if(!net2->nodeNameToNode.count(b)){
 			cout<<"node "<<b<<" not found in net2!"<<endl;
 		}
-		v = net2.nodeNameToNode.at(b);
+		v = net2->nodeNameToNode.at(b);
 		
 		aln[u] = v;
 		v2Unaligned.erase(v);
@@ -97,6 +102,12 @@ Alignment::Alignment(const Network& net1, const Network& net2,
 			alnMask[i] = false;
 			v2Unaligned.erase(arbNode);
 		}
+	}
+
+	//initialize conserved counts for fast ICS computation
+	conservedCounts = vector<int>(actualSize);
+	for(int i = 0; i < actualSize; i++){
+		initConservedCount(i,aln[i], alnMask[i]);
 	}
 }
 
@@ -145,6 +156,8 @@ Alignment::Alignment(mt19937& prng, float cxswappb,
 	bitscores = par1->bitscores;
 	actualSize = par1->actualSize;
 	currBitscore = par1->currBitscore;
+	net1 = par1->net1;
+	net2 = par1->net2;
 
 	for(int i = 0; i<size; i++){
 		if(fltgen(prng) < cxswappb){
@@ -168,10 +181,13 @@ Alignment::Alignment(mt19937& prng, float cxswappb,
 				}
 			}
 
-			//update currBitscore
+			//update currBitscore and conservedCounts
 			updateBitscore(i,temp1,temp2,temp1Mask,alnMask[i]);
+			updateConservedCount(i, temp1, temp2, temp1Mask, alnMask[i]);
 			updateBitscore(par1Indices[temp2],temp2,temp1,
 				           par1bool, alnMask[par1Indices[temp2]]);
+			updateConservedCount(par1Indices[temp2],temp2,temp1,
+				                 par1bool, alnMask[par1Indices[temp2]]);
 
 			//swap index records 
 			int itemp = par1Indices[temp1];
@@ -195,6 +211,12 @@ void Alignment::shuf(mt19937& prng, bool total){
 	}
 	if(bitscores)
 		currBitscore = sumBLAST();
+
+	//initialize conserved counts for fast ICS computation
+	conservedCounts = vector<int>(actualSize);
+	for(int i = 0; i < actualSize; i++){
+		initConservedCount(i,aln[i], alnMask[i]);
+	}	
 }
 
 //todo: add secondary mutate op for changing mask
@@ -231,6 +253,7 @@ void Alignment::mutate(mt19937& prng, float mutswappb, bool total){
 
 //takes 2 nodes from V1 and swaps the nodes they are aligned to in V2.
 //updates currBitscore accordingly.
+//updates conservedCounts accordingly as well.
 //todo: add this to crossover constructor
 void Alignment::doSwap(node x, node y){
 	node temp = aln[x];
@@ -243,20 +266,21 @@ void Alignment::doSwap(node x, node y){
 
 	updateBitscore(x, aln[y], aln[x], alnMask[y], alnMask[x]);
 	updateBitscore(y, aln[x], aln[y], alnMask[x], alnMask[y]);
+
+	updateConservedCount(x, aln[y], aln[x], alnMask[y], alnMask[x]);
+	updateConservedCount(y, aln[x], aln[y], alnMask[x], alnMask[y]);
 }
 
 
 //todo: add support for GO annotations
 //todo: maybe something more principled than fitnessNames (so ad hoc!)
-void Alignment::computeFitness(const Network& net1,
-	                const Network& net2,
-	                const BLASTDict& bitscores,
+void Alignment::computeFitness(const BLASTDict& bitscores,
 	                const BLASTDict& evalues,
 	                const vector<string>& fitnessNames){
 	fitness = vector<double>(fitnessNames.size(),0.0);
 	for(int i = 0; i < fitnessNames.size(); i++){
 		if(fitnessNames.at(i) == "ICS"){
-			fitness.at(i) = ics(net1,net2);
+			fitness.at(i) = ics();
 		}
 		if(fitnessNames.at(i) == "BitscoreSum"){
 			fitness.at(i) = currBitscore; //sumBLAST();
@@ -271,7 +295,7 @@ void Alignment::computeFitness(const Network& net1,
 	fitnessValid = true;
 }
 
-double Alignment::ics(const Network& net1, const Network& net2) const{
+double Alignment::ics() const{
 
 
 	unordered_set<node> v1Unaligned;
@@ -283,21 +307,21 @@ double Alignment::ics(const Network& net1, const Network& net2) const{
 		}
 		//second way for a node in V2 to be unaligned: by
 		//being aligned to a dummy node.
-		if(i >= net1.nodeToNodeName.size()){
+		if(i >= net1->nodeToNodeName.size()){
 			v2Unaligned.insert(aln[i]);
 		}
 	}
 
 	//induced subgraph of net2 that has been mapped to:
 	unordered_set<Edge, EdgeHash> inducedES;
-	for(Edge e : net2.edges){
+	for(Edge e : net2->edges){
 		if(!(v2Unaligned.count(e.u()) || v2Unaligned.count(e.v()))){
 			inducedES.insert(e);
 		}
 	}
 
 	unordered_set<Edge, EdgeHash> mappedNet1ES;
-	for(Edge e : net1.edges){
+	for(Edge e : net1->edges){
 		if(!(v1Unaligned.count(e.u()) || v1Unaligned.count(e.v()))){
 			Edge mapped(aln[e.u()],aln[e.v()]);
 			mappedNet1ES.insert(mapped);
@@ -305,7 +329,7 @@ double Alignment::ics(const Network& net1, const Network& net2) const{
 	}
 
 	double denominator = double(inducedES.size());
-	
+
 	if(denominator == 0.0){
 		return 0.0;
 	}
@@ -330,11 +354,10 @@ double Alignment::ics(const Network& net1, const Network& net2) const{
 	}
 }
 
-double Alignment::fastICSDenominator(const Network& net1, 
-	                                 const Network& net2) const{
+double Alignment::fastICSDenominator() const{
 	//construct set of nodes actually mapped to
 	unordered_set<node> mapped;
-	for(int i = 0; i < net1.nodeToNodeName.size(); i++){
+	for(int i = 0; i < net1->nodeToNodeName.size(); i++){
 		if(alnMask[i]){
 			mapped.insert(aln[i]);
 		}
@@ -344,7 +367,7 @@ double Alignment::fastICSDenominator(const Network& net1,
 	int count = 0;
 
 	for(auto x : mapped){
-		for(auto y : net2.adjList.at(x)){
+		for(auto y : net2->adjList.at(x)){
 			if(mapped.count(y)){
 				count++;
 			}
@@ -352,6 +375,18 @@ double Alignment::fastICSDenominator(const Network& net1,
 	}
 
 	return double(count / 2);
+}
+
+double Alignment::fastICSNumerator() const{
+	int sum = 0;
+	for(int i = 0; i < conservedCounts.size(); i++){
+		sum += conservedCounts[i];
+	}
+	return double(sum/2);
+}
+
+double Alignment::fastICS() const{
+	return fastICSNumerator() / fastICSDenominator;
 }
 
 double Alignment::sumBLAST() const{
@@ -378,21 +413,19 @@ double Alignment::alnSize() const{
 	return toReturn;
 }
 
-void Alignment::save(const Network& net1,
-	                 const Network& net2,
-	                 string filename) const{
+void Alignment::save(string filename) const{
 	ofstream ofile(filename);
-	for(int i = 0; i < net1.nodeToNodeName.size(); i++){
+	for(int i = 0; i < net1->nodeToNodeName.size(); i++){
 		if(alnMask[i]){
-			string u = net1.nodeToNodeName.at(i);
-			string v = net2.nodeToNodeName.at(aln[i]);
+			string u = net1->nodeToNodeName.at(i);
+			string v = net2->nodeToNodeName.at(aln[i]);
 			ofile<<u<<' '<<v<<endl;
 		}
 	}
 }
 
-inline void Alignment::updateBitscore(node n1, node n2old, node n2new, bool oldMask, 
-	                bool newMask){
+inline void Alignment::updateBitscore(node n1, node n2old, node n2new, 
+									  bool oldMask, bool newMask){
 	if(!bitscores)
 		return;
 
@@ -417,6 +450,59 @@ inline void Alignment::updateBitscore(node n1, node n2old, node n2new, bool oldM
 	       newScore<<endl;
 	cout<<"Score improvement is "<<delta<<endl;
 	*/
+}
+
+void Alignment::updateConservedCount(node n1, node n2old, node n2new, 
+	                                 bool oldMask, bool newMask){
+	conservedCounts[n1] = 0;
+
+	//easy cases first:
+	if(!newMask){
+		return;
+	}
+
+	if(n2old == n2new && oldMask == newMask){
+		return;
+	}
+
+	for(auto i : net1->adjList.at(n1)){
+		if(net2->adjList.at(n2new).count(aln[i])){
+			conservedCounts[n1]++;
+		}
+		//conservedCount of i either increases by 1,
+		//decreases by 1, or remains unchanged.
+
+		//unchanged case: both n2old and n2new are 
+		//neighbors of aln[i], or neither are.
+		auto alnINbrs = &(net2->adjList.at(aln[i])); 
+		if((alnINbrs->count(n2old) && 
+		    alnINbrs->count(n2new))
+		   || (!alnINbrs->count(n2old) &&
+		   	   !alnINbrs->count(n2new))){
+			//do nothing
+		}
+		else if(alnINbrs->count(n2old) &&
+			    !alnINbrs->count(n2new)){
+			conservedCounts[i]--;
+		}
+		else if(!alnINbrs->count(n2old) &&
+			    alnINbrs->count(n2new)){
+			conservedCounts[i]++;
+		}
+		else{
+			cout<<"Fell through exhaustive if statements!"<<endl;
+			assert(3==4);
+		}
+	}
+}
+
+void Alignment::initConservedCount(node n1, node n2, bool mask){
+	conservedCounts[n1] = 0;
+	for(auto i : net1->adjList.at(n1)){
+		if(net2->adjList.at(n2).count(aln[i])){
+			conservedCounts[n1]++;
+		}
+	}
 }
 
 //todo: move all GA algorithms to separate file

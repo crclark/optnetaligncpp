@@ -11,9 +11,9 @@
 
 class Alignment{
 public:	
-	Alignment(const Network& net1, const Network& net2, 
+	Alignment(const Network* n1, const Network* n2, 
 		      const BLASTDict* bit);
-	Alignment(const Network& net1, const Network& net2, string filename,
+	Alignment(const Network* n1, const Network* n2, string filename,
 		      const BLASTDict* bit);
 	Alignment(mt19937& prng, float cxswappb, 
 		             const Alignment& p1,
@@ -22,16 +22,12 @@ public:
 	void shuf(mt19937& prng, bool total =true); //shuffles the alignment to make it completely random
 	void mutate(mt19937& prng, float mutswappb, bool total = true);
 	void doSwap(node x, node y);
-	void computeFitness(const Network& net1,
-		                const Network& net2,
-		                const BLASTDict& bitscores,
+	void computeFitness(const BLASTDict& bitscores,
 		                const BLASTDict& evalues,
 		                const vector<string>& fitnessNames);
-	void save(const Network& net1,
-		      const Network& net2,
-		      string filename) const;
-	double ics(const Network& net1, const Network& net2) const;
-	double fastICSDenominator(const Network& net1, const Network& net2) const;
+	void save(string filename) const;
+	double ics() const;
+	
 	double sumBLAST() const;
 	double alnSize() const;	
 	vector<node> aln;
@@ -61,6 +57,21 @@ public:
 	const BLASTDict* bitscores;
 	void updateBitscore(node n1, node n2old, node n2new, bool oldMask,
 		                bool newMask);
+
+	//stored info version of ICS for fast computation
+	//(incrementally update as the alignment changes)
+	double fastICSDenominator() const;
+	double fastICSNumerator() const;
+	double fastICS() const;
+	const Network* net1;
+	const Network* net2;
+	//conservedCounts counts the number of conserved edges that node i
+	//is incident to. Summing it and dividing by 2 (to fix double-counting)
+	//gives the number of conserved edges in the alignment.
+	vector<int> conservedCounts;
+	void updateConservedCount(node n1, node n2old, node n2new, bool oldMask,
+		                     bool newMask);
+	void initConservedCount(node n1, node n2, bool mask);
 };
 
 /*
@@ -69,7 +80,6 @@ all of NSGA-II. This entails:
 -doing a non-dominated sort of the population
 -for each front, assigning crowding distances
 -sorting by the crowded comparison operator
--selecting the individuals to populate the next generation (todo)
 */
 
 //todo: consider passing vector by reference

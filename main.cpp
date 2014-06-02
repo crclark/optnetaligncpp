@@ -44,18 +44,18 @@ int main(int ac, char* av[])
 		const unsigned int popsize = vm["popsize"].as<int>();
 		vector<Alignment*> pop;
 		for(int i = 0; i < popsize; i++){	
-			Alignment* aln = new Alignment(*net1,*net2, bitPtr);
+			Alignment* aln = new Alignment(net1,net2, bitPtr);
 			aln->shuf(g, total);
-			aln->computeFitness(*net1,*net2,bitscores,evalues,fitnessNames);
+			aln->computeFitness(bitscores,evalues,fitnessNames);
 			pop.push_back(aln);
 		}
 
 		cout<<"creating initial children"<<endl;
 		vector<Alignment*> kids;
 		for(int i = 0; i < popsize; i++){
-			Alignment* aln = new Alignment(*net1,*net2, bitPtr);
+			Alignment* aln = new Alignment(net1,net2, bitPtr);
 			aln->shuf(g, total);
-			aln->computeFitness(*net1,*net2,bitscores,evalues,fitnessNames);
+			aln->computeFitness(bitscores,evalues,fitnessNames);
 			kids.push_back(aln);
 		}
 
@@ -154,7 +154,7 @@ int main(int ac, char* av[])
 						(*it) = new Alignment(*parents[0]);
 						(*it)->mutate(tg,mutswappb,total);
 					}
-					(*it)->computeFitness(*net1,*net2,bitscores,evalues,fitnessNames);
+					(*it)->computeFitness(bitscores,evalues,fitnessNames);
 				}
 
 			};
@@ -212,7 +212,7 @@ int main(int ac, char* av[])
 		//output all alignments in the first front
 		for(int i = 0; i < fronts[0].size(); i++){
 			string filename = outprefix + "_" + to_string(i) + ".aln";
-			fronts[0][i]->save(*net1,*net2,filename);
+			fronts[0][i]->save(filename);
 
 			infoFile << filename;
 
