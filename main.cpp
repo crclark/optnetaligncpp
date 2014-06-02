@@ -1,4 +1,5 @@
 #include <iostream>
+#include <fstream>
 #include <string>
 #include <tuple>
 #include <array>
@@ -33,6 +34,7 @@ int main(int ac, char* av[])
 		const bool verbose = vm.count("verbose");
 		const bool tournsel = vm.count("tournsel");
 		const bool total = vm.count("total");
+		const string outprefix = vm["outprefix"].as<string>();
 
 		const BLASTDict* bitPtr = vm.count("bitscores") ? &bitscores : nullptr;
 
@@ -64,6 +66,7 @@ int main(int ac, char* av[])
 
 			//combinedPtrs is R_t from Deb et al. 2002
 
+			//todo: do this as a more idiomatic concatenation
 			vector<Alignment*> combinedPtrs(2*popsize);
 			for(int i = 0; i < popsize; i++){
 				combinedPtrs[i] = pop[i];
@@ -187,7 +190,39 @@ int main(int ac, char* av[])
 			}
 		}
 
+		cout<<"Writing alignments in Pareto front"<<endl;
+		vector <Alignment*> allAlns;
+		allAlns.reserve(popsize*2);
+		allAlns.insert(allAlns.end(), pop.begin(), pop.end());
+		allAlns.insert(allAlns.end(), kids.begin(), kids.end());
+		vector<vector<Alignment* > > fronts = nonDominatedSort(allAlns);
 
+		string infoFilename = outprefix + ".info";
+		ofstream infoFile(infoFilename);
+
+		//make infoFile column labels
+		infoFile << "filename";
+
+		for(auto str : fitnessNames){
+			infoFile << '\t' << str;
+		}
+
+		infoFile << endl;
+
+		//output all alignments in the first front
+		for(int i = 0; i < fronts[0].size(); i++){
+			string filename = outprefix + "_" + to_string(i) + ".aln";
+			fronts[0][i]->save(*net1,*net2,filename);
+
+			infoFile << filename;
+
+			//write summary info to infoFile
+			for(int j = 0; j < fronts[0][i]->fitness.size(); j++){
+				infoFile << '\t' << fronts[0][i]->fitness[j];
+			}
+
+			infoFile << endl;
+		}
 
 
 	}
