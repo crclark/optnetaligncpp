@@ -283,7 +283,7 @@ double Alignment::ics(const Network& net1, const Network& net2) const{
 		}
 		//second way for a node in V2 to be unaligned: by
 		//being aligned to a dummy node.
-		if(i > net1.nodeToNodeName.size()){
+		if(i >= net1.nodeToNodeName.size()){
 			v2Unaligned.insert(aln[i]);
 		}
 	}
@@ -305,6 +305,7 @@ double Alignment::ics(const Network& net1, const Network& net2) const{
 	}
 
 	double denominator = double(inducedES.size());
+	
 	if(denominator == 0.0){
 		return 0.0;
 	}
@@ -327,6 +328,30 @@ double Alignment::ics(const Network& net1, const Network& net2) const{
 		double numerator = double(intersect.size());
 		return numerator/denominator;
 	}
+}
+
+double Alignment::fastICSDenominator(const Network& net1, 
+	                                 const Network& net2) const{
+	//construct set of nodes actually mapped to
+	unordered_set<node> mapped;
+	for(int i = 0; i < net1.nodeToNodeName.size(); i++){
+		if(alnMask[i]){
+			mapped.insert(aln[i]);
+		}
+	}
+
+	//count
+	int count = 0;
+
+	for(auto x : mapped){
+		for(auto y : net2.adjList.at(x)){
+			if(mapped.count(y)){
+				count++;
+			}
+		}
+	}
+
+	return double(count / 2);
 }
 
 double Alignment::sumBLAST() const{

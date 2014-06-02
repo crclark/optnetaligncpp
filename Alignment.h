@@ -31,6 +31,7 @@ public:
 		      const Network& net2,
 		      string filename) const;
 	double ics(const Network& net1, const Network& net2) const;
+	double fastICSDenominator(const Network& net1, const Network& net2) const;
 	double sumBLAST() const;
 	double alnSize() const;	
 	vector<node> aln;
