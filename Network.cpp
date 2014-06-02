@@ -62,3 +62,13 @@ Network::Network(string filename){
 	cout<<"Network "<<filename<<" has "<<count<<" nodes and "
 	    <<edges.size()<<" edges"<<endl;
 }
+
+int Network::degree(node x) const{
+	if(adjList.count(x) == 0){
+		return 0;
+	}
+
+	else{
+		return adjList.at(x).size();
+	}
+}

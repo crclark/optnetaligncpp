@@ -88,6 +88,7 @@ public:
 
 class Network{
 public:
+	int degree(node x) const;
 	Network(string filename);
 	unordered_set<Edge, EdgeHash> edges;
 	unordered_map<node,string> nodeToNodeName;

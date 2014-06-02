@@ -36,6 +36,11 @@ Alignment::Alignment(const Network* n1, const Network* n2,
 	bitscores = bit;
 
 	actualSize = net1->nodeToNodeName.size();
+	//initialize conserved counts for fast ICS computation
+	conservedCounts = vector<int>(actualSize);
+	for(int i = 0; i < actualSize; i++){
+		initConservedCount(i,aln[i], alnMask[i]);
+	}	
 }
 
 Alignment::Alignment(const Network* n1, const Network* n2, 
@@ -156,6 +161,7 @@ Alignment::Alignment(mt19937& prng, float cxswappb,
 	bitscores = par1->bitscores;
 	actualSize = par1->actualSize;
 	currBitscore = par1->currBitscore;
+	conservedCounts = par1->conservedCounts;
 	net1 = par1->net1;
 	net2 = par1->net2;
 
@@ -183,11 +189,11 @@ Alignment::Alignment(mt19937& prng, float cxswappb,
 
 			//update currBitscore and conservedCounts
 			updateBitscore(i,temp1,temp2,temp1Mask,alnMask[i]);
-			updateConservedCount(i, temp1, temp2, temp1Mask, alnMask[i]);
+			//updateConservedCount(i, temp1, temp2, temp1Mask, alnMask[i]);
 			updateBitscore(par1Indices[temp2],temp2,temp1,
 				           par1bool, alnMask[par1Indices[temp2]]);
-			updateConservedCount(par1Indices[temp2],temp2,temp1,
-				                 par1bool, alnMask[par1Indices[temp2]]);
+			//updateConservedCount(par1Indices[temp2],temp2,temp1,
+			//	                 par1bool, alnMask[par1Indices[temp2]]);
 
 			//swap index records 
 			int itemp = par1Indices[temp1];
@@ -197,6 +203,9 @@ Alignment::Alignment(mt19937& prng, float cxswappb,
 
 	}
 	fitnessValid = false;
+	for(int i = 0; i < actualSize; i++){
+		initConservedCount(i,aln[i], alnMask[i]);
+	}	
 }
 
 void Alignment::shuf(mt19937& prng, bool total){
@@ -249,6 +258,9 @@ void Alignment::mutate(mt19937& prng, float mutswappb, bool total){
 		}
 	}
 	fitnessValid = false;
+	for(int i = 0; i < actualSize; i++){
+		initConservedCount(i,aln[i], alnMask[i]);
+	}	
 }
 
 //takes 2 nodes from V1 and swaps the nodes they are aligned to in V2.
@@ -267,8 +279,8 @@ void Alignment::doSwap(node x, node y){
 	updateBitscore(x, aln[y], aln[x], alnMask[y], alnMask[x]);
 	updateBitscore(y, aln[x], aln[y], alnMask[x], alnMask[y]);
 
-	updateConservedCount(x, aln[y], aln[x], alnMask[y], alnMask[x]);
-	updateConservedCount(y, aln[x], aln[y], alnMask[x], alnMask[y]);
+	//updateConservedCount(x, aln[y], aln[x], alnMask[y], alnMask[x]);
+	//updateConservedCount(y, aln[x], aln[y], alnMask[x], alnMask[y]);
 }
 
 
@@ -350,6 +362,30 @@ double Alignment::ics() const{
 			}
 		}
 		double numerator = double(intersect.size());
+		if(numerator != fastICSNumerator()){
+			cout<<"numerator is "<<numerator<<endl;
+			cout<<"fast numerator is "<<fastICSNumerator()<<endl;
+			cout<<"-----"<<endl;
+			cout<<"Alignment: "<<endl;
+			for(int i = 0; i < actualSize; i++){
+				cout<<net1->nodeToNodeName.at(i)<<" "
+				    <<net2->nodeToNodeName.at(aln[i])
+				    <<" (mask: "<<alnMask[i]<<")"<<endl;
+			}
+			cout<<"-----"<<endl;
+			cout<<"conserved edges: "<<endl;
+			for(auto e : intersect){
+				cout<<net2->nodeToNodeName.at(e.u())<<" "
+				    <<net2->nodeToNodeName.at(e.v())<<endl;
+			}
+			cout<<"-----"<<endl;
+			cout<<"conserved counts: "<<endl;
+			for(int i = 0; i < conservedCounts.size(); i++){
+				cout<<net1->nodeToNodeName.at(i)<<" "
+				    <<conservedCounts[i]<<endl;
+			}
+			assert(1==2);
+		}
 		return numerator/denominator;
 	}
 }
@@ -386,7 +422,7 @@ double Alignment::fastICSNumerator() const{
 }
 
 double Alignment::fastICS() const{
-	return fastICSNumerator() / fastICSDenominator;
+	return fastICSNumerator() / fastICSDenominator();
 }
 
 double Alignment::sumBLAST() const{
@@ -443,25 +479,25 @@ inline void Alignment::updateBitscore(node n1, node n2old, node n2new,
 
 	double delta = newScore - oldScore;
 	currBitscore += delta;
-	/*
-	cout<<"node "<<n1<<" was aligned to "<<n2old<<" with bitscore "<<
-	       oldScore<<endl;
-	cout<<"node "<<n1<<" now aligned to "<<n2new<<" with bitscore "<<
-	       newScore<<endl;
-	cout<<"Score improvement is "<<delta<<endl;
-	*/
 }
 
 void Alignment::updateConservedCount(node n1, node n2old, node n2new, 
 	                                 bool oldMask, bool newMask){
+	//check that n1 is not a dummy node:
+	if(n1 >= actualSize){
+		return;
+	}
 	conservedCounts[n1] = 0;
-
 	//easy cases first:
 	if(!newMask){
 		return;
 	}
 
 	if(n2old == n2new && oldMask == newMask){
+		return;
+	}
+
+	if(net1->degree(n1) == 0){
 		return;
 	}
 
@@ -498,6 +534,9 @@ void Alignment::updateConservedCount(node n1, node n2old, node n2new,
 
 void Alignment::initConservedCount(node n1, node n2, bool mask){
 	conservedCounts[n1] = 0;
+	if(net1->degree(n1) == 0){
+		return;
+	}
 	for(auto i : net1->adjList.at(n1)){
 		if(net2->adjList.at(n2).count(aln[i])){
 			conservedCounts[n1]++;

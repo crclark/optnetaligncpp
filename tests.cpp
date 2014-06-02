@@ -424,6 +424,13 @@ BOOST_AUTO_TEST_CASE( crowding_dist_assignment )
 	BOOST_CHECK(approxEqual(1.0,front[3]->crowdDist));
 }
 
+BOOST_AUTO_TEST_CASE( adjacency_list_correct ){
+	Network net1("../optnetalign/tests/lccstest1.net");
+	BOOST_CHECK(net1.degree(net1.nodeNameToNode.at("1")) == 1);
+	BOOST_CHECK(net1.degree(net1.nodeNameToNode.at("2")) == 2);
+	BOOST_CHECK(net1.degree(net1.nodeNameToNode.at("3")) == 2);
+	BOOST_CHECK(net1.degree(net1.nodeNameToNode.at("4")) == 3);
+}
 //____________________________________________________________________________//
 
 // EOF
