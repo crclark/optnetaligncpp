@@ -141,6 +141,11 @@ argRetVals handleArgs(int ac, char* av[]){
 	net1 = new Network(vm["net1"].as<string>());
 	net2 = new Network(vm["net2"].as<string>());
 
+	if(net1->nodeToNodeName.size() > net2->nodeToNodeName.size()){
+		throw ArgError("Number of nodes in net1 must be less than "
+			           "or equal to the number of nodes in net2.");
+	}
+
 	vector<string> fitnessNames;
 
 	if(vm.count("ics")){
