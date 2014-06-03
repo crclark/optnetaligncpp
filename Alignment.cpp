@@ -319,6 +319,10 @@ void Alignment::computeFitness(const BLASTDict& bitscores,
 		if(fitnessNames.at(i) == "ICS"){
 			fitness.at(i) = fastICS(); //ics();
 		}
+		if(fitnessNames.at(i) == "EC"){
+			fitness.at(i) = fastICSNumerator() / 
+			                double(net1->nodeToNodeName.size());
+		}
 		if(fitnessNames.at(i) == "BitscoreSum"){
 			fitness.at(i) = currBitscore; //sumBLAST();
 		}

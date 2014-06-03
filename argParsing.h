@@ -86,6 +86,8 @@ argRetVals handleArgs(int ac, char* av[]){
 		("annotations2", po::value<string>(), "Path to GO annotations for net 2.")
 		("ics", "When set, integrated conserved structure score will be used as "
 			    "an alignment objective.")
+		("ec", "When set, edge correctness score will be used as an "
+			   "alignment objective.")
 		("verbose", "When set, extra information about the progress of the "
 			        "alignment is printed to stdout.")
 		("mutswappb", po::value<float>(), "Sets the probability of swap "
@@ -117,7 +119,8 @@ argRetVals handleArgs(int ac, char* av[]){
 	}
 
 
-	if(!(vm.count("ics") || vm.count("bitscores") || vm.count("evalues")
+	if(!(vm.count("ics") || vm.count("bitscores") || vm.count("evalues"
+		|| vm.count("ec"))
 		|| (vm.count("annotations1") && vm.count("annotations2")) )){
 		throw ArgError("At least one objective must be specified!");
 	}
@@ -161,6 +164,10 @@ argRetVals handleArgs(int ac, char* av[]){
 		fitnessNames.push_back("ICS");
 	}
 
+	if(vm.count("ec")){
+		fitnessNames.push_back("EC");
+	}
+	
 	BLASTDict bitscores;
 
 	if(vm.count("bitscores")){
