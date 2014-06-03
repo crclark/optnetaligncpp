@@ -7,6 +7,9 @@ as objective space to do so.
 
 add logging of mean and max over time for plotting purposes
 
+test smallstart, uniformsize, and ec
+
+make non-tournament selection faster
 
 Try starting with only very small alignment sizes and force it to start
 from nothing as it does with ICS and bitscore.

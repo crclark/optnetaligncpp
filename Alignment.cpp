@@ -165,6 +165,8 @@ Alignment::Alignment(mt19937& prng, float cxswappb,
 	net1 = par1->net1;
 	net2 = par1->net2;
 
+
+	//do crossover
 	for(int i = 0; i<size; i++){
 		if(fltgen(prng) < cxswappb){
 			//swap nodes
@@ -204,9 +206,6 @@ Alignment::Alignment(mt19937& prng, float cxswappb,
 
 	}
 	fitnessValid = false;
-	for(int i = 0; i < actualSize; i++){
-		initConservedCount(i,aln[i], alnMask[i]);
-	}	
 }
 
 //todo: make starting size of alns uniformly distributed
@@ -546,6 +545,17 @@ void Alignment::updateConservedCount(node n1, node n2old, node n2new,
 	}
 
 	for(auto i : net1->adjList.at(n1)){
+		//need to count self loops one extra time so as to
+		//ensure they are counted correctly when conserved.
+		//otherwise, they will only be counted once
+		//when all other conserved edges get counted twice
+		//(which is why we divide by two in fastICSNumerator())
+		if(n1 == i && n2old != n2new){
+			if(net2->adjList.at(n2new).count(n2new)){
+				conservedCounts[n1]++;
+			}
+		}
+
 		if(i == ignore){
 			continue;
 		}
@@ -591,6 +601,12 @@ void Alignment::initConservedCount(node n1, node n2, bool mask){
 		return;
 	}
 	for(auto i : net1->adjList.at(n1)){
+		//deal with self loops
+		if(n1 == i){
+			if(net2->adjList.at(n2).count(n2)){
+				conservedCounts[n1]++;
+			}
+		}
 		if(!alnMask[i]){
 			continue;
 		}

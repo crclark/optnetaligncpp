@@ -433,6 +433,7 @@ BOOST_AUTO_TEST_CASE( adjacency_list_correct ){
 }
 
 BOOST_AUTO_TEST_CASE( fast_ics_works_total_crossover ){
+	cout<<endl<<"BEGIN fast_ics_works_total_crossover"<<endl;
 	Network net1("../optnetalign/tests/cg1a.net");
 	Network net2("../optnetalign/tests/cg1b.net");
 	Alignment aln1(&net1,&net2,nullptr);
@@ -449,13 +450,14 @@ BOOST_AUTO_TEST_CASE( fast_ics_works_total_crossover ){
 }
 
 BOOST_AUTO_TEST_CASE( fast_ics_works_partial_crossover ){
-	Network net1("../optnetalign/tests/cg1a.net");
-	Network net2("../optnetalign/tests/cg1b.net");
+	cout<<endl<<"BEGIN fast_ics_works_partial_crossover"<<endl;
+	Network net1("../optnetalign/tests/selflooptest.net");
+	Network net2("../optnetalign/tests/selflooptest.net");
 	Alignment aln1(&net1,&net2,nullptr);
 	Alignment aln2(&net1,&net2,nullptr);
 	mt19937 g1(12);
-	aln1.shuf(g1,false,false,false);
-	aln2.shuf(g1,false,false,false);
+	//aln1.shuf(g1,false,false,false);
+	//aln2.shuf(g1,false,false,false);
 	Alignment child(g1,0.2,aln1,aln2,false);
 	double ics = child.ics();
 	double fastICS = child.fastICS();
@@ -536,23 +538,7 @@ BOOST_AUTO_TEST_CASE( fast_ics_works_after_init_partial ){
 	double ics = aln1.ics();
 	double fastICS = aln1.fastICS();
 	cout<<"ICS is "<<ics<<endl;
-	cout<<"Fast ICS is "<<fastICS<<endl;
-	/*
-	if(!approxEqual(ics,fastICS)){
-		cout<<"Alignment is: "<<endl;
-		for(int i = 0; i < aln1.actualSize; i++){
-			cout<<net1.nodeToNodeName.at(i)<<" "
-			     <<net2.nodeToNodeName.at(aln1.aln[i])
-			     <<" (mask: "<<aln1.alnMask[i]<<")"<<endl;
-		}
-		cout<<"--------"<<endl;
-		cout<<"Conserved counts are: "<<endl;
-		for(int i = 0; i <aln1.actualSize; i++){
-			cout<<net1.nodeToNodeName.at(i)
-			    <<": "<<aln1.conservedCounts[i]<<" (mask: "
-				<<aln1.alnMask[i]<<")"<<endl;
-		}
-	}*/	
+	cout<<"Fast ICS is "<<fastICS<<endl;	
 }
 
 //____________________________________________________________________________//
