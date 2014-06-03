@@ -209,6 +209,7 @@ Alignment::Alignment(mt19937& prng, float cxswappb,
 	}	
 }
 
+//todo: make starting size of alns uniformly distributed
 void Alignment::shuf(mt19937& prng, bool total){
 	shuffle(aln.begin(),aln.end(), prng);
 	if(!total){
@@ -289,13 +290,15 @@ void Alignment::doSwap(node x, node y){
 
 //todo: add support for GO annotations
 //todo: maybe something more principled than fitnessNames (so ad hoc!)
+//todo: add conserved edges (fastICSNumerator) as an objective.
+//      (about 40% faster than ICS)
 void Alignment::computeFitness(const BLASTDict& bitscores,
 	                const BLASTDict& evalues,
 	                const vector<string>& fitnessNames){
 	fitness = vector<double>(fitnessNames.size(),0.0);
 	for(int i = 0; i < fitnessNames.size(); i++){
 		if(fitnessNames.at(i) == "ICS"){
-			fitness.at(i) = ics();
+			fitness.at(i) = fastICS(); //ics();
 		}
 		if(fitnessNames.at(i) == "BitscoreSum"){
 			fitness.at(i) = currBitscore; //sumBLAST();
@@ -344,7 +347,8 @@ double Alignment::ics() const{
 	}
 
 	double denominator = double(inducedES.size());
-
+	
+	
 	if(denominator == 0.0){
 		return 0.0;
 	}
@@ -365,36 +369,6 @@ double Alignment::ics() const{
 			}
 		}
 		double numerator = double(intersect.size());
-		//cout<<"numerator is "<<numerator<<endl;
-		//cout<<"fast numerator is "<<fastICSNumerator()<<endl;
-		if(abs(numerator - fastICSNumerator()) > 0.000000001){
-			cout<<"error"<<endl;
-			cout<<"numerator is "<<numerator<<endl;
-			cout<<"fast numerator is "<<fastICSNumerator()<<endl;
-			/*
-			cout<<"-----"<<endl;
-			cout<<"Alignment: "<<endl;
-			for(int i = 0; i < actualSize; i++){
-				cout<<net1->nodeToNodeName.at(i)<<" "
-				    <<net2->nodeToNodeName.at(aln[i])
-				    <<" (mask: "<<alnMask[i]<<")"<<endl;
-			}
-			cout<<"-----"<<endl;
-			cout<<"conserved edges: "<<endl;
-			for(auto e : intersect){
-				cout<<net2->nodeToNodeName.at(e.u())<<" "
-				    <<net2->nodeToNodeName.at(e.v())<<endl;
-			}
-			cout<<"-----"<<endl;
-			cout<<"conserved counts: "<<endl;
-			for(int i = 0; i < conservedCounts.size(); i++){
-				cout<<net1->nodeToNodeName.at(i)<<" "
-				    <<conservedCounts[i]<<endl;
-			}
-			assert(1==2);
-			*/
-
-		}
 		return numerator/denominator;
 	}
 }
@@ -419,13 +393,22 @@ double Alignment::fastICSDenominator() const{
 		}
 	}
 
+	//self loops are only counted once instead of twice like
+	//all other edges, so we add the number of self loops to
+	//the count so we count them correctly.
+	count += net2->numSelfLoops;
+
+	//cout<<"fast denominator count is "<<count<<endl;
+
 	return double(count / 2);
 }
 
 double Alignment::fastICSNumerator() const{
 	int sum = 0;
 	for(int i = 0; i < conservedCounts.size(); i++){
-		sum += conservedCounts[i];
+		if(alnMask[i]){
+			sum += conservedCounts[i];
+		}
 	}
 	return double(sum/2);
 }
@@ -525,6 +508,9 @@ void Alignment::updateConservedCount(node n1, node n2old, node n2new,
 		if(i == ignore){
 			continue;
 		}
+		if(!alnMask[i]){
+			continue;
+		}
 		if(net2->adjList.at(n2new).count(aln[i])){
 			conservedCounts[n1]++;
 		}
@@ -557,10 +543,16 @@ void Alignment::updateConservedCount(node n1, node n2old, node n2new,
 
 void Alignment::initConservedCount(node n1, node n2, bool mask){
 	conservedCounts[n1] = 0;
+	if(!mask){
+		return;
+	}
 	if(net1->degree(n1) == 0){
 		return;
 	}
 	for(auto i : net1->adjList.at(n1)){
+		if(!alnMask[i]){
+			continue;
+		}
 		if(net2->adjList.at(n2).count(aln[i])){
 			conservedCounts[n1]++;
 		}

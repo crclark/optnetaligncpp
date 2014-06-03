@@ -10,6 +10,7 @@ using namespace std;
 
 Network::Network(string filename){
 	unsigned int count = 0;
+	numSelfLoops = 0;
 	unordered_set<string> alreadySeen;
 
 	ifstream infile(filename);
@@ -50,6 +51,10 @@ Network::Network(string filename){
 			v = nodeNameToNode[b];
 		}
 
+		if(u == v){
+			numSelfLoops++;
+		}
+		
 		Edge e = Edge(u,v);
 
 		edges.insert(e);

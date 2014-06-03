@@ -432,7 +432,7 @@ BOOST_AUTO_TEST_CASE( adjacency_list_correct ){
 	BOOST_CHECK(net1.degree(net1.nodeNameToNode.at("4")) == 3);
 }
 
-BOOST_AUTO_TEST_CASE( fast_ics_works_total ){
+BOOST_AUTO_TEST_CASE( fast_ics_works_total_crossover ){
 	Network net1("../optnetalign/tests/cg1a.net");
 	Network net2("../optnetalign/tests/cg1b.net");
 	Alignment aln1(&net1,&net2,nullptr);
@@ -441,10 +441,120 @@ BOOST_AUTO_TEST_CASE( fast_ics_works_total ){
 	aln1.shuf(g1,true);
 	aln2.shuf(g1,true);
 	Alignment child(g1,0.2,aln1,aln2,true);
-	cout<<"ICS is "<<child.ics()<<endl;
-	cout<<"Fast ICS is "<<child.fastICS()<<endl;
-	BOOST_CHECK(approxEqual(child.ics(),child.fastICS()));
+	double ics = child.ics();
+	double fastICS = child.fastICS();
+	cout<<"ICS is "<<ics<<endl;
+	cout<<"Fast ICS is "<<fastICS<<endl;
+	BOOST_CHECK(approxEqual(ics,fastICS));
 }
+
+BOOST_AUTO_TEST_CASE( fast_ics_works_partial_crossover ){
+	Network net1("../optnetalign/tests/cg1a.net");
+	Network net2("../optnetalign/tests/cg1b.net");
+	Alignment aln1(&net1,&net2,nullptr);
+	Alignment aln2(&net1,&net2,nullptr);
+	mt19937 g1(12);
+	aln1.shuf(g1,false);
+	aln2.shuf(g1,false);
+	Alignment child(g1,0.2,aln1,aln2,false);
+	double ics = child.ics();
+	double fastICS = child.fastICS();
+	cout<<"ICS is "<<ics<<endl;
+	cout<<"Fast ICS is "<<fastICS<<endl;
+	BOOST_CHECK(approxEqual(ics,fastICS));
+}
+
+BOOST_AUTO_TEST_CASE( fast_ics_works_total_mutation ){
+	cout<<endl<<"BEGIN fast_ics_works_total_mutation"<<endl;
+	Network net1("../optnetalign/tests/cg1a.net");
+	Network net2("../optnetalign/tests/cg1b.net");
+	Alignment aln1(&net1,&net2,nullptr);
+	mt19937 g1(12);
+	aln1.shuf(g1,true);
+	aln1.mutate(g1,0.1,true);
+	double ics = aln1.ics();
+	double fastICS = aln1.fastICS();
+	cout<<"ICS is "<<ics<<endl;
+	cout<<"Fast ICS is "<<fastICS<<endl;
+	BOOST_CHECK(approxEqual(ics,fastICS));	
+}
+
+BOOST_AUTO_TEST_CASE( fast_ics_works_total_repeat_mutation ){
+	cout<<endl<<"BEGIN fast_ics_works_total_repeat_mutation"<<endl;
+	Network net1("../optnetalign/tests/cg1a.net");
+	Network net2("../optnetalign/tests/cg1b.net");
+	Alignment aln1(&net1,&net2,nullptr);
+	mt19937 g1(12);
+	aln1.shuf(g1,true);
+	for(int i = 0; i < 100; i++){
+		aln1.mutate(g1,0.1,true);
+	}
+	double ics = aln1.ics();
+	double fastICS = aln1.fastICS();
+	cout<<"ICS is "<<ics<<endl;
+	cout<<"Fast ICS is "<<fastICS<<endl;
+	BOOST_CHECK(approxEqual(ics,fastICS));	
+}
+
+BOOST_AUTO_TEST_CASE( fast_ics_works_partial_mutation ){
+	cout<<endl<<"BEGIN fast_ics_works_partial_mutation"<<endl;
+	Network net1("../optnetalign/tests/cg1a.net");
+	Network net2("../optnetalign/tests/cg1b.net");
+	Alignment aln1(&net1,&net2,nullptr);
+	mt19937 g1(12);
+	aln1.shuf(g1,false);
+	aln1.mutate(g1,0.1,false);
+	double ics = aln1.ics();
+	double fastICS = aln1.fastICS();
+	cout<<"ICS is "<<ics<<endl;
+	cout<<"Fast ICS is "<<fastICS<<endl;
+	BOOST_CHECK(approxEqual(ics,fastICS));	
+}
+
+BOOST_AUTO_TEST_CASE( fast_ics_works_after_init_total ){
+	cout<<endl<<"BEGIN fast_ics_works_after_init_total"<<endl;
+	Network net1("../optnetalign/tests/cg1a.net");
+	Network net2("../optnetalign/tests/cg1b.net");
+	Alignment aln1(&net1,&net2,nullptr);
+	mt19937 g1(12);
+	aln1.shuf(g1,true);
+	double ics = aln1.ics();
+	double fastICS = aln1.fastICS();
+	cout<<"ICS is "<<ics<<endl;
+	cout<<"Fast ICS is "<<fastICS<<endl;
+	BOOST_CHECK(approxEqual(ics,fastICS));	
+}
+
+
+BOOST_AUTO_TEST_CASE( fast_ics_works_after_init_partial ){
+	cout<<endl<<"BEGIN fast_ics_works_after_init_partial"<<endl;
+	Network net1("../optnetalign/tests/cg1a.net");
+	Network net2("../optnetalign/tests/cg1b.net");
+	Alignment aln1(&net1,&net2,nullptr);
+	mt19937 g1(123);
+	aln1.shuf(g1,false);
+	double ics = aln1.ics();
+	double fastICS = aln1.fastICS();
+	cout<<"ICS is "<<ics<<endl;
+	cout<<"Fast ICS is "<<fastICS<<endl;
+	/*
+	if(!approxEqual(ics,fastICS)){
+		cout<<"Alignment is: "<<endl;
+		for(int i = 0; i < aln1.actualSize; i++){
+			cout<<net1.nodeToNodeName.at(i)<<" "
+			     <<net2.nodeToNodeName.at(aln1.aln[i])
+			     <<" (mask: "<<aln1.alnMask[i]<<")"<<endl;
+		}
+		cout<<"--------"<<endl;
+		cout<<"Conserved counts are: "<<endl;
+		for(int i = 0; i <aln1.actualSize; i++){
+			cout<<net1.nodeToNodeName.at(i)
+			    <<": "<<aln1.conservedCounts[i]<<" (mask: "
+				<<aln1.alnMask[i]<<")"<<endl;
+		}
+	}*/	
+}
+
 //____________________________________________________________________________//
 
 // EOF

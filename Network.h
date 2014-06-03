@@ -95,4 +95,5 @@ public:
 	unordered_map<string,node> nodeNameToNode;
 
 	unordered_map<node, unordered_set<node> > adjList;
+	int numSelfLoops;
 };
