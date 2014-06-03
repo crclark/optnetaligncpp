@@ -732,7 +732,7 @@ vector<Alignment*> binSel(mt19937& prng,
 	return toReturn;
 }
 
-void reportStats(const vector<Alignment*>& in){
+void reportStats(const vector<Alignment*>& in, bool verbose){
 
 	for(int i =0; i < in[0]->fitness.size(); i++){
 		double sum = 0.0;
@@ -745,10 +745,8 @@ void reportStats(const vector<Alignment*>& in){
 				max = temp;
 			sum += p->fitness[i];
 		}
-		cout<<"Max of objective "<<i<<" is "<<max<<endl;
-		mean = sum/double(in.size());
-		cout<<"Mean of objective "<<i<<" is "<<mean<<endl;
 
+		mean = sum/double(in.size());
 		double std_dev = 0.0;
 
 		for(auto p : in){
@@ -758,7 +756,14 @@ void reportStats(const vector<Alignment*>& in){
 
 		std_dev /= double(in.size());
 		std_dev = sqrt(std_dev);
-		cout<<"Std. Dev. of objective "<<i<<" is "<<std_dev<<endl;
+		if(verbose){
+			cout<<"Max of objective "<<i<<" is "<<max<<endl;
+			cout<<"Mean of objective "<<i<<" is "<<mean<<endl;
+			cout<<"Std. Dev. of objective "<<i<<" is "<<std_dev<<endl;
+		}
+		else{
+			cout<<'\t'<<max<<'\t'<<mean<<'\t'<<std_dev;
+		}
 	}
 
 }

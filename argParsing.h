@@ -49,9 +49,11 @@ argRetVals handleArgs(int ac, char* av[]){
 			                           "generally allow the program to run "
 			                           "faster. If unspecified, defaults to "
 			                           "the number of cores in your machine.")
-		("total", "When set, restricts alignments to total alignment only.")
+		("total", "When set, restricts alignments to total alignment only."
+			      " Otherwise, one of the objectives will be alignment size")
 		("popsize", po::value<int>(), "The number of alignments to maintain "
-			                          "in the genetic algorithm's population.")
+			                          "in the genetic algorithm's population."
+			                          " Default: 100")
 		("generations", po::value<int>(), "The max number of generations to "
 			                              "run the algorithm.")
 		("initlist", po::value<string>(), "Path to a list of paths to existing "
@@ -82,9 +84,11 @@ argRetVals handleArgs(int ac, char* av[]){
 		("verbose", "When set, extra information about the progress of the "
 			        "alignment is printed to stdout.")
 		("mutswappb", po::value<float>(), "Sets the probability of swap "
-			                              "mutation. See documentation.")
+			                              "mutation. See documentation."
+			                              " Default: 0.005")
 		("cxswappb", po::value<float>(), "Sets the probability of swapping "
-			                             "during crossover. See documentation.")
+			                             "during crossover. See documentation."
+			                             " Default: 0.1")
 		("finalstats", "When set, prints comma-separated stats to stdout "
 			           "when execution completes. Used to find good parameter "
 			           "values through experimentation.")

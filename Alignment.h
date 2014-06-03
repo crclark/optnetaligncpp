@@ -99,4 +99,4 @@ bool crowdedComp(Alignment* aln1, Alignment* aln2);
 vector<Alignment*> binSel(mt19937& prng,
 	                      const vector<Alignment*>& in, unsigned int tournSize);
 
-void reportStats(const vector<Alignment*>& in);
+void reportStats(const vector<Alignment*>& in, bool verbose);

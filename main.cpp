@@ -38,6 +38,7 @@ int main(int ac, char* av[])
 		const bool verbose = vm.count("verbose");
 		const bool tournsel = vm.count("tournsel");
 		const bool total = vm.count("total");
+		const bool finalstats = vm.count("finalstats");
 		const string outprefix = vm["outprefix"].as<string>();
 
 		const BLASTDict* bitPtr = vm.count("bitscores") ? &bitscores : nullptr;
@@ -198,13 +199,16 @@ int main(int ac, char* av[])
 			
 			if(verbose){
 				cout<<"Finished generation "<<gen<<endl;
-				reportStats(pop);
+				reportStats(pop,true);
 			}
 		}
 
 		if(verbose){
 			cout<<"Finished!"<<endl;
 			cout<<"Writing alignments in Pareto front"<<endl;
+		}
+		if(finalstats){
+			reportStats(pop,false);
 		}
 		vector <Alignment*> allAlns;
 		allAlns.reserve(popsize*2);

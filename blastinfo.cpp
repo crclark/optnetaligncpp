@@ -33,6 +33,5 @@ BLASTDict loadBLASTInfo(Network* net1, Network* net2, string filename){
 		toReturn[u][v] = blastScore;
 		count++;
 	}
-	cout<<count<<" lines of blast info parsed from "<<filename<<endl;
 	return toReturn;
 }
