@@ -1,0 +1,19 @@
+add more checks to arg parsing
+
+start thinking about how to combine alignments from the Pareto front
+to create local ones. Should try to take from the best representatives of
+the whole front-- might want to look at distance in alignment space as well
+as objective space to do so.
+
+add logging of mean and max over time for plotting purposes
+
+
+Try starting with only very small alignment sizes and force it to start
+from nothing as it does with ICS and bitscore.
+
+label objectives better when displaying verbose stats
+
+REFACTORING
+-----------
+use doSwap function in crossover constructor
+
