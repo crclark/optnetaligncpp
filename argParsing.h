@@ -51,6 +51,11 @@ argRetVals handleArgs(int ac, char* av[]){
 			                           "the number of cores in your machine.")
 		("total", "When set, restricts alignments to total alignment only."
 			      " Otherwise, one of the objectives will be alignment size")
+		("uniformsize", "When set, and --total is not, the initial population"
+			            " will consist of alignments generated so that their"
+			            " sizes are drawn from a uniform distribution."
+			            " Otherwise, each will have about half of their "
+			            "nodes aligned.")
 		("popsize", po::value<int>(), "The number of alignments to maintain "
 			                          "in the genetic algorithm's population."
 			                          " Default: 100")

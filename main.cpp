@@ -38,6 +38,7 @@ int main(int ac, char* av[])
 		const bool verbose = vm.count("verbose");
 		const bool tournsel = vm.count("tournsel");
 		const bool total = vm.count("total");
+		const bool uniformsize = vm.count("uniformsize");
 		const bool finalstats = vm.count("finalstats");
 		const string outprefix = vm["outprefix"].as<string>();
 
@@ -208,6 +209,12 @@ int main(int ac, char* av[])
 			cout<<"Writing alignments in Pareto front"<<endl;
 		}
 		if(finalstats){
+			cout<<popsize;
+			cout<<'\t'<<generations;
+			cout<<'\t'<<mutswappb;
+			cout<<'\t'<<cxswappb;
+			cout<<'\t'<<tournsel;
+			cout<<'\t'<<uniformsize;
 			reportStats(pop,false);
 		}
 		vector <Alignment*> allAlns;
