@@ -54,7 +54,7 @@ Network::Network(string filename){
 		if(u == v){
 			numSelfLoops++;
 		}
-		
+
 		Edge e = Edge(u,v);
 
 		edges.insert(e);
@@ -63,9 +63,6 @@ Network::Network(string filename){
 		adjList[u].insert(v);
 		adjList[v].insert(u);
 	}
-
-	cout<<"Network "<<filename<<" has "<<count<<" nodes and "
-	    <<edges.size()<<" edges"<<endl;
 }
 
 int Network::degree(node x) const{

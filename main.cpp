@@ -28,9 +28,13 @@ int main(int ac, char* av[])
 		BLASTDict evalues = get<4>(vals);
 		vector<string> fitnessNames = get<5>(vals);
 
-		const int nthreads = vm["nthreads"].as<int>();
-		const float mutswappb = vm["mutswappb"].as<float>();
-		const float cxswappb = vm["cxswappb"].as<float>();
+		const int nthreads = vm.count("nthreads") ? vm["nthreads"].as<int>()
+		                                          : 1;
+		const float mutswappb = vm.count("mutswappb")  
+		                             ? vm["mutswappb"].as<float>()
+		                             : 0.005;
+		const float cxswappb = vm.count("cxswappb") ? vm["cxswappb"].as<float>()
+		                                            : 0.1;
 		const bool verbose = vm.count("verbose");
 		const bool tournsel = vm.count("tournsel");
 		const bool total = vm.count("total");
@@ -40,8 +44,12 @@ int main(int ac, char* av[])
 
 		mt19937 g(14);
 		//initialize population
-		cout<<"creating initial population"<<endl;
-		const unsigned int popsize = vm["popsize"].as<int>();
+		if(verbose){
+			cout<<"creating initial population"<<endl;
+		}
+		const unsigned int popsize = vm.count("popsize") 
+		                             ? vm["popsize"].as<int>()
+		                             : 100;
 		vector<Alignment*> pop;
 		for(int i = 0; i < popsize; i++){	
 			Alignment* aln = new Alignment(net1,net2, bitPtr);
@@ -49,8 +57,9 @@ int main(int ac, char* av[])
 			aln->computeFitness(bitscores,evalues,fitnessNames);
 			pop.push_back(aln);
 		}
-
-		cout<<"creating initial children"<<endl;
+		if(verbose){
+			cout<<"creating initial children"<<endl;
+		}
 		vector<Alignment*> kids;
 		for(int i = 0; i < popsize; i++){
 			Alignment* aln = new Alignment(net1,net2, bitPtr);
@@ -60,7 +69,9 @@ int main(int ac, char* av[])
 		}
 
 		//main loop
-		cout<<"starting main loop"<<endl;
+		if(verbose){
+			cout<<"starting main loop"<<endl;
+		}
 		const int generations = vm["generations"].as<int>();
 		for(int gen = 0; gen < generations; gen++){
 
@@ -183,14 +194,18 @@ int main(int ac, char* av[])
 			//in parallel for: binary select tournament, crossover, mutate
 			//and evaluate fitness. Maybe also have a chance to just copy
 			//and mutate without crossover, too.
-			cout<<"size of kids is "<<kids.size()<<endl;
-			cout<<"finished generation "<<gen<<endl;
+
+			
 			if(verbose){
+				cout<<"Finished generation "<<gen<<endl;
 				reportStats(pop);
 			}
 		}
 
-		cout<<"Writing alignments in Pareto front"<<endl;
+		if(verbose){
+			cout<<"Finished!"<<endl;
+			cout<<"Writing alignments in Pareto front"<<endl;
+		}
 		vector <Alignment*> allAlns;
 		allAlns.reserve(popsize*2);
 		allAlns.insert(allAlns.end(), pop.begin(), pop.end());

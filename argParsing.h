@@ -170,5 +170,9 @@ argRetVals handleArgs(int ac, char* av[]){
 		fitnessNames.push_back("Size");
 	}
 
+	if(!vm.count("generations")){
+		throw ArgError("Number of generations must be specified.");
+	}
+
 	return argRetVals(vm,net1,net2,bitscores,evalues, fitnessNames);
 }
