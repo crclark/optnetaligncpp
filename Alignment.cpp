@@ -189,11 +189,12 @@ Alignment::Alignment(mt19937& prng, float cxswappb,
 
 			//update currBitscore and conservedCounts
 			updateBitscore(i,temp1,temp2,temp1Mask,alnMask[i]);
-			//updateConservedCount(i, temp1, temp2, temp1Mask, alnMask[i]);
+			updateConservedCount(i, temp1, temp2, temp1Mask, alnMask[i],
+				                 -1);
 			updateBitscore(par1Indices[temp2],temp2,temp1,
 				           par1bool, alnMask[par1Indices[temp2]]);
-			//updateConservedCount(par1Indices[temp2],temp2,temp1,
-			//	                 par1bool, alnMask[par1Indices[temp2]]);
+			updateConservedCount(par1Indices[temp2],temp2,temp1,
+				                 par1bool, alnMask[par1Indices[temp2]],i);
 
 			//swap index records 
 			int itemp = par1Indices[temp1];
@@ -279,8 +280,10 @@ void Alignment::doSwap(node x, node y){
 	updateBitscore(x, aln[y], aln[x], alnMask[y], alnMask[x]);
 	updateBitscore(y, aln[x], aln[y], alnMask[x], alnMask[y]);
 
-	//updateConservedCount(x, aln[y], aln[x], alnMask[y], alnMask[x]);
-	//updateConservedCount(y, aln[x], aln[y], alnMask[x], alnMask[y]);
+	updateConservedCount(x, aln[y], aln[x], alnMask[y], alnMask[x],
+		                 -1);
+	updateConservedCount(y, aln[x], aln[y], alnMask[x], alnMask[y],
+		                 x);
 }
 
 
@@ -362,9 +365,13 @@ double Alignment::ics() const{
 			}
 		}
 		double numerator = double(intersect.size());
-		if(numerator != fastICSNumerator()){
+		//cout<<"numerator is "<<numerator<<endl;
+		//cout<<"fast numerator is "<<fastICSNumerator()<<endl;
+		if(abs(numerator - fastICSNumerator()) > 0.000000001){
+			cout<<"error"<<endl;
 			cout<<"numerator is "<<numerator<<endl;
 			cout<<"fast numerator is "<<fastICSNumerator()<<endl;
+			/*
 			cout<<"-----"<<endl;
 			cout<<"Alignment: "<<endl;
 			for(int i = 0; i < actualSize; i++){
@@ -385,6 +392,8 @@ double Alignment::ics() const{
 				    <<conservedCounts[i]<<endl;
 			}
 			assert(1==2);
+			*/
+
 		}
 		return numerator/denominator;
 	}
@@ -481,15 +490,17 @@ inline void Alignment::updateBitscore(node n1, node n2old, node n2new,
 	currBitscore += delta;
 }
 
+//ignore parameter is for the edge case where two neighbors are 
+//swapped with each other. In that case, one of them already has
+//an up-to-date conservedCount and so it becomes incorrect when it
+//is touched again while its neighbor is being updated. Thus, we
+//need to specify that it should be ignored.
 void Alignment::updateConservedCount(node n1, node n2old, node n2new, 
-	                                 bool oldMask, bool newMask){
+	                                 bool oldMask, bool newMask,
+	                                 node ignore){
+	//easy cases first:
 	//check that n1 is not a dummy node:
 	if(n1 >= actualSize){
-		return;
-	}
-	conservedCounts[n1] = 0;
-	//easy cases first:
-	if(!newMask){
 		return;
 	}
 
@@ -497,11 +508,23 @@ void Alignment::updateConservedCount(node n1, node n2old, node n2new,
 		return;
 	}
 
+	conservedCounts[n1] = 0;
+	
+	//todo: degree 0 currently impossible but may be needed later
+	/*
 	if(net1->degree(n1) == 0){
+		return;
+	}
+	*/
+
+	if(!newMask){
 		return;
 	}
 
 	for(auto i : net1->adjList.at(n1)){
+		if(i == ignore){
+			continue;
+		}
 		if(net2->adjList.at(n2new).count(aln[i])){
 			conservedCounts[n1]++;
 		}

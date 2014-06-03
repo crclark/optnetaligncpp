@@ -431,6 +431,20 @@ BOOST_AUTO_TEST_CASE( adjacency_list_correct ){
 	BOOST_CHECK(net1.degree(net1.nodeNameToNode.at("3")) == 2);
 	BOOST_CHECK(net1.degree(net1.nodeNameToNode.at("4")) == 3);
 }
+
+BOOST_AUTO_TEST_CASE( fast_ics_works_total ){
+	Network net1("../optnetalign/tests/cg1a.net");
+	Network net2("../optnetalign/tests/cg1b.net");
+	Alignment aln1(&net1,&net2,nullptr);
+	Alignment aln2(&net1,&net2,nullptr);
+	mt19937 g1(12);
+	aln1.shuf(g1,true);
+	aln2.shuf(g1,true);
+	Alignment child(g1,0.2,aln1,aln2,true);
+	cout<<"ICS is "<<child.ics()<<endl;
+	cout<<"Fast ICS is "<<child.fastICS()<<endl;
+	BOOST_CHECK(approxEqual(child.ics(),child.fastICS()));
+}
 //____________________________________________________________________________//
 
 // EOF

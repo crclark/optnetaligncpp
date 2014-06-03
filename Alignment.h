@@ -70,7 +70,7 @@ public:
 	//gives the number of conserved edges in the alignment.
 	vector<int> conservedCounts;
 	void updateConservedCount(node n1, node n2old, node n2new, bool oldMask,
-		                     bool newMask);
+		                     bool newMask, node ignore);
 	void initConservedCount(node n1, node n2, bool mask);
 };
 
