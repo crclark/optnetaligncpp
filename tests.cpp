@@ -82,7 +82,7 @@ BOOST_AUTO_TEST_CASE( currBitscore_consistent ){
     	                        "../optnetalign/tests/small.bitScores");
     Alignment a2 = Alignment(&net1,&net2,&b);
     mt19937 g1(12);
-    a2.shuf(g1,false,true);
+    a2.shuf(g1,false,false,true);
     double sumbit2 = a2.sumBLAST();
     BOOST_CHECK(approxEqual(sumbit2,a2.currBitscore));
 }
@@ -109,8 +109,8 @@ BOOST_AUTO_TEST_CASE( currBitscore_consistent_2 ){
     
     Alignment a3 = Alignment(&net1,&net2,&b);
     mt19937 g1(12);
-    a2.shuf(g1,false,false);
-    a3.shuf(g1,false,false);
+    a2.shuf(g1,false,false,false);
+    a3.shuf(g1,false,false,false);
     Alignment a4 = Alignment(g1,0.5,a2,a3,false);
     double sumbit2 = a4.sumBLAST();
     cout<<"sumbit2: "<<sumbit2<<endl;
@@ -160,8 +160,8 @@ BOOST_AUTO_TEST_CASE( currBitscore_consistent_5 ){
     
     Alignment a3 = Alignment(&net1,&net2,&b);
     mt19937 g1(12);
-    a2.shuf(g1,false,false);
-    a3.shuf(g1,false,false);
+    a2.shuf(g1,false,false,false);
+    a3.shuf(g1,false,false,false);
     Alignment a4 = Alignment(g1,0.5,a2,a3,false);
     double sumbit2 = a4.sumBLAST();
     cout<<"sumbit2: "<<sumbit2<<endl;
@@ -178,8 +178,8 @@ BOOST_AUTO_TEST_CASE( currBitscore_consistent_6 ){
     
     Alignment a3 = Alignment(&net1,&net2,&b);
     mt19937 g1(1244);
-    a2.shuf(g1,false,true);
-    a3.shuf(g1,false,true);
+    a2.shuf(g1,false,false,true);
+    a3.shuf(g1,false,false,true);
     Alignment a4 = Alignment(g1,0.5,a2,a3,true);
     double sumbit2 = a4.sumBLAST();
     cout<<"sumbit2: "<<sumbit2<<endl;
@@ -438,8 +438,8 @@ BOOST_AUTO_TEST_CASE( fast_ics_works_total_crossover ){
 	Alignment aln1(&net1,&net2,nullptr);
 	Alignment aln2(&net1,&net2,nullptr);
 	mt19937 g1(12);
-	aln1.shuf(g1,false,true);
-	aln2.shuf(g1,false,true);
+	aln1.shuf(g1,false,false,true);
+	aln2.shuf(g1,false,false,true);
 	Alignment child(g1,0.2,aln1,aln2,true);
 	double ics = child.ics();
 	double fastICS = child.fastICS();
@@ -454,8 +454,8 @@ BOOST_AUTO_TEST_CASE( fast_ics_works_partial_crossover ){
 	Alignment aln1(&net1,&net2,nullptr);
 	Alignment aln2(&net1,&net2,nullptr);
 	mt19937 g1(12);
-	aln1.shuf(g1,false,false);
-	aln2.shuf(g1,false,false);
+	aln1.shuf(g1,false,false,false);
+	aln2.shuf(g1,false,false,false);
 	Alignment child(g1,0.2,aln1,aln2,false);
 	double ics = child.ics();
 	double fastICS = child.fastICS();
@@ -470,7 +470,7 @@ BOOST_AUTO_TEST_CASE( fast_ics_works_total_mutation ){
 	Network net2("../optnetalign/tests/cg1b.net");
 	Alignment aln1(&net1,&net2,nullptr);
 	mt19937 g1(12);
-	aln1.shuf(g1,false,true);
+	aln1.shuf(g1,false,false,true);
 	aln1.mutate(g1,0.1,true);
 	double ics = aln1.ics();
 	double fastICS = aln1.fastICS();
@@ -485,7 +485,7 @@ BOOST_AUTO_TEST_CASE( fast_ics_works_total_repeat_mutation ){
 	Network net2("../optnetalign/tests/cg1b.net");
 	Alignment aln1(&net1,&net2,nullptr);
 	mt19937 g1(12);
-	aln1.shuf(g1,false,true);
+	aln1.shuf(g1,false,false,true);
 	for(int i = 0; i < 100; i++){
 		aln1.mutate(g1,0.1,true);
 	}
@@ -502,7 +502,7 @@ BOOST_AUTO_TEST_CASE( fast_ics_works_partial_mutation ){
 	Network net2("../optnetalign/tests/cg1b.net");
 	Alignment aln1(&net1,&net2,nullptr);
 	mt19937 g1(12);
-	aln1.shuf(g1,false,false);
+	aln1.shuf(g1,false,false,false);
 	aln1.mutate(g1,0.1,false);
 	double ics = aln1.ics();
 	double fastICS = aln1.fastICS();
@@ -517,7 +517,7 @@ BOOST_AUTO_TEST_CASE( fast_ics_works_after_init_total ){
 	Network net2("../optnetalign/tests/cg1b.net");
 	Alignment aln1(&net1,&net2,nullptr);
 	mt19937 g1(12);
-	aln1.shuf(g1,false,true);
+	aln1.shuf(g1,false,false,true);
 	double ics = aln1.ics();
 	double fastICS = aln1.fastICS();
 	cout<<"ICS is "<<ics<<endl;
@@ -532,7 +532,7 @@ BOOST_AUTO_TEST_CASE( fast_ics_works_after_init_partial ){
 	Network net2("../optnetalign/tests/cg1b.net");
 	Alignment aln1(&net1,&net2,nullptr);
 	mt19937 g1(123);
-	aln1.shuf(g1,false,false);
+	aln1.shuf(g1,false,false,false);
 	double ics = aln1.ics();
 	double fastICS = aln1.fastICS();
 	cout<<"ICS is "<<ics<<endl;

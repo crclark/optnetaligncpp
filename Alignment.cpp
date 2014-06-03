@@ -210,10 +210,11 @@ Alignment::Alignment(mt19937& prng, float cxswappb,
 }
 
 //todo: make starting size of alns uniformly distributed
-void Alignment::shuf(mt19937& prng, bool uniformsize, bool total){
+void Alignment::shuf(mt19937& prng, bool uniformsize, 
+	                 bool smallstart, bool total){
 	shuffle(aln.begin(),aln.end(), prng);
 	if(!total){
-		if(!uniformsize){
+		if(!uniformsize && !smallstart){
 			uniform_int_distribution<int> coinFlip(0,1);
 			for(int i =0; i < alnMask.size(); i++){
 				if(coinFlip(prng)){
@@ -221,7 +222,7 @@ void Alignment::shuf(mt19937& prng, bool uniformsize, bool total){
 				}
 			}
 		}
-		else{
+		else if(uniformsize){
 			//actually randomly generating number of mask cells to
 			//turn OFF because they are already all on.
 			uniform_int_distribution<int> sizeDist(1,actualSize-1);
@@ -232,6 +233,23 @@ void Alignment::shuf(mt19937& prng, bool uniformsize, bool total){
 			for(int i = 0; i < numToDeactivate; i++){
 				int index = indexDist(prng);
 				//if index already activated, find another
+				while(alnMask[index]){
+					index = indexDist(prng);
+				}
+				alnMask[index] = false;
+			}
+		}
+		else{ //smallsize
+			int maxsize = net1->nodeToNodeName.size() / 100;
+			if(maxsize == 0){
+				maxsize = 1;
+			}
+			uniform_int_distribution<int> sizeDist(1,maxsize);
+			int numToDeactivate = actualSize - sizeDist(prng);
+
+			uniform_int_distribution<int> indexDist(0,alnMask.size()-1);
+			for(int i = 0; i < numToDeactivate; i++){
+				int index = indexDist(prng);
 				while(alnMask[index]){
 					index = indexDist(prng);
 				}

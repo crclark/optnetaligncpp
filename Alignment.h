@@ -19,7 +19,8 @@ public:
 		             const Alignment& p1,
 		             const Alignment& p2,
 		             bool total = true);
-	void shuf(mt19937& prng, bool uniformsize, bool total); //shuffles the alignment to make it completely random
+	void shuf(mt19937& prng, bool uniformsize,
+	          bool smallstart, bool total); //shuffles the alignment to make it completely random
 	void mutate(mt19937& prng, float mutswappb, bool total = true);
 	void doSwap(node x, node y);
 	void computeFitness(const BLASTDict& bitscores,

@@ -56,6 +56,10 @@ argRetVals handleArgs(int ac, char* av[]){
 			            " sizes are drawn from a uniform distribution."
 			            " Otherwise, each will have about half of their "
 			            "nodes aligned.")
+		("smallstart", "When set, and --total and --uniformsize are not, "
+			           "initialize the population with random alignments " 
+			           "that are very small compared to the size of "
+			           "net1. These will be up to 1/100th the size of net1.")
 		("popsize", po::value<int>(), "The number of alignments to maintain "
 			                          "in the genetic algorithm's population."
 			                          " Default: 100")
@@ -119,9 +123,9 @@ argRetVals handleArgs(int ac, char* av[]){
 	}
 
 
-	if(!(vm.count("ics") || vm.count("bitscores") || vm.count("evalues"
+	if(!(vm.count("ics") || vm.count("bitscores") || vm.count("evalues")
 		|| vm.count("ec"))
-		|| (vm.count("annotations1") && vm.count("annotations2")) )){
+		|| (vm.count("annotations1") && vm.count("annotations2")) ){
 		throw ArgError("At least one objective must be specified!");
 	}
 
@@ -167,7 +171,7 @@ argRetVals handleArgs(int ac, char* av[]){
 	if(vm.count("ec")){
 		fitnessNames.push_back("EC");
 	}
-	
+
 	BLASTDict bitscores;
 
 	if(vm.count("bitscores")){
@@ -188,6 +192,17 @@ argRetVals handleArgs(int ac, char* av[]){
 
 	if(!vm.count("generations")){
 		throw ArgError("Number of generations must be specified.");
+	}
+
+	if(vm.count("total") && 
+	   (vm.count("smallsize") || vm.count("uniformsize"))){
+		throw ArgError("--smallsize and --uniformsize not compatible with "
+			           "--total.");
+	}
+
+	if(vm.count("smallsize") && vm.count("uniformsize")){
+		throw ArgError("only one of --smallsize and --uniformsize "
+			           "may be specified.");
 	}
 
 	return argRetVals(vm,net1,net2,bitscores,evalues, fitnessNames);

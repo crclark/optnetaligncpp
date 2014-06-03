@@ -39,6 +39,7 @@ int main(int ac, char* av[])
 		const bool tournsel = vm.count("tournsel");
 		const bool total = vm.count("total");
 		const bool uniformsize = vm.count("uniformsize");
+		const bool smallstart = vm.count("smallstart");
 		const bool finalstats = vm.count("finalstats");
 		const string outprefix = vm["outprefix"].as<string>();
 
@@ -55,7 +56,7 @@ int main(int ac, char* av[])
 		vector<Alignment*> pop;
 		for(int i = 0; i < popsize; i++){	
 			Alignment* aln = new Alignment(net1,net2, bitPtr);
-			aln->shuf(g, uniformsize, total);
+			aln->shuf(g, uniformsize, smallstart, total);
 			aln->computeFitness(bitscores,evalues,fitnessNames);
 			pop.push_back(aln);
 		}
@@ -65,7 +66,7 @@ int main(int ac, char* av[])
 		vector<Alignment*> kids;
 		for(int i = 0; i < popsize; i++){
 			Alignment* aln = new Alignment(net1,net2, bitPtr);
-			aln->shuf(g, uniformsize, total);
+			aln->shuf(g, uniformsize, smallstart, total);
 			aln->computeFitness(bitscores,evalues,fitnessNames);
 			kids.push_back(aln);
 		}
@@ -201,6 +202,7 @@ int main(int ac, char* av[])
 			if(verbose){
 				cout<<"Finished generation "<<gen<<endl;
 				reportStats(pop,true);
+				cout<<endl;
 			}
 		}
 
