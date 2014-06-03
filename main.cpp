@@ -55,7 +55,7 @@ int main(int ac, char* av[])
 		vector<Alignment*> pop;
 		for(int i = 0; i < popsize; i++){	
 			Alignment* aln = new Alignment(net1,net2, bitPtr);
-			aln->shuf(g, total);
+			aln->shuf(g, uniformsize, total);
 			aln->computeFitness(bitscores,evalues,fitnessNames);
 			pop.push_back(aln);
 		}
@@ -65,7 +65,7 @@ int main(int ac, char* av[])
 		vector<Alignment*> kids;
 		for(int i = 0; i < popsize; i++){
 			Alignment* aln = new Alignment(net1,net2, bitPtr);
-			aln->shuf(g, total);
+			aln->shuf(g, uniformsize, total);
 			aln->computeFitness(bitscores,evalues,fitnessNames);
 			kids.push_back(aln);
 		}

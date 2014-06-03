@@ -210,13 +210,32 @@ Alignment::Alignment(mt19937& prng, float cxswappb,
 }
 
 //todo: make starting size of alns uniformly distributed
-void Alignment::shuf(mt19937& prng, bool total){
+void Alignment::shuf(mt19937& prng, bool uniformsize, bool total){
 	shuffle(aln.begin(),aln.end(), prng);
 	if(!total){
-		uniform_int_distribution<int> coinFlip(0,1);
-		for(int i =0; i < alnMask.size(); i++){
-			if(coinFlip(prng)){
-				alnMask[i] = false;
+		if(!uniformsize){
+			uniform_int_distribution<int> coinFlip(0,1);
+			for(int i =0; i < alnMask.size(); i++){
+				if(coinFlip(prng)){
+					alnMask[i] = false;
+				}
+			}
+		}
+		else{
+			//actually randomly generating number of mask cells to
+			//turn OFF because they are already all on.
+			uniform_int_distribution<int> sizeDist(1,actualSize-1);
+			int numToDeactivate = sizeDist(prng);
+
+			//generate indices to flip on
+			uniform_int_distribution<int> indexDist(0,alnMask.size()-1);
+			for(int i = 0; i < numToDeactivate; i++){
+				int index = indexDist(prng);
+				//if index already activated, find another
+				while(alnMask[index]){
+					index = indexDist(prng);
+				}
+				alnMask[index] = false;
 			}
 		}
 	}
