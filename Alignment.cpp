@@ -208,7 +208,7 @@ Alignment::Alignment(mt19937& prng, float cxswappb,
 	fitnessValid = false;
 }
 
-//todo: make starting size of alns uniformly distributed
+
 void Alignment::shuf(mt19937& prng, bool uniformsize, 
 	                 bool smallstart, bool total){
 	shuffle(aln.begin(),aln.end(), prng);
@@ -226,13 +226,12 @@ void Alignment::shuf(mt19937& prng, bool uniformsize,
 			//turn OFF because they are already all on.
 			uniform_int_distribution<int> sizeDist(1,actualSize-1);
 			int numToDeactivate = sizeDist(prng);
-
 			//generate indices to flip on
 			uniform_int_distribution<int> indexDist(0,alnMask.size()-1);
 			for(int i = 0; i < numToDeactivate; i++){
 				int index = indexDist(prng);
-				//if index already activated, find another
-				while(alnMask[index]){
+				//if index already deactivated, find another
+				while(!alnMask[index]){
 					index = indexDist(prng);
 				}
 				alnMask[index] = false;
@@ -249,7 +248,7 @@ void Alignment::shuf(mt19937& prng, bool uniformsize,
 			uniform_int_distribution<int> indexDist(0,alnMask.size()-1);
 			for(int i = 0; i < numToDeactivate; i++){
 				int index = indexDist(prng);
-				while(alnMask[index]){
+				while(!alnMask[index]){
 					index = indexDist(prng);
 				}
 				alnMask[index] = false;
