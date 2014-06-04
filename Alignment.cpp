@@ -227,7 +227,7 @@ void Alignment::shuf(mt19937& prng, bool uniformsize,
 			uniform_int_distribution<int> sizeDist(1,actualSize-1);
 			int numToDeactivate = sizeDist(prng);
 			//generate indices to flip on
-			uniform_int_distribution<int> indexDist(0,alnMask.size()-1);
+			uniform_int_distribution<int> indexDist(0,actualSize-1);
 			for(int i = 0; i < numToDeactivate; i++){
 				int index = indexDist(prng);
 				//if index already deactivated, find another
@@ -235,6 +235,10 @@ void Alignment::shuf(mt19937& prng, bool uniformsize,
 					index = indexDist(prng);
 				}
 				alnMask[index] = false;
+			}
+			//deactivate all unaligned nodes aligned to dummy nodes
+			for(int i = actualSize; i < aln.size(); i++){
+				alnMask[i] = false;
 			}
 		}
 		else{ //smallsize
@@ -244,14 +248,17 @@ void Alignment::shuf(mt19937& prng, bool uniformsize,
 			}
 			uniform_int_distribution<int> sizeDist(1,maxsize);
 			int numToDeactivate = actualSize - sizeDist(prng);
-
-			uniform_int_distribution<int> indexDist(0,alnMask.size()-1);
+			uniform_int_distribution<int> indexDist(0,actualSize-1);
 			for(int i = 0; i < numToDeactivate; i++){
 				int index = indexDist(prng);
 				while(!alnMask[index]){
 					index = indexDist(prng);
 				}
 				alnMask[index] = false;
+			}
+			//deactivate all unaligned nodes aligned to dummy nodes
+			for(int i = actualSize; i < aln.size(); i++){
+				alnMask[i] = false;
 			}
 		}
 	}
@@ -338,7 +345,7 @@ void Alignment::computeFitness(const BLASTDict& bitscores,
 			                double(net1->nodeToNodeName.size());
 		}
 		if(fitnessNames.at(i) == "BitscoreSum"){
-			fitness.at(i) = sumBLAST();
+			fitness.at(i) = currBitscore; //sumBLAST();
 		}
 		if(fitnessNames.at(i) == "EvalsSum"){
 			fitness.at(i) = -1.0*sumBLAST();
@@ -466,7 +473,6 @@ double Alignment::sumBLAST() const{
 	return toReturn;
 }
 
-//todo: make this show number of nodes in V1 that are currently aligned
 double Alignment::alnSize() const{
 	double toReturn = 0.0;
 	for(int i = 0; i < actualSize; i++){
