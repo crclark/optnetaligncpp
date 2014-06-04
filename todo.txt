@@ -16,6 +16,8 @@ from nothing as it does with ICS and bitscore.
 
 label objectives better when displaying verbose stats
 
+make sure asserts are turned off in optimized version
+
 REFACTORING
 -----------
 use doSwap function in crossover constructor

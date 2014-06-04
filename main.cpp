@@ -201,7 +201,7 @@ int main(int ac, char* av[])
 			
 			if(verbose){
 				cout<<"Finished generation "<<gen<<endl;
-				reportStats(pop,true);
+				reportStats(pop,fitnessNames,true);
 				cout<<endl;
 			}
 		}
@@ -217,7 +217,7 @@ int main(int ac, char* av[])
 			cout<<'\t'<<cxswappb;
 			cout<<'\t'<<tournsel;
 			cout<<'\t'<<uniformsize;
-			reportStats(pop,false);
+			reportStats(pop,fitnessNames,false);
 		}
 		vector <Alignment*> allAlns;
 		allAlns.reserve(popsize*2);

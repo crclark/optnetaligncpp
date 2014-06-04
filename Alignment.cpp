@@ -326,8 +326,6 @@ void Alignment::doSwap(node x, node y){
 
 //todo: add support for GO annotations
 //todo: maybe something more principled than fitnessNames (so ad hoc!)
-//todo: add conserved edges (fastICSNumerator) as an objective.
-//      (about 40% faster than ICS)
 void Alignment::computeFitness(const BLASTDict& bitscores,
 	                const BLASTDict& evalues,
 	                const vector<string>& fitnessNames){
@@ -789,7 +787,9 @@ vector<Alignment*> binSel(mt19937& prng,
 	return toReturn;
 }
 
-void reportStats(const vector<Alignment*>& in, bool verbose){
+void reportStats(const vector<Alignment*>& in, 
+	             const vector<string> fitnessNames, 
+	             bool verbose){
 
 	for(int i =0; i < in[0]->fitness.size(); i++){
 		double sum = 0.0;
@@ -814,9 +814,10 @@ void reportStats(const vector<Alignment*>& in, bool verbose){
 		std_dev /= double(in.size());
 		std_dev = sqrt(std_dev);
 		if(verbose){
-			cout<<"Max of objective "<<i<<" is "<<max<<endl;
-			cout<<"Mean of objective "<<i<<" is "<<mean<<endl;
-			cout<<"Std. Dev. of objective "<<i<<" is "<<std_dev<<endl;
+			cout<<"Max of objective "<<fitnessNames[i]<<" is "<<max<<endl;
+			cout<<"Mean of objective "<<fitnessNames[i]<<" is "<<mean<<endl;
+			cout<<"Std. Dev. of objective "<<fitnessNames[i]
+			    <<" is "<<std_dev<<endl;
 		}
 		else{
 			cout<<'\t'<<max<<'\t'<<mean<<'\t'<<std_dev;
