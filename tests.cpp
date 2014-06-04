@@ -187,6 +187,14 @@ BOOST_AUTO_TEST_CASE( currBitscore_consistent_6 ){
     BOOST_CHECK(approxEqual(sumbit2,a4.currBitscore));
 }
 
+BOOST_AUTO_TEST_CASE( bitscores_contains_correct_records ){
+	Network net1("../optnetalign/tests/cg1a.net");
+    Network net2("../optnetalign/tests/cg1b.net");
+    BLASTDict b = loadBLASTInfo(&net1,&net2,
+    	                        "../optnetalign/tests/cg1.sim");
+    BOOST_CHECK(b.count(net1.nodeNameToNode.at("a1")));
+}
+
 BOOST_AUTO_TEST_CASE( save_load_inverses )
 {
 	Network net1("../optnetalign/tests/lccstest1.net");

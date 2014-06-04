@@ -11,7 +11,9 @@
 BLASTDict loadBLASTInfo(Network* net1, Network* net2, string filename){
 
 	ifstream infile(filename);
-
+	if(!infile.good()){
+		throw LineReadException("Failed to load BLAST info! Check filename.");
+	}
 	BLASTDict toReturn;
 
 	string line;

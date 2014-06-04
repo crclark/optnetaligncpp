@@ -339,7 +339,7 @@ void Alignment::computeFitness(const BLASTDict& bitscores,
 			                double(net1->nodeToNodeName.size());
 		}
 		if(fitnessNames.at(i) == "BitscoreSum"){
-			fitness.at(i) = currBitscore; //sumBLAST();
+			fitness.at(i) = sumBLAST();
 		}
 		if(fitnessNames.at(i) == "EvalsSum"){
 			fitness.at(i) = -1.0*sumBLAST();
@@ -457,14 +457,13 @@ double Alignment::fastICS() const{
 
 double Alignment::sumBLAST() const{
 	double toReturn = 0.0;
+
 	for(node i = 0; i < actualSize; i++){
 		if(bitscores->count(i) && bitscores->at(i).count(aln[i]) &&
 		   alnMask[i]){
-		   	//cout<<i<<" "<<aln[i]<<" "<<bitscores->at(i).at(aln[i])<<endl;
 			toReturn += bitscores->at(i).at(aln[i]);
 		}
 	}
-	//cout<<"total: "<<toReturn<<endl;
 	return toReturn;
 }
 
