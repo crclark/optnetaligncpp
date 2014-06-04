@@ -218,6 +218,7 @@ int main(int ac, char* av[])
 			cout<<'\t'<<tournsel;
 			cout<<'\t'<<uniformsize;
 			reportStats(pop,fitnessNames,false);
+			cout<<endl;
 		}
 		vector <Alignment*> allAlns;
 		allAlns.reserve(popsize*2);
