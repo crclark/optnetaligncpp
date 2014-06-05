@@ -1,6 +1,7 @@
 #pragma once
 
 #include <unordered_set>
+#include <vector>
 #include <string>
 #include <unordered_map>
 using namespace std;
@@ -95,5 +96,6 @@ public:
 	unordered_map<string,node> nodeNameToNode;
 
 	unordered_map<node, unordered_set<node> > adjList;
+	vector<vector<bool>> adjMatrix;
 	int numSelfLoops;
 };

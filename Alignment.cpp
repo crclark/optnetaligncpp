@@ -319,12 +319,11 @@ void Alignment::doSwap(node x, node y){
 	alnMask[y] = tempb;
 
 	updateBitscore(x, aln[y], aln[x], alnMask[y], alnMask[x]);
-	updateBitscore(y, aln[x], aln[y], alnMask[x], alnMask[y]);
-
 	updateConservedCount(x, aln[y], aln[x], alnMask[y], alnMask[x],
 		                 -1);
 	updateConservedCount(y, aln[x], aln[y], alnMask[x], alnMask[y],
 		                 x);
+	updateBitscore(y, aln[x], aln[y], alnMask[x], alnMask[y]);
 }
 
 
@@ -414,12 +413,16 @@ double Alignment::ics() const{
 	}
 }
 
+//note: this function is probably as fast as it is going to get. 
+//my attempts at optimizing it further have only slowed it down.
+//todo: if the speed of this function is still unbearable,
+//consider tracking it as we go like numerator.
 double Alignment::fastICSDenominator() const{
 	//construct set of nodes actually mapped to
 
-	vector<bool> mapped(aln.size(), false);
+	vector<bool> mapped(aln.size(),false);
 	for(int i = 0; i < actualSize; i++){
-		mapped[aln[i]] = alnMask[i]; //should I do if on alnMask[i] or this?
+		mapped[aln[i]] = alnMask[i]; 
 	}
 
 	int count = 0;
@@ -496,6 +499,8 @@ void Alignment::save(string filename) const{
 inline void Alignment::updateBitscore(node n1, node n2old, node n2new, 
 									  bool oldMask, bool newMask){
 	if(!bitscores)
+		return;
+	if(n1 >= actualSize)
 		return;
 
 	double oldScore = 0.0;

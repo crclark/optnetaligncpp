@@ -63,6 +63,18 @@ Network::Network(string filename){
 		adjList[u].insert(v);
 		adjList[v].insert(u);
 	}
+
+	//set up adjacency matrix
+	for(int i = 0; i < nodeToNodeName.size(); i++){
+		adjMatrix.push_back(vector<bool>(nodeToNodeName.size(),false));
+	}
+
+	for(auto i = adjList.begin(); i != adjList.end(); i++){
+		node n = i->first;
+		for(auto m : i->second){
+			adjMatrix[n][m] = true;
+		}
+	}
 }
 
 int Network::degree(node x) const{
