@@ -556,8 +556,7 @@ void Alignment::updateConservedCount(node n1, node n2old, node n2new,
 		//if our neighbors had a conserved edge thanks to us,
 		//we need to decrement their count.
 		for(auto i : net1->adjList.at(n1)){
-			auto alnINbrs = &(net2->adjList.at(aln[i]));
-			if(alnINbrs->count(n2old)){
+			if(net2->adjMatrix[aln[i]][n2old]){
 				if(conservedCounts[i] > 0){
 					conservedCounts[i]--;
 				}
@@ -573,7 +572,7 @@ void Alignment::updateConservedCount(node n1, node n2old, node n2new,
 		//when all other conserved edges get counted twice
 		//(which is why we divide by two in fastICSNumerator())
 		if(n1 == i && n2old != n2new){
-			if(net2->adjList.at(n2new).count(n2new)){
+			if(net2->adjMatrix[n2new][n2new]){
 				conservedCounts[n1]++;
 			}
 		}
@@ -584,7 +583,7 @@ void Alignment::updateConservedCount(node n1, node n2old, node n2new,
 		if(!alnMask[i]){
 			continue;
 		}
-		if(net2->adjList.at(n2new).count(aln[i])){
+		if(net2->adjMatrix[n2new][aln[i]]){
 			conservedCounts[n1]++;
 		}
 		//conservedCount of i either increases by 1,
@@ -592,25 +591,25 @@ void Alignment::updateConservedCount(node n1, node n2old, node n2new,
 
 		//unchanged case: both n2old and n2new are 
 		//neighbors of aln[i], or neither are.
-		auto alnINbrs = &(net2->adjList.at(aln[i])); 
-		if((alnINbrs->count(n2old) && 
-		    alnINbrs->count(n2new) && oldMask == newMask)
-		   || (!alnINbrs->count(n2old) &&
-		   	   !alnINbrs->count(n2new))){
+		auto alnINbrs = &(net2->adjMatrix[aln[i]]); 
+		if(((*alnINbrs)[n2old] && 
+		    (*alnINbrs)[n2new] && oldMask == newMask)
+		   || (!(*alnINbrs)[n2old] &&
+		   	   !(*alnINbrs)[n2new])){
 			//do nothing
 		}
-		else if(alnINbrs->count(n2old) && alnINbrs->count(n2new)
+		else if((*alnINbrs)[n2old] && (*alnINbrs)[n2new]
 			    && !oldMask && newMask){
 			conservedCounts[i]++;
 		}
-		else if(alnINbrs->count(n2old) &&
-			    !alnINbrs->count(n2new)){
+		else if((*alnINbrs)[n2old] &&
+			    !(*alnINbrs)[n2new]){
 			if(conservedCounts[i]>0){
 				conservedCounts[i]--;
 			}
 		}
-		else if(!alnINbrs->count(n2old) &&
-			    alnINbrs->count(n2new)){
+		else if(!(*alnINbrs)[n2old] &&
+			    (*alnINbrs)[n2new]){
 			conservedCounts[i]++;
 		}
 	}
