@@ -12,6 +12,7 @@
 
 #include "Alignment.h"
 #include "argParsing.h"
+#include "nsga-ii.h"
 using namespace std;
 namespace po = boost::program_options;
 
@@ -183,12 +184,6 @@ int main(int ac, char* av[])
 					i.join();
 				}
 			}
-
-			//idea: create a constructor for a non-random arbitrary aln
-			//allocate kids using that constructor. Then,
-			//in parallel for: binary select tournament, crossover, mutate
-			//and evaluate fitness. Maybe also have a chance to just copy
-			//and mutate without crossover, too.
 
 			
 			if(verbose){
