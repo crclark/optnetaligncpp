@@ -21,8 +21,6 @@ consider adding archive
 
 consider self-adaptive mutation probabilities
 
-REMOVE DEBUG COUT IN MUTATE
-
 REFACTORING
 -----------
 use doSwap function in crossover constructor
@@ -33,3 +31,10 @@ function of: whether self loop, whether neighbor and self used to have
        edge, and both masks. 
 
 move NSGA-II functions out into separate files
+
+LOCAL SEARCH
+------------
+hillClimb function just calls mutate repeatedly, always switching to new aln
+that improves the given objective. Seems to work really well. Need to make it
+faster. Create hypotheticalDoSwap that returns a vector of how much conservedCounts
+would increase/decrease and how much bitscores would change. Could we then exhaustively consider all possible swaps at each iteration? Would that be worthwhile?

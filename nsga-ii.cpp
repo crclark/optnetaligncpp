@@ -99,14 +99,6 @@ void setCrowdingDists(vector<Alignment*>& in){
 
 //returns true if aln1 Pareto dominates aln2
 bool dominates(Alignment* aln1, Alignment* aln2){
-	/*
-	if(!(aln1->fitnessValid && aln2->fitnessValid)){
-		cout<<"danger: dominates called on alns with invalid fitness"<<endl;
-	}
-	if(aln1->fitness.size() != aln2->fitness.size()){
-		cout<<"danger: fitness sizes not equal!"<<endl;
-	}
-	*/
 	bool oneBigger = false;
 
 	for(int i = 0; i < aln1->fitness.size(); i++){

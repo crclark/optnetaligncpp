@@ -329,9 +329,7 @@ void Alignment::doSwap(node x, node y){
 
 //todo: add support for GO annotations
 //todo: maybe something more principled than fitnessNames (so ad hoc!)
-void Alignment::computeFitness(const BLASTDict& bitscores,
-	                const BLASTDict& evalues,
-	                const vector<string>& fitnessNames){
+void Alignment::computeFitness(const vector<string>& fitnessNames){
 	fitness = vector<double>(fitnessNames.size(),0.0);
 	for(int i = 0; i < fitnessNames.size(); i++){
 		if(fitnessNames.at(i) == "ICS"){
@@ -519,6 +517,28 @@ inline void Alignment::updateBitscore(node n1, node n2old, node n2new,
 	currBitscore += delta;
 }
 
+double Alignment::hypotheticalBitscoreDelta(node n1, node n2old, node n2new,
+		                             bool oldMask, bool newMask) const{
+	if(!bitscores)
+		return 0.0;
+	if(n1 >= actualSize)
+		return 0.0;
+
+	double oldScore = 0.0;
+
+	//set oldScore
+	if(bitscores->count(n1) && bitscores->at(n1).count(n2old) && oldMask)
+		oldScore = bitscores->at(n1).at(n2old);
+
+	double newScore = 0.0;
+
+	//set newScore
+	if(bitscores->count(n1) && bitscores->at(n1).count(n2new) && newMask)
+		newScore = bitscores->at(n1).at(n2new);
+
+	return newScore - oldScore;	
+}
+
 //ignore parameter is for the edge case where two neighbors are 
 //swapped with each other. In that case, one of them already has
 //an up-to-date conservedCount and so it becomes incorrect when it
@@ -613,6 +633,98 @@ void Alignment::updateConservedCount(node n1, node n2old, node n2new,
 			conservedCounts[i]++;
 		}
 	}
+}
+
+int Alignment::hypotheticalConservedCountDelta(node n1, node n2old, node n2new, 
+	                    bool oldMask, bool newMask, node ignore) const{
+	//easy cases first:
+	//check that n1 is not a dummy node:
+	if(n1 >= actualSize){
+		return 0;
+	}
+
+	if(n2old == n2new && oldMask == newMask){
+		return 0;
+	}
+
+
+	int toReturn = 0;
+	
+	//todo: degree 0 currently impossible but may be needed later
+	/*
+	if(net1->degree(n1) == 0){
+		return 0;
+	}
+	*/
+
+	if(!newMask && !oldMask){
+		//nothing has changed. We were unaligned, we are still unaligned.
+		return 0;
+	}
+	else if(!newMask && oldMask){
+		//our bit has been turned off.
+		//if our neighbors had a conserved edge thanks to us,
+		//we need to decrement their count.
+		for(auto i : net1->adjList.at(n1)){
+			if(net2->adjMatrix[aln[i]][n2old]){
+				if(conservedCounts[i] > 0){
+					toReturn--;
+				}
+			}
+		}
+		return toReturn; //don't fall through to counting conservations that dont exist
+	}
+
+	for(auto i : net1->adjList.at(n1)){
+		//need to count self loops one extra time so as to
+		//ensure they are counted correctly when conserved.
+		//otherwise, they will only be counted once
+		//when all other conserved edges get counted twice
+		//(which is why we divide by two in fastICSNumerator())
+		if(n1 == i && n2old != n2new){
+			if(net2->adjMatrix[n2new][n2new]){
+				toReturn++;
+			}
+		}
+
+		if(i == ignore){
+			continue;
+		}
+		if(!alnMask[i]){
+			continue;
+		}
+		if(net2->adjMatrix[n2new][aln[i]]){
+			toReturn++;
+		}
+		//conservedCount of i either increases by 1,
+		//decreases by 1, or remains unchanged.
+
+		//unchanged case: both n2old and n2new are 
+		//neighbors of aln[i], or neither are.
+		auto alnINbrs = &(net2->adjMatrix[aln[i]]); 
+		if(((*alnINbrs)[n2old] && 
+		    (*alnINbrs)[n2new] && oldMask == newMask)
+		   || (!(*alnINbrs)[n2old] &&
+		   	   !(*alnINbrs)[n2new])){
+			//do nothing
+		}
+		else if((*alnINbrs)[n2old] && (*alnINbrs)[n2new]
+			    && !oldMask && newMask){
+			toReturn++;
+		}
+		else if((*alnINbrs)[n2old] &&
+			    !(*alnINbrs)[n2new]){
+			if(conservedCounts[i]>0){
+				toReturn--;
+			}
+		}
+		else if(!(*alnINbrs)[n2old] &&
+			    (*alnINbrs)[n2new]){
+			toReturn++;
+		}
+	}
+
+	return toReturn;
 }
 
 void Alignment::initConservedCount(node n1, node n2, bool mask){

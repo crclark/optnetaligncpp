@@ -58,7 +58,7 @@ int main(int ac, char* av[])
 		for(int i = 0; i < popsize; i++){	
 			Alignment* aln = new Alignment(net1,net2, bitPtr);
 			aln->shuf(g, uniformsize, smallstart, total);
-			aln->computeFitness(bitscores,evalues,fitnessNames);
+			aln->computeFitness(fitnessNames);
 			pop.push_back(aln);
 		}
 		if(verbose){
@@ -68,7 +68,7 @@ int main(int ac, char* av[])
 		for(int i = 0; i < popsize; i++){
 			Alignment* aln = new Alignment(net1,net2, bitPtr);
 			aln->shuf(g, uniformsize, smallstart, total);
-			aln->computeFitness(bitscores,evalues,fitnessNames);
+			aln->computeFitness(fitnessNames);
 			kids.push_back(aln);
 		}
 
@@ -161,7 +161,7 @@ int main(int ac, char* av[])
 						(*it) = new Alignment(*parents[0]);
 						(*it)->mutate(tg,mutswappb,total);
 					}
-					(*it)->computeFitness(bitscores,evalues,fitnessNames);
+					(*it)->computeFitness(fitnessNames);
 				}
 
 			};

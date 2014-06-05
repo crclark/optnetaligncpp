@@ -23,9 +23,7 @@ public:
 	          bool smallstart, bool total); //shuffles the alignment to make it completely random
 	void mutate(mt19937& prng, float mutswappb, bool total = true);
 	void doSwap(node x, node y);
-	void computeFitness(const BLASTDict& bitscores,
-		                const BLASTDict& evalues,
-		                const vector<string>& fitnessNames);
+	void computeFitness(const vector<string>& fitnessNames);
 	void save(string filename) const;
 	double ics() const;
 	
@@ -59,6 +57,10 @@ public:
 	void updateBitscore(node n1, node n2old, node n2new, bool oldMask,
 		                bool newMask);
 
+	//returns by how much updateBitscore would change currBitscore
+	double hypotheticalBitscoreDelta(node n1, node n2old, node n2new,
+		                             bool oldMask, bool newMask) const;
+
 	//stored info version of ICS for fast computation
 	//(incrementally update as the alignment changes)
 	double fastICSDenominator() const;
@@ -72,6 +74,8 @@ public:
 	vector<int> conservedCounts;
 	void updateConservedCount(node n1, node n2old, node n2new, bool oldMask,
 		                     bool newMask, node ignore);
+	int hypotheticalConservedCountDelta(node n1, node n2old, node n2new, 
+		            bool oldMask, bool newMask, node ignore) const;
 	void initConservedCount(node n1, node n2, bool mask);
 };
 
