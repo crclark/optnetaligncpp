@@ -416,20 +416,19 @@ double Alignment::ics() const{
 
 double Alignment::fastICSDenominator() const{
 	//construct set of nodes actually mapped to
-	unordered_set<node> mapped;
-	for(int i = 0; i < net1->nodeToNodeName.size(); i++){
-		if(alnMask[i]){
-			mapped.insert(aln[i]);
-		}
+
+	vector<bool> mapped(aln.size(), false);
+	for(int i = 0; i < actualSize; i++){
+		mapped[aln[i]] = alnMask[i]; //should I do if on alnMask[i] or this?
 	}
 
-	//count
 	int count = 0;
-
-	for(auto x : mapped){
-		for(auto y : net2->adjList.at(x)){
-			if(mapped.count(y)){
-				count++;
+	for(int i = 0; i < mapped.size(); i++){
+		if(mapped[i]){
+			for(auto y : net2->adjList.at(i)){
+				if(mapped[y]){
+					count++;
+				}
 			}
 		}
 	}
