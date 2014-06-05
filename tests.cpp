@@ -511,15 +511,78 @@ BOOST_AUTO_TEST_CASE( fast_ics_works_partial_mutation ){
 	Network net1("../optnetalign/tests/cg1a.net");
 	Network net2("../optnetalign/tests/cg1b.net");
 	Alignment aln1(&net1,&net2,nullptr);
-	mt19937 g1(12);
+	mt19937 g1(4);
 	aln1.shuf(g1,false,false,false);
+	cout<<"BEFORE MUTATION"<<endl;
+	/*
+	cout<<"Alignment is: "<<endl;
+	for(int i = 0; i < aln1.actualSize; i++){
+		cout<<net1.nodeToNodeName.at(i)<<" "
+		    <<net2.nodeToNodeName.at(aln1.aln[i])<<" mask: "
+		    <<aln1.alnMask[i]<<endl;
+	}
+	cout<<endl<<"Conserved counts are: "<<endl;
+	for(int i = 0; i < aln1.conservedCounts.size(); i++){
+		cout<<net1.nodeToNodeName.at(i)<<" "
+		    <<aln1.conservedCounts[i]<<endl;
+	}
+	cout<<endl;
+	*/
 	aln1.mutate(g1,0.1,false);
+	
+	cout<<"AFTER MUTATION"<<endl;
+	/*
+	cout<<"Alignment is: "<<endl;
+	for(int i = 0; i < aln1.actualSize; i++){
+		cout<<net1.nodeToNodeName.at(i)<<" "
+		    <<net2.nodeToNodeName.at(aln1.aln[i])<<" mask: "
+		    <<aln1.alnMask[i]<<endl;
+	}
+	cout<<endl<<"Conserved counts are: "<<endl;
+	for(int i = 0; i < aln1.conservedCounts.size(); i++){
+		cout<<net1.nodeToNodeName.at(i)<<" "
+		    <<aln1.conservedCounts[i]<<endl;
+	}
+	cout<<endl;
+	*/
+	vector<int> badCounts = aln1.conservedCounts;
+	//reinit counts to correct them
+	for(int i = 0; i < aln1.actualSize; i++){
+		aln1.initConservedCount(i,aln1.aln[i], aln1.alnMask[i]);
+	}
+	vector<int> goodCounts = aln1.conservedCounts;
+	for(int i = 0; i < goodCounts.size(); i++){
+		if(badCounts[i] != goodCounts[i]){
+			cout<<i<<" (AKA "<<net1.nodeToNodeName.at(i)
+				<<") count should be "<<goodCounts[i]
+                <<" but is actually "<<badCounts[i]<<endl;
+		}
+	}
+	aln1.conservedCounts = badCounts;
 	double ics = aln1.ics();
 	double fastICS = aln1.fastICS();
 	cout<<"ICS is "<<ics<<endl;
 	cout<<"Fast ICS is "<<fastICS<<endl;
 	BOOST_CHECK(approxEqual(ics,fastICS));	
 }
+
+BOOST_AUTO_TEST_CASE( fast_ics_works_partial_repeat_mutation ){
+	cout<<endl<<"BEGIN fast_ics_works_total_repeat_mutation"<<endl;
+	Network net1("../optnetalign/tests/cg1a.net");
+	Network net2("../optnetalign/tests/cg1b.net");
+	Alignment aln1(&net1,&net2,nullptr);
+	mt19937 g1(12);
+	aln1.shuf(g1,false,false,false);
+	for(int i = 0; i < 100; i++){
+		aln1.mutate(g1,0.1,false);
+	}
+	double ics = aln1.ics();
+	double fastICS = aln1.fastICS();
+	cout<<"ICS is "<<ics<<endl;
+	cout<<"Fast ICS is "<<fastICS<<endl;
+	BOOST_CHECK(approxEqual(ics,fastICS));	
+}
+
 
 BOOST_AUTO_TEST_CASE( fast_ics_works_after_init_total ){
 	cout<<endl<<"BEGIN fast_ics_works_after_init_total"<<endl;

@@ -277,9 +277,11 @@ void Alignment::shuf(mt19937& prng, bool uniformsize,
 void Alignment::mutate(mt19937& prng, float mutswappb, bool total){
 	int size = aln.size();
 	uniform_real_distribution<float> fltgen(0.0,1.0);
+	//size-2 because of increment below
 	uniform_int_distribution<int> intgen(0,size-2); 
 	for(int i = 0; i < aln.size(); i++){
 		//swap probabilistically
+		
 		if(fltgen(prng) < mutswappb){
 			int swapIndex = intgen(prng);
 			if(swapIndex >= i){
@@ -287,24 +289,20 @@ void Alignment::mutate(mt19937& prng, float mutswappb, bool total){
 			}
 			doSwap(i,swapIndex);
 		}
+		
 		//switch mask bit on/off probabilistically
+		
 		if(!total && fltgen(prng) < mutswappb){
 			alnMask[i] = !alnMask[i];
 			updateBitscore(i, aln[i], aln[i], !alnMask[i],
 		                   alnMask[i]);
+			updateConservedCount(i, aln[i], aln[i], !alnMask[i],
+		                         alnMask[i], -1);
 		}
-	}
-	if(!total){
-		for(int i = 0; i < alnMask.size(); i++){
-			if(fltgen(prng) < mutswappb){
-				alnMask[i] = !alnMask[i];
-			}
-		}
+		
+		
 	}
 	fitnessValid = false;
-	for(int i = 0; i < actualSize; i++){
-		initConservedCount(i,aln[i], alnMask[i]);
-	}	
 }
 
 //takes 2 nodes from V1 and swaps the nodes they are aligned to in V2.
@@ -392,7 +390,6 @@ double Alignment::ics() const{
 
 	double denominator = double(inducedES.size());
 	
-	
 	if(denominator == 0.0){
 		return 0.0;
 	}
@@ -458,6 +455,9 @@ double Alignment::fastICSNumerator() const{
 }
 
 double Alignment::fastICS() const{
+	if(fastICSDenominator() == 0.0){
+		return 0.0;
+	}
 	return fastICSNumerator() / fastICSDenominator();
 }
 
@@ -533,6 +533,7 @@ void Alignment::updateConservedCount(node n1, node n2old, node n2new,
 		return;
 	}
 
+
 	conservedCounts[n1] = 0;
 	
 	//todo: degree 0 currently impossible but may be needed later
@@ -542,8 +543,23 @@ void Alignment::updateConservedCount(node n1, node n2old, node n2new,
 	}
 	*/
 
-	if(!newMask){
+	if(!newMask && !oldMask){
+		//nothing has changed. We were unaligned, we are still unaligned.
 		return;
+	}
+	else if(!newMask && oldMask){
+		//our bit has been turned off.
+		//if our neighbors had a conserved edge thanks to us,
+		//we need to decrement their count.
+		for(auto i : net1->adjList.at(n1)){
+			auto alnINbrs = &(net2->adjList.at(aln[i]));
+			if(alnINbrs->count(n2old)){
+				if(conservedCounts[i] > 0){
+					conservedCounts[i]--;
+				}
+			}
+		}
+		return; //don't fall through to counting conservations that dont exist
 	}
 
 	for(auto i : net1->adjList.at(n1)){
@@ -574,22 +590,24 @@ void Alignment::updateConservedCount(node n1, node n2old, node n2new,
 		//neighbors of aln[i], or neither are.
 		auto alnINbrs = &(net2->adjList.at(aln[i])); 
 		if((alnINbrs->count(n2old) && 
-		    alnINbrs->count(n2new))
+		    alnINbrs->count(n2new) && oldMask == newMask)
 		   || (!alnINbrs->count(n2old) &&
 		   	   !alnINbrs->count(n2new))){
 			//do nothing
 		}
+		else if(alnINbrs->count(n2old) && alnINbrs->count(n2new)
+			    && !oldMask && newMask){
+			conservedCounts[i]++;
+		}
 		else if(alnINbrs->count(n2old) &&
 			    !alnINbrs->count(n2new)){
-			conservedCounts[i]--;
+			if(conservedCounts[i]>0){
+				conservedCounts[i]--;
+			}
 		}
 		else if(!alnINbrs->count(n2old) &&
 			    alnINbrs->count(n2new)){
 			conservedCounts[i]++;
-		}
-		else{
-			cout<<"Fell through exhaustive if statements!"<<endl;
-			assert(3==4);
 		}
 	}
 }

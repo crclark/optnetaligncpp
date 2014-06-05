@@ -11,14 +11,25 @@ test smallstart, uniformsize, and ec
 
 make non-tournament selection faster
 
-Try starting with only very small alignment sizes and force it to start
-from nothing as it does with ICS and bitscore.
-
 label objectives better when displaying verbose stats
 
 make sure asserts are turned off in optimized version
+
+consider making this memetic -- local search on new alns
+
+consider adding archive
+
+consider self-adaptive mutation probabilities
+
+REMOVE DEBUG COUT IN MUTATE
 
 REFACTORING
 -----------
 use doSwap function in crossover constructor
 
+rewrite the abomination that updateConservedCount has become
+function of: whether self loop, whether neighbor and self used to have
+       conserved edge, whether neighbor and self now have conserved
+       edge, and both masks. 
+
+move NSGA-II functions out into separate files
