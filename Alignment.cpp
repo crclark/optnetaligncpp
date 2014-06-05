@@ -690,8 +690,6 @@ vector<vector<Alignment*> > nonDominatedSort(const vector<Alignment*>& in){
 		frontsTotal += fronts[i].size();
 	}
 
-	assert(frontsTotal == in.size());
-
 	return fronts;
 
 }
@@ -700,23 +698,6 @@ vector<vector<Alignment*> > nonDominatedSort(const vector<Alignment*>& in){
 //takes a front as input and assigns crowdDist to each element
 //note: results meaningless if input is not non-dominated set
 void setCrowdingDists(vector<Alignment*>& in){
-	/*
-	//debug check: no one in input should dominate anyone else
-	for(auto i : in){
-		for(auto j : in){
-			if(dominates(i,j)){
-				cout<<"one aln in a front dominates another!"<<endl;
-				cout<<"All fitnesses in this front:"<<endl;
-				for(auto x : in){
-					for(int y = 0; y<x->fitness.size(); y++){
-						cout<<x->fitness[y]<<" ";
-					}
-					cout<<endl;
-				}
-				assert(0==1);
-			}
-		}
-	}*/
 
 	//init all to zero
 	for(auto i : in){

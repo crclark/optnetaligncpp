@@ -108,7 +108,6 @@ int main(int ac, char* av[])
 			int numLeftToInsert = popsize - popNew.size();
 			if(numLeftToInsert > 0){
 				setCrowdingDists(fronts[i]);
-				assert(fronts[i].size() >= numLeftToInsert);
 				sort(fronts[i].begin(),fronts[i].end(),crowdedComp);
 				popNew.insert(fronts[i].begin(), 
 				              fronts[i].begin() + numLeftToInsert);
@@ -121,14 +120,7 @@ int main(int ac, char* av[])
 				}
 			}
 			//set pop = popNew
-			assert(pop.size() == popNew.size());
 			copy(popNew.begin(), popNew.end(), pop.begin());
-
-			//check that pop has sane contents
-			assert(pop.size() == popsize);
-			for(int i = 0; i < pop.size(); i++){
-				assert(popNew.count(pop[i]));
-			}
 
 			//do multithreaded version of kids creation
 			//first resize kids to the proper size
