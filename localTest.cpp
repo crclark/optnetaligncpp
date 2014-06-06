@@ -53,6 +53,9 @@ int main(int ac, char* av[])
 		Alignment* aln = new Alignment(net1,net2, &bitscores);
 		aln->shuf(g,false,false,total);
 		aln->computeFitness(fitnessNames);
+
+		//slow hill climb version
+		/*
 		cout<<"starting main loop"<<endl;
 		for(int i = 0; i < 10000; i++){
 			cout<<"calling hillClimb"<<endl;
@@ -63,8 +66,16 @@ int main(int ac, char* av[])
 			aln = temp;
 			cout<<"curr ICS: "<<aln->fitness.at(0)<<endl;
 		}
-
+		*/
 		
+		//fast hill climb version
+		cout<<"starting main loop"<<endl;
+		for(int i = 0; i < 100000; i++){
+			fastHillClimb(g, aln, total,
+	               500, fitnessNames, 0);
+			cout<<"curr ICS: "<<aln->fitness.at(0)<<endl;
+			cout<<"True ICS is "<<aln->ics()<<endl;
+		}
 
 	}
 	catch(exception& e){

@@ -21,7 +21,7 @@
 #include "Alignment.h"
 #include "Network.h"
 #include "blastinfo.h"
-
+#include "nsga-ii.h"
 using namespace std;
 
 bool approxEqual(double x, double y){
@@ -514,37 +514,11 @@ BOOST_AUTO_TEST_CASE( fast_ics_works_partial_mutation ){
 	mt19937 g1(4);
 	aln1.shuf(g1,false,false,false);
 	cout<<"BEFORE MUTATION"<<endl;
-	/*
-	cout<<"Alignment is: "<<endl;
-	for(int i = 0; i < aln1.actualSize; i++){
-		cout<<net1.nodeToNodeName.at(i)<<" "
-		    <<net2.nodeToNodeName.at(aln1.aln[i])<<" mask: "
-		    <<aln1.alnMask[i]<<endl;
-	}
-	cout<<endl<<"Conserved counts are: "<<endl;
-	for(int i = 0; i < aln1.conservedCounts.size(); i++){
-		cout<<net1.nodeToNodeName.at(i)<<" "
-		    <<aln1.conservedCounts[i]<<endl;
-	}
-	cout<<endl;
-	*/
+
 	aln1.mutate(g1,0.1,false);
 	
 	cout<<"AFTER MUTATION"<<endl;
-	/*
-	cout<<"Alignment is: "<<endl;
-	for(int i = 0; i < aln1.actualSize; i++){
-		cout<<net1.nodeToNodeName.at(i)<<" "
-		    <<net2.nodeToNodeName.at(aln1.aln[i])<<" mask: "
-		    <<aln1.alnMask[i]<<endl;
-	}
-	cout<<endl<<"Conserved counts are: "<<endl;
-	for(int i = 0; i < aln1.conservedCounts.size(); i++){
-		cout<<net1.nodeToNodeName.at(i)<<" "
-		    <<aln1.conservedCounts[i]<<endl;
-	}
-	cout<<endl;
-	*/
+	
 	vector<int> badCounts = aln1.conservedCounts;
 	//reinit counts to correct them
 	for(int i = 0; i < aln1.actualSize; i++){
@@ -609,7 +583,61 @@ BOOST_AUTO_TEST_CASE( fast_ics_works_after_init_partial ){
 	double ics = aln1.ics();
 	double fastICS = aln1.fastICS();
 	cout<<"ICS is "<<ics<<endl;
-	cout<<"Fast ICS is "<<fastICS<<endl;	
+	cout<<"Fast ICS is "<<fastICS<<endl;
+	BOOST_CHECK(approxEqual(ics,fastICS));	
+}
+
+BOOST_AUTO_TEST_CASE( do_swap_consistent_ics ){
+	cout<<endl<<"BEGIN do_swap_consistent_ics"<<endl;
+	Network net1("../optnetalign/tests/selflooptest.net");
+	Network net2("../optnetalign/tests/selflooptest.net");
+	Alignment aln1(&net1,&net2,nullptr);
+	mt19937 g1(123);
+	aln1.shuf(g1,false,false,true);
+	
+	cout<<"before doSwap:"<<endl;
+	cout<<"Alignment is: "<<endl;
+	for(int i = 0; i < aln1.actualSize; i++){
+		cout<<net1.nodeToNodeName.at(i)<<" "
+		    <<net2.nodeToNodeName.at(aln1.aln[i])<<" mask: "
+		    <<aln1.alnMask[i]<<endl;
+	}
+	cout<<endl<<"Conserved counts are: "<<endl;
+	for(int i = 0; i < aln1.conservedCounts.size(); i++){
+		cout<<net1.nodeToNodeName.at(i)<<" "
+		    <<aln1.conservedCounts[i]<<endl;
+	}
+	cout<<endl;
+	
+	double icsBefore = aln1.ics();
+	double fastICSBefore = aln1.fastICS();
+	BOOST_CHECK(approxEqual(icsBefore,fastICSBefore));
+	auto dist = uniform_int_distribution<int>(0,aln1.aln.size()-1);
+	node x = dist(g1);
+	node y = dist(g1);
+	cout<<"x is "<<net1.nodeToNodeName.at(x)<<endl;
+	cout<<"y is "<<net1.nodeToNodeName.at(y)<<endl;
+	aln1.doSwap(x,y);
+	
+	cout<<"after doSwap:"<<endl;
+	cout<<"Alignment is: "<<endl;
+	for(int i = 0; i < aln1.actualSize; i++){
+		cout<<net1.nodeToNodeName.at(i)<<" "
+		    <<net2.nodeToNodeName.at(aln1.aln[i])<<" mask: "
+		    <<aln1.alnMask[i]<<endl;
+	}
+	cout<<endl<<"Conserved counts are: "<<endl;
+	for(int i = 0; i < aln1.conservedCounts.size(); i++){
+		cout<<net1.nodeToNodeName.at(i)<<" "
+		    <<aln1.conservedCounts[i]<<endl;
+	}
+	cout<<endl;
+	
+	double ics = aln1.ics();
+	double fastICS = aln1.fastICS();
+	cout<<"ICS is "<<ics<<endl;
+	cout<<"Fast ICS is "<<fastICS<<endl;
+	BOOST_CHECK(approxEqual(ics,fastICS));	
 }
 
 //____________________________________________________________________________//

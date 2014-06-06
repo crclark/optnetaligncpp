@@ -52,3 +52,24 @@ Alignment* hillClimb(mt19937& prng, Alignment* orig, bool total,
 	    <<(double(numImprovingMuts)/double(numMuts))<<" cases."<<endl;
 	return curr;
 }
+
+void fastHillClimb(mt19937& prng, Alignment* aln, bool total,
+	               int maxIters, const vector<string>& fitnessNames,
+	               int objectiveToImprove){
+	auto randIndex = uniform_int_distribution<int>(0,aln->aln.size()-1);
+	double startObj = aln->fitness.at(objectiveToImprove);
+
+	for(int i = 0; i < maxIters; i++){
+		node x = randIndex(prng);
+		node y = x;
+		while(y == x){
+			y = randIndex(prng);
+		}
+
+		vector<double> delta = aln->doSwapHypothetical(x,y);
+		if(delta.at(objectiveToImprove) > aln->fitness.at(objectiveToImprove)){
+			aln->doSwap(x,y);
+			aln->computeFitness(fitnessNames);
+		}
+	}
+}
