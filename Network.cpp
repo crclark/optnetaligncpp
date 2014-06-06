@@ -11,6 +11,7 @@ using namespace std;
 Network::Network(string filename){
 	unsigned int count = 0;
 	numSelfLoops = 0;
+	int ignoredSelfLoops = 0;
 	unordered_set<string> alreadySeen;
 
 	ifstream infile(filename);
@@ -27,6 +28,11 @@ Network::Network(string filename){
 		if (!(iss >> a >> b)){
 			throw LineReadException(string("Parse error in network: ") + filename +
 				                   string("on line: ") + line + "\n");
+		}
+
+		if(a == b){
+			ignoredSelfLoops++;
+			continue;
 		}
 
 		if(!alreadySeen.count(a)){
@@ -64,6 +70,7 @@ Network::Network(string filename){
 		adjList[v].insert(u);
 	}
 
+	//cout<<"ignored "<<ignoredSelfLoops<<" self-loops"<<endl;
 	//set up adjacency matrix
 	for(int i = 0; i < nodeToNodeName.size(); i++){
 		adjMatrix.push_back(vector<bool>(nodeToNodeName.size(),false));
