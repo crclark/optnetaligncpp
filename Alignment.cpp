@@ -358,7 +358,7 @@ void Alignment::computeFitness(const vector<string>& fitnessNames){
 		}
 		if(fitnessNames.at(i) == "EC"){
 			fitness.at(i) = fastICSNumerator() / 
-			                double(net1->nodeToNodeName.size());
+			                double(net1->edges.size());
 		}
 		if(fitnessNames.at(i) == "BitscoreSum"){
 			fitness.at(i) = currBitscore; //sumBLAST();
@@ -568,9 +568,11 @@ double Alignment::hypotheticalBitscoreDelta(node n1, node n2old, node n2new,
 void Alignment::updateConservedCount(node n1, node n2old, node n2new, 
 	                                 bool oldMask, bool newMask,
 	                                 node ignore){
+	
 	//cout<<"in updateConservedCount"<<endl;
+	
+	//cout<<"n1 = "<<net1->nodeToNodeName.at(n1)<<endl;
 	/*
-	cout<<"n1 = "<<net1->nodeToNodeName.at(n1)<<endl;
 	cout<<"n2old = "<<net2->nodeToNodeName.at(n2old)<<endl;
 	cout<<"n2new = "<<net2->nodeToNodeName.at(n2new)<<endl;
 	cout<<"oldMask = "<<oldMask<<endl;
@@ -617,6 +619,7 @@ void Alignment::updateConservedCount(node n1, node n2old, node n2new,
 	}
 
 	for(auto i : net1->adjList.at(n1)){
+		//cout<<"neighbor is "<<net1->nodeToNodeName.at(i)<<endl;
 		//cout<<"in loop for neighbors of n1."<<endl;
 		//cout<<"i = "<<net1->nodeToNodeName.at(i)<<endl;
 		//need to count self loops one extra time so as to
@@ -625,23 +628,35 @@ void Alignment::updateConservedCount(node n1, node n2old, node n2new,
 		//when all other conserved edges get counted twice
 		//(which is why we divide by two in fastICSNumerator())
 		if(n1 == i){
+			//NOTE: at this point conservedCounts[n1] is zero!
+			//cout<<"in self-loop case!"<<endl;
+			if(newMask && net2->adjMatrix[n2new][n2new]){
+				conservedCounts[n1]++;
+			}
+			/*
 			if(!n2old && n2new && net2->adjMatrix[n2new][n2new]){
-				//cout<<"increasing count for self loop conservation."<<endl;
+				cout<<"case 1"<<endl;
 				conservedCounts[n1]++;
 			}
 			else if(n2old && !n2new && net2->adjMatrix[n2old][n2old]){
-				if(conservedCounts[n1]>0)
+				if(conservedCounts[n1]>0){
+					cout<<"case 2"<<endl;
 					conservedCounts[n1]--;
+				}
 			}
 			else if(n2old && n2new && !(net2->adjMatrix[n2old][n2old])
 				    && net2->adjMatrix[n2new][n2new]){
+				cout<<"case 3"<<endl;
 				conservedCounts[n1]++;
 			}
 			else if(n2old && n2new && net2->adjMatrix[n2old][n2old]
 				    && !(net2->adjMatrix[n2new][n2new])){
-				if(conservedCounts[n1]>0)
+				if(conservedCounts[n1]>0){
+					cout<<"case 4"<<endl;
 					conservedCounts[n1]--;
+				}
 			}
+			*/
 			else {
 				/*
 				cout<<"fell through neighbor cases and continuing."<<endl;
