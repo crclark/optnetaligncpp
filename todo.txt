@@ -21,6 +21,17 @@ consider adding archive
 
 consider self-adaptive mutation probabilities
 
+write tests for hypothetical bitscore and conserved count functions
+
+there is some kind of bug in fastICS when the networks contain self-loops.
+	This can cause fastICS to under or over estimate ICS when there are 
+	a lot of self-loops. Currently, ignoring self-loops when reading 
+	networks, but that causes a couple ICS tests to fail (since they 
+	are comparing against ICS computations that don't ignore self-loops).
+	So, those tests are commented out.
+	In the long run, it would be good to fix this bug, but it is taking
+	an inordinate amount of time right now.
+
 REFACTORING
 -----------
 use doSwap function in crossover constructor

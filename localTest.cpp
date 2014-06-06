@@ -73,9 +73,12 @@ int main(int ac, char* av[])
 		for(int i = 0; i < 100000; i++){
 			fastHillClimb(g, aln, total,
 	               500, fitnessNames, 0);
-			cout<<"curr ICS: "<<aln->fitness.at(0)<<endl;
-			cout<<"True ICS is "<<aln->ics()<<endl;
+			for(int j = 0; j <fitnessNames.size();j++){
+				cout<<"current "<<fitnessNames.at(j)<<" is "
+				    <<aln->fitness.at(j)<<endl;
+			}
 		}
+		aln->save("localTest.aln");
 
 	}
 	catch(exception& e){

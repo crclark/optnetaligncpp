@@ -65,9 +65,20 @@ void fastHillClimb(mt19937& prng, Alignment* aln, bool total,
 		while(y == x){
 			y = randIndex(prng);
 		}
+		/*
+		double currFit = aln->fitness.at(objectiveToImprove);
+		aln->doSwap(x,y);
+		aln->computeFitness(fitnessNames);
+		double newFit = aln->fitness.at(objectiveToImprove);
+		
+		if(newFit < currFit){
+			aln->doSwap(x,y);
+		}
+		*/
 
+		
 		vector<double> delta = aln->doSwapHypothetical(x,y);
-		if(delta.at(objectiveToImprove) > aln->fitness.at(objectiveToImprove)){
+		if(delta.at(objectiveToImprove) > 0){
 			aln->doSwap(x,y);
 			aln->computeFitness(fitnessNames);
 		}
