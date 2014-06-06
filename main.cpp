@@ -13,6 +13,7 @@
 #include "Alignment.h"
 #include "argParsing.h"
 #include "nsga-ii.h"
+#include "localSearch.h"
 using namespace std;
 namespace po = boost::program_options;
 
@@ -43,6 +44,9 @@ int main(int ac, char* av[])
 		const bool smallstart = vm.count("smallstart");
 		const bool finalstats = vm.count("finalstats");
 		const string outprefix = vm["outprefix"].as<string>();
+		const int hillclimbiters = vm.count("hillclimbiters") 
+		                           ? vm["hillclimbiters"].as<int>() 
+		                           : 0; 
 
 		const BLASTDict* bitPtr = vm.count("bitscores") ? &bitscores : nullptr;
 
@@ -162,6 +166,18 @@ int main(int ac, char* av[])
 						(*it)->mutate(tg,mutswappb,total);
 					}
 					(*it)->computeFitness(fitnessNames);
+
+					//do local search by hill-climbing on a random objective
+					if(hillclimbiters != 0){
+						uniform_int_distribution<int> 
+						  objGen(0,fitnessNames.size() -1);
+
+						  int obj = objGen(tg);
+
+						  fastHillClimb(tg, *it, total,
+	                         hillclimbiters, fitnessNames,
+	                         obj);
+					}
 				}
 
 			};

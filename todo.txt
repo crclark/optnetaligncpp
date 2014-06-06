@@ -32,6 +32,9 @@ there is some kind of bug in fastICS when the networks contain self-loops.
 	In the long run, it would be good to fix this bug, but it is taking
 	an inordinate amount of time right now.
 
+write tests for v1Unaligned being correct after all modifying ops.
+
+
 REFACTORING
 -----------
 use doSwap function in crossover constructor

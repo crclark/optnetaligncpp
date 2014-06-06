@@ -24,7 +24,8 @@ Alignment::Alignment(const Network* n1, const Network* n2,
 	aln = vector<node>(size,-1);
 	alnMask = vector<bool>(size,true);
 	fitnessValid = false;
-	
+	v1Unaligned = unordered_set<node>();
+	v1Unaligned.reserve(n2->nodeToNodeName.size());
 	for(int i = 0; i < size; i++){
 		aln[i] = i;
 	}
@@ -104,6 +105,7 @@ Alignment::Alignment(const Network* n1, const Network* n2,
 			node arbNode = *(v2Unaligned.begin());
 			aln[i] = arbNode;
 			alnMask[i] = false;
+			v1Unaligned.insert(i);
 			v2Unaligned.erase(arbNode);
 		}
 	}
@@ -163,6 +165,7 @@ Alignment::Alignment(mt19937& prng, float cxswappb,
 	conservedCounts = par1->conservedCounts;
 	net1 = par1->net1;
 	net2 = par1->net2;
+	v1Unaligned = par1->v1Unaligned;
 
 
 	//do crossover
@@ -182,9 +185,15 @@ Alignment::Alignment(mt19937& prng, float cxswappb,
 				alnMask[par1Indices[temp2]] = temp1Mask;
 				if(coinFlip(prng)){
 					alnMask[i] = par1bool && par2bool;
+					if(!alnMask[i]){
+						v1Unaligned.insert(i);
+					}
 				}
 				else{
 					alnMask[i] = par1bool || par2bool;
+					if(!alnMask[i]){
+						v1Unaligned.insert(i);
+					}
 				}
 			}
 
@@ -217,6 +226,7 @@ void Alignment::shuf(mt19937& prng, bool uniformsize,
 			for(int i =0; i < alnMask.size(); i++){
 				if(coinFlip(prng)){
 					alnMask[i] = false;
+					v1Unaligned.insert(i);
 				}
 			}
 		}
@@ -234,10 +244,12 @@ void Alignment::shuf(mt19937& prng, bool uniformsize,
 					index = indexDist(prng);
 				}
 				alnMask[index] = false;
+				v1Unaligned.insert(index);
 			}
 			//deactivate all unaligned nodes aligned to dummy nodes
 			for(int i = actualSize; i < aln.size(); i++){
 				alnMask[i] = false;
+				v1Unaligned.insert(i);
 			}
 		}
 		else{ //smallsize
@@ -254,10 +266,12 @@ void Alignment::shuf(mt19937& prng, bool uniformsize,
 					index = indexDist(prng);
 				}
 				alnMask[index] = false;
+				v1Unaligned.insert(index);
 			}
 			//deactivate all unaligned nodes aligned to dummy nodes
 			for(int i = actualSize; i < aln.size(); i++){
 				alnMask[i] = false;
+				v1Unaligned.insert(i);
 			}
 		}
 	}
@@ -293,6 +307,12 @@ void Alignment::mutate(mt19937& prng, float mutswappb, bool total){
 		
 		if(!total && fltgen(prng) < mutswappb){
 			alnMask[i] = !alnMask[i];
+			if(alnMask[i]){
+				v1Unaligned.remove(i);
+			}
+			else{
+				v1Unaligned.insert(i);
+			}
 			updateBitscore(i, aln[i], aln[i], !alnMask[i],
 		                   alnMask[i]);
 			updateConservedCount(i, aln[i], aln[i], !alnMask[i],
@@ -316,6 +336,20 @@ void Alignment::doSwap(node x, node y){
 	alnMask[x] = alnMask[y];
 	alnMask[y] = tempb;
 
+	if(alnMask[x]){
+		v1Unaligned.remove(x);
+	}
+	else{
+		v1Unaligned.insert(x);
+	}
+
+	if(alnMask[y]){
+		v1Unaligned.remove(x);
+	}
+	else{
+		v1Unaligned.insert(x);
+	}
+
 	updateBitscore(x, aln[y], aln[x], alnMask[y], alnMask[x]);
 	updateConservedCount(x, aln[y], aln[x], alnMask[y], alnMask[x],
 		                 -1);
@@ -324,6 +358,7 @@ void Alignment::doSwap(node x, node y){
 	updateBitscore(y, aln[x], aln[y], alnMask[x], alnMask[y]);
 }
 
+//todo: test this
 vector<double> Alignment::doSwapHypothetical(node x, node y) const{
 	vector<double> toReturn(fitness.size(),0.0);
 
@@ -343,6 +378,29 @@ vector<double> Alignment::doSwapHypothetical(node x, node y) const{
 			           hypAlnMsky, hypAlnMskx);
 		toReturn[1] += hypotheticalBitscoreDelta(y, hypAlnx, hypAlny,
 			           hypAlnMskx, hypAlnMsky);
+	}
+
+	return toReturn;
+}
+
+void Alignment::onBit(node x){
+	bool old = alnMask[x];
+	alnMask[x] = true;
+	v1Unaligned.remove(x);
+	updateBitscore(x,aln[x],aln[x],old, alnMask[x]);
+	updateConservedCount(x,aln[x],aln[x],old, alnMask[x],-1);
+}
+
+//todo: test this
+vector<double> Alignment::onBitHypothetical(node x) const{
+	vector<double> toReturn(fitness.size(), 0.0);
+
+	toReturn[0] += hypotheticalConservedCountDelta(x, aln[x], aln[x],
+		           false, true, -1);
+
+	if(bitscores != nullptr){
+		toReturn[1] += hypotheticalBitscoreDelta(x, aln[x], aln[x],
+			           false, true);
 	}
 
 	return toReturn;
@@ -569,17 +627,6 @@ void Alignment::updateConservedCount(node n1, node n2old, node n2new,
 	                                 bool oldMask, bool newMask,
 	                                 node ignore){
 	
-	//cout<<"in updateConservedCount"<<endl;
-	
-	//cout<<"n1 = "<<net1->nodeToNodeName.at(n1)<<endl;
-	/*
-	cout<<"n2old = "<<net2->nodeToNodeName.at(n2old)<<endl;
-	cout<<"n2new = "<<net2->nodeToNodeName.at(n2new)<<endl;
-	cout<<"oldMask = "<<oldMask<<endl;
-	cout<<"newMask = "<<newMask<<endl;
-	if(ignore>0)
-		cout<<"ignore = "<<net1->nodeToNodeName.at(ignore)<<endl;
-	*/
 	//easy cases first:
 	//check that n1 is not a dummy node:
 	if(n1 >= actualSize){
@@ -619,9 +666,6 @@ void Alignment::updateConservedCount(node n1, node n2old, node n2new,
 	}
 
 	for(auto i : net1->adjList.at(n1)){
-		//cout<<"neighbor is "<<net1->nodeToNodeName.at(i)<<endl;
-		//cout<<"in loop for neighbors of n1."<<endl;
-		//cout<<"i = "<<net1->nodeToNodeName.at(i)<<endl;
 		//need to count self loops one extra time so as to
 		//ensure they are counted correctly when conserved.
 		//otherwise, they will only be counted once
@@ -633,59 +677,13 @@ void Alignment::updateConservedCount(node n1, node n2old, node n2new,
 			if(newMask && net2->adjMatrix[n2new][n2new]){
 				conservedCounts[n1]++;
 			}
-			/*
-			if(!n2old && n2new && net2->adjMatrix[n2new][n2new]){
-				cout<<"case 1"<<endl;
-				conservedCounts[n1]++;
-			}
-			else if(n2old && !n2new && net2->adjMatrix[n2old][n2old]){
-				if(conservedCounts[n1]>0){
-					cout<<"case 2"<<endl;
-					conservedCounts[n1]--;
-				}
-			}
-			else if(n2old && n2new && !(net2->adjMatrix[n2old][n2old])
-				    && net2->adjMatrix[n2new][n2new]){
-				cout<<"case 3"<<endl;
-				conservedCounts[n1]++;
-			}
-			else if(n2old && n2new && net2->adjMatrix[n2old][n2old]
-				    && !(net2->adjMatrix[n2new][n2new])){
-				if(conservedCounts[n1]>0){
-					cout<<"case 4"<<endl;
-					conservedCounts[n1]--;
-				}
-			}
-			*/
 			else {
-				/*
-				cout<<"fell through neighbor cases and continuing."<<endl;
-				if(n1 >= actualSize){
-					cout<<"n1 is a dummy node."<<endl;
-				}
-				else{
-					cout<<"n1 is "<<net1->nodeToNodeName.at(n1)<<endl;
-				}
-				cout<<"n2old is "<<net2->nodeToNodeName.at(n2old)<<endl;
-				if(net2->adjMatrix[n2old][n2old]){
-					cout<<"n2old has a self-loop"<<endl;
-				}
-				cout<<"n2new is "<<net2->nodeToNodeName.at(n2new)<<endl;
-				if(net2->adjMatrix[n2new][n2new]){
-					cout<<"n2new has a self-loop"<<endl;
-				}
-				cout<<"oldMask is "<<oldMask<<endl;
-				cout<<"newMask is "<<newMask<<endl;
-				*/
 				continue;
 			}
 		}
 
 		//todo: we still get small errors in ICS due to the presence of self-
 		//loops (ignoring self-loops when loading network makes them go away).
-		//Currently ignoring them because they are quite small errors.
-		//However, Need to make sure they do not propagate and eventually cause
-		//large errors. Or, rewrite this function such that the bug is fixed.
 
 		if(i == ignore){
 			//cout<<"i is ignore; continuing"<<endl;
@@ -753,7 +751,7 @@ int Alignment::hypotheticalConservedCountDelta(node n1, node n2old, node n2new,
 	//todo: degree 0 currently impossible but may be needed later
 	/*
 	if(net1->degree(n1) == 0){
-		return 0;
+		return;
 	}
 	*/
 
@@ -781,19 +779,31 @@ int Alignment::hypotheticalConservedCountDelta(node n1, node n2old, node n2new,
 		//otherwise, they will only be counted once
 		//when all other conserved edges get counted twice
 		//(which is why we divide by two in fastICSNumerator())
-		if(n1 == i && n2old != n2new){
-			if(net2->adjMatrix[n2new][n2new]){
+		if(n1 == i){
+			//NOTE: at this point conservedCounts[n1] is zero!
+			//cout<<"in self-loop case!"<<endl;
+			if(newMask && net2->adjMatrix[n2new][n2new]){
 				toReturn++;
+			}
+			else {
+				continue;
 			}
 		}
 
+		//todo: we still get small errors in ICS due to the presence of self-
+		//loops (ignoring self-loops when loading network makes them go away).
+
 		if(i == ignore){
+			//cout<<"i is ignore; continuing"<<endl;
 			continue;
 		}
 		if(!alnMask[i]){
+			//cout<<"mask off; continuing"<<endl;
 			continue;
 		}
 		if(net2->adjMatrix[n2new][aln[i]]){
+			//cout<<"aln[i] is neighbor to n2new; edge conserved. n1 conserved "
+			//      "count++"<<endl;
 			toReturn++;
 		}
 		//conservedCount of i either increases by 1,
@@ -806,20 +816,26 @@ int Alignment::hypotheticalConservedCountDelta(node n1, node n2old, node n2new,
 		    (*alnINbrs)[n2new] && oldMask == newMask)
 		   || (!(*alnINbrs)[n2old] &&
 		   	   !(*alnINbrs)[n2new])){
+			//cout<<"both n2old and n2new are neighbors of aln[i], or neither is."
+		    //   <<endl;
 			//do nothing
 		}
 		else if((*alnINbrs)[n2old] && (*alnINbrs)[n2new]
 			    && !oldMask && newMask){
+			//cout<<"both n2old and n2new are neighbors and mask went from 0 to 1"
+		     //   <<endl;
 			toReturn++;
 		}
 		else if((*alnINbrs)[n2old] &&
 			    !(*alnINbrs)[n2new]){
 			if(conservedCounts[i]>0){
+			//	cout<<"n1 to i used to be conserved and is no longer"<<endl;
 				toReturn--;
 			}
 		}
 		else if(!(*alnINbrs)[n2old] &&
 			    (*alnINbrs)[n2new]){
+			//cout<<"n1 to i wasn't conserved but is now"<<endl;
 			toReturn++;
 		}
 	}

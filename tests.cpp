@@ -644,6 +644,52 @@ BOOST_AUTO_TEST_CASE( do_swap_consistent_ics ){
 	BOOST_CHECK(approxEqual(ics,fastICS));	
 }
 
+BOOST_AUTO_TEST_CASE( hypothetical_swap_correct ){
+	cout<<endl<<"BEGIN hypothetical_swap_correct"<<endl;
+	Network net1("../optnetalign/tests/lccstest1.net");
+	Network net2("../optnetalign/tests/lccstest2.net");
+	Alignment aln1(&net1,&net2,"../optnetalign/tests/lccstest.aln",nullptr);
+	mt19937 g1(123);
+	vector<string> fitnessNames;
+	fitnessNames.push_back("ICS");
+	aln1.computeFitness(fitnessNames);
+
+	uniform_int_distribution<int> randIndex(0,aln1.aln.size());
+
+
+	for(int i = 0; i < 100; i++){
+		node x = randIndex(g1);
+		node y = x;
+		while(y == x){
+			y = randIndex(g1);
+		}
+		vector<double> delta = aln1.doSwapHypothetical(x,y);
+
+		//get sum of conservedCounts before swapping
+		int sumBefore = 0;
+		for(int j = 0; j < aln1.conservedCounts.size(); j++){
+			sumBefore += aln1.conservedCounts[j];
+		}
+
+		aln1.doSwap(x,y);
+
+		int sumAfter = 0;
+		for(int j = 0; j < aln1.conservedCounts.size(); j++){
+			sumAfter += aln1.conservedCounts[j];
+		}
+
+		int diff = sumAfter - sumBefore;
+		if(diff != 2*delta[0]){
+			cout<<"diff: "<<diff<<endl;
+			cout<<"2*delta[0]: "<<2*delta[0]<<endl;
+			cout<<"x: "<<x<<endl;
+			cout<<"y: "<<y<<endl;
+		}
+	}
+
+
+}
+
 //____________________________________________________________________________//
 
 // EOF

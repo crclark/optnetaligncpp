@@ -70,13 +70,15 @@ int main(int ac, char* av[])
 		
 		//fast hill climb version
 		cout<<"starting main loop"<<endl;
+		int obj = 0;
 		for(int i = 0; i < 100000; i++){
 			fastHillClimb(g, aln, total,
-	               500, fitnessNames, 0);
+	               500, fitnessNames, obj);
 			for(int j = 0; j <fitnessNames.size();j++){
 				cout<<"current "<<fitnessNames.at(j)<<" is "
 				    <<aln->fitness.at(j)<<endl;
 			}
+			obj = obj ? 0 : 1;
 		}
 		aln->save("localTest.aln");
 

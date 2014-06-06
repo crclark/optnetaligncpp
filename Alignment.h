@@ -24,6 +24,8 @@ public:
 	void mutate(mt19937& prng, float mutswappb, bool total = true);
 	void doSwap(node x, node y);
 	vector<double> doSwapHypothetical(node x, node y) const;
+	void onBit(node x);
+	vector<double> onBitHypothetical(node x) const;
 	void computeFitness(const vector<string>& fitnessNames);
 	void save(string filename) const;
 	double ics() const;
@@ -44,6 +46,8 @@ public:
 		                  // but if we separate searching through permutations
 	                      //from searching through masks, it should be 
 	                      //workable.
+	unordered_set<node> v1Unaligned; //tracks which nodes are unaligned
+	                                 //DANGER: tracks dummy nodes, too!
 	bool fitnessValid;
 	vector<double> fitness; //all fitnesses stored s.t. larger is better.
 	int actualSize; //number of nodes in net1

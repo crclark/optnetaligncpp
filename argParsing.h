@@ -111,6 +111,10 @@ argRetVals handleArgs(int ac, char* av[]){
 		("tournsel", "When set, use tournament selection "
 			         "to choose parents for crossover. Otherwise, uses "
 			         "random selection.")
+		("hillclimbiters", po::value<int>(), "Sets the number of hill-climbing"
+			                                 " iterations to perform on each "
+			                                 "member of each new generation."
+			                                 "Default: 0.")
 	;
 	
 	po::variables_map vm;
