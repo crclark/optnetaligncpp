@@ -23,6 +23,7 @@ public:
 	          bool smallstart, bool total); //shuffles the alignment to make it completely random
 	void mutate(mt19937& prng, float mutswappb, bool total = true);
 	void doSwap(node x, node y);
+	vector<double> doSwapHypothetical(node x, node y) const;
 	void computeFitness(const vector<string>& fitnessNames);
 	void save(string filename) const;
 	double ics() const;

@@ -34,7 +34,6 @@ Alignment::Alignment(const Network* n1, const Network* n2,
 	domRank = -1;
 	crowdDist = -1.0;
 	bitscores = bit;
-
 	actualSize = net1->nodeToNodeName.size();
 	//initialize conserved counts for fast ICS computation
 	conservedCounts = vector<int>(actualSize);
@@ -308,7 +307,6 @@ void Alignment::mutate(mt19937& prng, float mutswappb, bool total){
 //takes 2 nodes from V1 and swaps the nodes they are aligned to in V2.
 //updates currBitscore accordingly.
 //updates conservedCounts accordingly as well.
-//todo: add this to crossover constructor
 void Alignment::doSwap(node x, node y){
 	node temp = aln[x];
 	aln[x] = aln[y];
@@ -326,6 +324,29 @@ void Alignment::doSwap(node x, node y){
 	updateBitscore(y, aln[x], aln[y], alnMask[x], alnMask[y]);
 }
 
+vector<double> Alignment::doSwapHypothetical(node x, node y) const{
+	vector<double> toReturn(fitness.size(),0.0);
+
+	node hypAlnx = aln[y];
+	node hypAlny = aln[x];
+
+	bool hypAlnMskx = alnMask[y];
+	bool hypAlnMsky = alnMask[x];
+
+	toReturn[0] += hypotheticalConservedCountDelta(x, hypAlny, hypAlnx,
+	               hypAlnMsky, hypAlnMskx, -1);
+	toReturn[0] += hypotheticalConservedCountDelta(y,hypAlnx,hypAlny,
+		           hypAlnMskx, hypAlnMsky, x);
+
+	if(bitscores != nullptr){
+		toReturn[1] += hypotheticalBitscoreDelta(x, hypAlny, hypAlnx,
+			           hypAlnMsky, hypAlnMskx);
+		toReturn[1] += hypotheticalBitscoreDelta(y, hypAlnx, hypAlny,
+			           hypAlnMskx, hypAlnMsky);
+	}
+
+	return toReturn;
+}
 
 //todo: add support for GO annotations
 //todo: maybe something more principled than fitnessNames (so ad hoc!)
@@ -547,6 +568,16 @@ double Alignment::hypotheticalBitscoreDelta(node n1, node n2old, node n2new,
 void Alignment::updateConservedCount(node n1, node n2old, node n2new, 
 	                                 bool oldMask, bool newMask,
 	                                 node ignore){
+	//cout<<"in updateConservedCount"<<endl;
+	/*
+	cout<<"n1 = "<<net1->nodeToNodeName.at(n1)<<endl;
+	cout<<"n2old = "<<net2->nodeToNodeName.at(n2old)<<endl;
+	cout<<"n2new = "<<net2->nodeToNodeName.at(n2new)<<endl;
+	cout<<"oldMask = "<<oldMask<<endl;
+	cout<<"newMask = "<<newMask<<endl;
+	if(ignore>0)
+		cout<<"ignore = "<<net1->nodeToNodeName.at(ignore)<<endl;
+	*/
 	//easy cases first:
 	//check that n1 is not a dummy node:
 	if(n1 >= actualSize){
@@ -586,24 +617,72 @@ void Alignment::updateConservedCount(node n1, node n2old, node n2new,
 	}
 
 	for(auto i : net1->adjList.at(n1)){
+		//cout<<"in loop for neighbors of n1."<<endl;
+		//cout<<"i = "<<net1->nodeToNodeName.at(i)<<endl;
 		//need to count self loops one extra time so as to
 		//ensure they are counted correctly when conserved.
 		//otherwise, they will only be counted once
 		//when all other conserved edges get counted twice
 		//(which is why we divide by two in fastICSNumerator())
-		if(n1 == i && n2old != n2new){
-			if(net2->adjMatrix[n2new][n2new]){
+		if(n1 == i){
+			if(!n2old && n2new && net2->adjMatrix[n2new][n2new]){
+				//cout<<"increasing count for self loop conservation."<<endl;
 				conservedCounts[n1]++;
+			}
+			else if(n2old && !n2new && net2->adjMatrix[n2old][n2old]){
+				if(conservedCounts[n1]>0)
+					conservedCounts[n1]--;
+			}
+			else if(n2old && n2new && !(net2->adjMatrix[n2old][n2old])
+				    && net2->adjMatrix[n2new][n2new]){
+				conservedCounts[n1]++;
+			}
+			else if(n2old && n2new && net2->adjMatrix[n2old][n2old]
+				    && !(net2->adjMatrix[n2new][n2new])){
+				if(conservedCounts[n1]>0)
+					conservedCounts[n1]--;
+			}
+			else {
+				/*
+				cout<<"fell through neighbor cases and continuing."<<endl;
+				if(n1 >= actualSize){
+					cout<<"n1 is a dummy node."<<endl;
+				}
+				else{
+					cout<<"n1 is "<<net1->nodeToNodeName.at(n1)<<endl;
+				}
+				cout<<"n2old is "<<net2->nodeToNodeName.at(n2old)<<endl;
+				if(net2->adjMatrix[n2old][n2old]){
+					cout<<"n2old has a self-loop"<<endl;
+				}
+				cout<<"n2new is "<<net2->nodeToNodeName.at(n2new)<<endl;
+				if(net2->adjMatrix[n2new][n2new]){
+					cout<<"n2new has a self-loop"<<endl;
+				}
+				cout<<"oldMask is "<<oldMask<<endl;
+				cout<<"newMask is "<<newMask<<endl;
+				*/
+				continue;
 			}
 		}
 
+		//todo: we still get small errors in ICS due to the presence of self-
+		//loops (ignoring self-loops when loading network makes them go away).
+		//Currently ignoring them because they are quite small errors.
+		//However, Need to make sure they do not propagate and eventually cause
+		//large errors. Or, rewrite this function such that the bug is fixed.
+
 		if(i == ignore){
+			//cout<<"i is ignore; continuing"<<endl;
 			continue;
 		}
 		if(!alnMask[i]){
+			//cout<<"mask off; continuing"<<endl;
 			continue;
 		}
 		if(net2->adjMatrix[n2new][aln[i]]){
+			//cout<<"aln[i] is neighbor to n2new; edge conserved. n1 conserved "
+			//      "count++"<<endl;
 			conservedCounts[n1]++;
 		}
 		//conservedCount of i either increases by 1,
@@ -616,20 +695,26 @@ void Alignment::updateConservedCount(node n1, node n2old, node n2new,
 		    (*alnINbrs)[n2new] && oldMask == newMask)
 		   || (!(*alnINbrs)[n2old] &&
 		   	   !(*alnINbrs)[n2new])){
+			//cout<<"both n2old and n2new are neighbors of aln[i], or neither is."
+		    //   <<endl;
 			//do nothing
 		}
 		else if((*alnINbrs)[n2old] && (*alnINbrs)[n2new]
 			    && !oldMask && newMask){
+			//cout<<"both n2old and n2new are neighbors and mask went from 0 to 1"
+		     //   <<endl;
 			conservedCounts[i]++;
 		}
 		else if((*alnINbrs)[n2old] &&
 			    !(*alnINbrs)[n2new]){
 			if(conservedCounts[i]>0){
+			//	cout<<"n1 to i used to be conserved and is no longer"<<endl;
 				conservedCounts[i]--;
 			}
 		}
 		else if(!(*alnINbrs)[n2old] &&
 			    (*alnINbrs)[n2new]){
+			//cout<<"n1 to i wasn't conserved but is now"<<endl;
 			conservedCounts[i]++;
 		}
 	}
