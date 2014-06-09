@@ -61,7 +61,7 @@ void fastHillClimb(mt19937& prng, Alignment* aln, bool total,
 	if(fitnessNames.at(objectiveToImprove) == "Size"){
 
 		//make sure not already total
-		if(v1Unaligned.size() == 0){
+		if(aln->v1Unaligned.size() == 0){
 			return;
 		}
 

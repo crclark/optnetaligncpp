@@ -308,7 +308,7 @@ void Alignment::mutate(mt19937& prng, float mutswappb, bool total){
 		if(!total && fltgen(prng) < mutswappb){
 			alnMask[i] = !alnMask[i];
 			if(alnMask[i]){
-				v1Unaligned.remove(i);
+				v1Unaligned.erase(i);
 			}
 			else{
 				v1Unaligned.insert(i);
@@ -337,14 +337,14 @@ void Alignment::doSwap(node x, node y){
 	alnMask[y] = tempb;
 
 	if(alnMask[x]){
-		v1Unaligned.remove(x);
+		v1Unaligned.erase(x);
 	}
 	else{
 		v1Unaligned.insert(x);
 	}
 
 	if(alnMask[y]){
-		v1Unaligned.remove(x);
+		v1Unaligned.erase(x);
 	}
 	else{
 		v1Unaligned.insert(x);
@@ -386,7 +386,7 @@ vector<double> Alignment::doSwapHypothetical(node x, node y) const{
 void Alignment::onBit(node x){
 	bool old = alnMask[x];
 	alnMask[x] = true;
-	v1Unaligned.remove(x);
+	v1Unaligned.erase(x);
 	updateBitscore(x,aln[x],aln[x],old, alnMask[x]);
 	updateConservedCount(x,aln[x],aln[x],old, alnMask[x],-1);
 }

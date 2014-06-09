@@ -9,19 +9,11 @@ add logging of mean and max over time for plotting purposes
 
 test smallstart, uniformsize, and ec
 
-make non-tournament selection faster
-
-label objectives better when displaying verbose stats
-
 make sure asserts are turned off in optimized version
-
-consider making this memetic -- local search on new alns
 
 consider adding archive
 
 consider self-adaptive mutation probabilities
-
-write tests for hypothetical bitscore and conserved count functions
 
 there is some kind of bug in fastICS when the networks contain self-loops.
 	This can cause fastICS to under or over estimate ICS when there are 
@@ -34,21 +26,23 @@ there is some kind of bug in fastICS when the networks contain self-loops.
 
 write tests for v1Unaligned being correct after all modifying ops.
 
+consider abandoning size optimization if total alignment optimization
+performance continues to be much better. Instead, might want to do partiality
+as a post-processing step of extracting high-confidence sub-alignments.
+
+add the ability to specify a list of fitnesses to dominate as a stopping condition.
+Maybe go another 10000 generations after dominating the last one.
 
 REFACTORING
 -----------
-use doSwap function in crossover constructor
 
-rewrite the abomination that updateConservedCount has become
-function of: whether self loop, whether neighbor and self used to have
+rewrite the abomination that updateConservedCount has become.
+Function of: whether self loop, whether neighbor and self used to have
        conserved edge, whether neighbor and self now have conserved
        edge, and both masks. 
 
-move NSGA-II functions out into separate files
 
-LOCAL SEARCH
-------------
-hillClimb function just calls mutate repeatedly, always switching to new aln
-that improves the given objective. Seems to work really well. Need to make it
-faster. Create hypotheticalDoSwap that returns a vector of how much conservedCounts
-would increase/decrease and how much bitscores would change. Could we then exhaustively consider all possible swaps at each iteration? Would that be worthwhile?
+LOCAL SEARCH ALONE
+------------------
+Alternating between optimizing ICS/EC and bitscore sum each iteration. This seems
+to get to an EC of about .15 really quickly, but then it starts to slowly fall. This isn't bad, but it's a lot worse than it could be given the GA performance. Bitscore sum, OTOH, increases very slowly compared to other methods but seems to keep increasing for much longer compared to topological fit. Also, it could be that this way of trying to compromise between the two objectives simply doesn't work well.

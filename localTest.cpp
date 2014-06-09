@@ -47,6 +47,8 @@ int main(int ac, char* av[])
 
 		const BLASTDict* bitPtr = vm.count("bitscores") ? &bitscores : nullptr;
 
+		const int generations = vm["generations"].as<int>();
+
 		mt19937 g(14);
 		//initialize population
 		
@@ -71,7 +73,7 @@ int main(int ac, char* av[])
 		//fast hill climb version
 		cout<<"starting main loop"<<endl;
 		int obj = 0;
-		for(int i = 0; i < 100000; i++){
+		for(int i = 0; i < generations; i++){
 			fastHillClimb(g, aln, total,
 	               500, fitnessNames, obj);
 			for(int j = 0; j <fitnessNames.size();j++){
@@ -79,6 +81,7 @@ int main(int ac, char* av[])
 				    <<aln->fitness.at(j)<<endl;
 			}
 			obj = obj ? 0 : 1;
+			cout<<"Generation "<<i<<" complete."<<endl;
 		}
 		aln->save("localTest.aln");
 
@@ -87,6 +90,8 @@ int main(int ac, char* av[])
 		cerr << "error: " << e.what() << endl;
 		cerr <<"Run with --help for help."<<endl;
 	}
+
+	
 
 	return 0;
 }
