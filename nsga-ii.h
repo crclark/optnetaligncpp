@@ -18,6 +18,11 @@ all of NSGA-II. This entails:
 //todo: add more pass-by-reference in general
 vector<vector<Alignment*> > nonDominatedSort(const vector<Alignment*>& in);
 
+//precond: all alns have fitnesses computed
+//postcond: all alns have fitnessNormalizeds computed
+//this should be called before setCrowdingDists
+void normalizeFitnesses(vector<Alignment*>& in);
+
 //in is assumed to be a front produced by nonDominatedSort
 void setCrowdingDists(vector<Alignment*>& in);
 

@@ -7,8 +7,6 @@ as objective space to do so.
 
 add logging of mean and max over time for plotting purposes
 
-test smallstart, uniformsize, and ec
-
 make sure asserts are turned off in optimized version
 
 consider adding archive
@@ -33,8 +31,6 @@ as a post-processing step of extracting high-confidence sub-alignments.
 add the ability to specify a list of fitnesses to dominate as a stopping condition.
 Maybe go another 10000 generations after dominating the last one.
 
-normalize objectives before doing crowding distances!
-
 REFACTORING
 -----------
 
@@ -47,4 +43,4 @@ Function of: whether self loop, whether neighbor and self used to have
 LOCAL SEARCH ALONE
 ------------------
 Alternating between optimizing ICS/EC and bitscore sum each iteration. This seems
-to get to an EC of about .15 really quickly, but then it starts to slowly fall. This isn't bad, but it's a lot worse than it could be given the GA performance. Bitscore sum, OTOH, increases very slowly compared to other methods but seems to keep increasing for much longer compared to topological fit. Also, it could be that this way of trying to compromise between the two objectives simply doesn't work well.
+to get to an EC of about .15 really quickly on dm-hs, but then it starts to slowly fall. This isn't bad, but it's a lot worse than it could be given the GA performance. Bitscore sum, OTOH, increases very slowly compared to other methods but seems to keep increasing for much longer compared to topological fit. Also, it could be that this way of trying to compromise between the two objectives simply doesn't work well.

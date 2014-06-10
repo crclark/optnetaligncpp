@@ -428,6 +428,7 @@ BOOST_AUTO_TEST_CASE( crowding_dist_assignment )
 	front.push_back(&aln3);
 	front.push_back(&aln4);
 	front.push_back(&aln5);
+	normalizeFitnesses(front);
 	setCrowdingDists(front);
 	BOOST_CHECK(approxEqual(1.0,front[1]->crowdDist));
 	BOOST_CHECK(approxEqual(0.666666666666666,front[2]->crowdDist));

@@ -95,9 +95,10 @@ int main(int ac, char* av[])
 				combinedPtrs.at(i) = ptr;
 			}
 			
+			
 			vector<vector<Alignment*> > fronts = nonDominatedSort(combinedPtrs);
 
-
+			normalizeFitnesses(combinedPtrs);
 			//started with best front, add to new population front-by-front
 			unordered_set<Alignment*> popNew;
 			popNew.reserve(popsize);

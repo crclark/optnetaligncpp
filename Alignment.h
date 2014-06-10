@@ -51,6 +51,8 @@ public:
 	                                 //DANGER: tracks dummy nodes, too!
 	bool fitnessValid;
 	vector<double> fitness; //all fitnesses stored s.t. larger is better.
+	vector<double> fitnessNormalized; //stores fitnesses normalized so
+	                                  //that crowded comparison works right.
 	int actualSize; //number of nodes in net1
 	int domRank; //which front this aln is in. 0 is best, 1 is 2nd best, etc.
 	int numThatDominate; //how many others in the population dominate this one.

@@ -12,6 +12,7 @@ using namespace std;
 //this function assumes fitnesses have already been assigned
 //todo: add check that that's the case.
 vector<vector<Alignment*> > nonDominatedSort(const vector<Alignment*>& in){
+
 	vector<vector<Alignment*> > fronts(1); //know there is at least one front.
 	for(int i = 0; i < in.size(); i++){
 		in[i]->numThatDominate = 0;
@@ -62,9 +63,27 @@ vector<vector<Alignment*> > nonDominatedSort(const vector<Alignment*>& in){
 
 }
 
+void normalizeFitnesses(vector<Alignment*>& in){
+	//for each objective:
+	for(int i = 0; i < in[0]->fitness.size(); i++){
+		//compute max of this objective
+		double max = 0.0;
+		for(auto p : in){
+			if(p->fitness[i] > max){
+				max = p->fitness[i];
+			}
+		}
+
+		//set normalized fitness of all alns for this objective
+		for(auto p : in){
+			p->fitnessNormalized.push_back(p->fitness[i]/max);
+		}
+	}
+}
 
 //takes a front as input and assigns crowdDist to each element
 //note: results meaningless if input is not non-dominated set
+//note: normalizeFitnesses MUST be called first!
 void setCrowdingDists(vector<Alignment*>& in){
 
 	//init all to zero
@@ -80,7 +99,7 @@ void setCrowdingDists(vector<Alignment*>& in){
 		//sort by objective m
 		sort(in.begin(), in.end(),
 			[m](const Alignment* a, const Alignment* b){
-				return a->fitness[m] < b->fitness[m];
+				return a->fitnessNormalized[m] < b->fitnessNormalized[m];
 			});
 
 		//set boundary points to max dist
@@ -89,8 +108,8 @@ void setCrowdingDists(vector<Alignment*>& in){
 
 		//increment crowding dist for the current objective
 		for(int i = 1; i< (numAlns-1); i++){
-			double numerator = in[i+1]->fitness[m] - in[i-1]->fitness[m];
-			double denom = in[numAlns-1]->fitness[m] - in[0]->fitness[m];
+			double numerator = in[i+1]->fitnessNormalized[m] - in[i-1]->fitnessNormalized[m];
+			double denom = in[numAlns-1]->fitnessNormalized[m] - in[0]->fitnessNormalized[m];
 			in[i]-> crowdDist += (numerator/denom);
 		}
 
