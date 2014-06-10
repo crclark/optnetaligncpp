@@ -768,6 +768,24 @@ BOOST_AUTO_TEST_CASE( greedy_match_aln_consistent ){
 
 	BOOST_CHECK_EQUAL(alnv2.size(),aln.aln.size());
 }
+
+BOOST_AUTO_TEST_CASE( self_similarity_is_one){
+	Network net1("../optnetalign/tests/cg1a.net");
+	Network net2("../optnetalign/tests/cg1b.net");
+	BLASTDict b = loadBLASTInfo(&net1,&net2,"../optnetalign/tests/cg1.sim");
+	Alignment aln(&net1,&net2,"../optnetalign/tests/cg1.aln",&b);
+	BOOST_CHECK(approxEqual(alnSimilarity(&aln,&aln),1.0));
+
+}
+
+BOOST_AUTO_TEST_CASE(similarity_check){
+	Network net1("../optnetalign/tests/cg1a.net");
+	Network net2("../optnetalign/tests/cg1b.net");
+	Alignment aln1(&net1,&net2,"../optnetalign/tests/cg1.aln",nullptr);
+	Alignment aln2(&net1,&net2,"../optnetalign/tests/cg1partial.aln",nullptr);
+	double sim = alnSimilarity(&aln1,&aln2);
+	BOOST_CHECK(approxEqual(sim,0.8891585761));
+}
 //____________________________________________________________________________//
 
 // EOF

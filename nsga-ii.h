@@ -34,4 +34,7 @@ vector<Alignment*> binSel(mt19937& prng,
 void reportStats(const vector<Alignment*>& in,
                  const vector<string> fitnessNames, bool verbose);
 
+//returns 0 if the two alignments have no pairs in common, and 1.0
+//if the smaller alignment is a perfect subalignment of the other.
+//In general, returns number of shared pairs divided by smaller alignment size.
 double alnSimilarity(const Alignment* aln1, const Alignment* aln2);

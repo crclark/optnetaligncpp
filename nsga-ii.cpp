@@ -193,5 +193,20 @@ void reportStats(const vector<Alignment*>& in,
 }
 
 double alnSimilarity(const Alignment* aln1, const Alignment* aln2){
-	return 1.0; //todo
+	int count = 0;
+	for(int i = 0; i < aln1->actualSize; i++){
+		if(aln1->alnMask[i] && aln2->alnMask[i] && aln1->aln[i] == aln2->aln[i]){
+			count++;
+		}
+	}
+
+	int size1 = aln1->alnSize();
+	int size2 = aln2->alnSize();
+
+	if(size1 <= size2){
+		return double(count)/double(size1);
+	}
+	else{
+		return double(count)/double(size2);
+	}
 }

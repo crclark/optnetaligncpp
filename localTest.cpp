@@ -85,12 +85,22 @@ int main(int ac, char* av[])
 			pop[i]->computeFitness(fitnessNames);
 			cout<<"calling proportionalSearch"<<endl;
 			proportionalSearch(g, pop[i], total,
-	                    10000, fitnessNames,
+	                    100000, fitnessNames,
 	                    prop);
 			cout<<"First alignment: "<<endl;
 			for(int j = 0; j <fitnessNames.size();j++){
 				cout<<fitnessNames.at(j)<<" is "
 				    <<pop[i]->fitness.at(j)<<endl;
+			}
+			cout<<endl;
+		}
+
+		cout.width(7);
+		cout.precision(5);
+		cout<<"SHARED PAIRS"<<endl;
+		for(int i = 0; i < 10; i++){
+			for(int j = 0; j < 10; j++){
+				cout<<alnSimilarity(pop[i],pop[j])<<'\t';
 			}
 			cout<<endl;
 		}
