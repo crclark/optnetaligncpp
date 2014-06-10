@@ -191,3 +191,7 @@ void reportStats(const vector<Alignment*>& in,
 	}
 
 }
+
+double alnSimilarity(const Alignment* aln1, const Alignment* aln2){
+	return 1.0; //todo
+}

@@ -644,6 +644,7 @@ BOOST_AUTO_TEST_CASE( do_swap_consistent_ics ){
 	BOOST_CHECK(approxEqual(ics,fastICS));	
 }
 
+
 BOOST_AUTO_TEST_CASE( hypothetical_swap_correct ){
 	cout<<endl<<"BEGIN hypothetical_swap_correct"<<endl;
 	Network net1("../optnetalign/tests/lccstest1.net");
@@ -690,6 +691,83 @@ BOOST_AUTO_TEST_CASE( hypothetical_swap_correct ){
 
 }
 
+
+BOOST_AUTO_TEST_CASE( v1unaligned_consistent_after_load ){
+	Network net1("../optnetalign/tests/cg1a.net");
+	Network net2("../optnetalign/tests/cg1b.net");
+	Alignment aln(&net1, &net2, "../optnetalign/tests/cg1partial.aln", nullptr);
+
+	for(int i = 0; i < aln.alnMask.size(); i++){
+		if(!aln.alnMask[i])
+			BOOST_CHECK(aln.v1Unaligned.count(i));
+		else
+			BOOST_CHECK(!aln.v1Unaligned.count(i));
+	}
+}
+
+BOOST_AUTO_TEST_CASE( v1unaligned_consistent_after_shuf ){
+	Network net1("../optnetalign/tests/cg1a.net");
+	Network net2("../optnetalign/tests/cg1b.net");
+	Alignment aln(&net1, &net2, nullptr);
+	mt19937 g(12);
+	aln.shuf(g, false, false, false);
+
+	for(int i = 0; i < aln.alnMask.size(); i++){
+		if(!aln.alnMask[i])
+			BOOST_CHECK(aln.v1Unaligned.count(i));
+		else
+			BOOST_CHECK(!aln.v1Unaligned.count(i));
+	}
+}
+
+BOOST_AUTO_TEST_CASE( v1unaligned_consistent_after_onBit ){
+	Network net1("../optnetalign/tests/cg1a.net");
+	Network net2("../optnetalign/tests/cg1b.net");
+	Alignment aln(&net1, &net2, nullptr);
+	mt19937 g(12);
+	aln.shuf(g, false, false, false);
+
+	int offbit = 0;
+	for(; offbit < aln.alnMask.size(); offbit++){
+		if(!aln.alnMask[offbit])
+			break;
+	}
+
+	aln.onBit(offbit);
+
+	for(int i = 0; i < aln.alnMask.size(); i++){
+		if(!aln.alnMask[i])
+			BOOST_CHECK(aln.v1Unaligned.count(i));
+		else
+			BOOST_CHECK(!aln.v1Unaligned.count(i));
+	}
+}
+
+BOOST_AUTO_TEST_CASE( greedy_match_aln_consistent ){
+	Network net1("../optnetalign/tests/cg1a.net");
+	Network net2("../optnetalign/tests/cg1b.net");
+	BLASTDict b = loadBLASTInfo(&net1,&net2,"../optnetalign/tests/cg1.sim");
+	Alignment aln(&net1,&net2,&b);
+
+	//check that if a node is in v1Unaligned, then it is unaligned
+	for(auto n : aln.v1Unaligned){
+		BOOST_CHECK(!aln.alnMask[n]);
+	}
+
+	//check that if a node is unaligned, it is in v1Unaligned
+	for(int i = 0; i < aln.alnMask.size(); i++){
+		BOOST_CHECK_EQUAL(aln.v1Unaligned.count(i),!aln.alnMask[i]);
+	}
+
+	//check that the aln is a permutation
+	unordered_set<node> alnv2;
+
+	for(int i = 0; i < aln.aln.size(); i++){
+		alnv2.insert(aln.aln[i]);
+	}
+
+	BOOST_CHECK_EQUAL(alnv2.size(),aln.aln.size());
+}
 //____________________________________________________________________________//
 
 // EOF

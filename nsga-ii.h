@@ -33,3 +33,5 @@ vector<Alignment*> binSel(mt19937& prng,
 
 void reportStats(const vector<Alignment*>& in,
                  const vector<string> fitnessNames, bool verbose);
+
+double alnSimilarity(const Alignment* aln1, const Alignment* aln2);

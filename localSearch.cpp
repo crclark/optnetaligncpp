@@ -55,29 +55,38 @@ Alignment* hillClimb(mt19937& prng, Alignment* orig, bool total,
 
 void fastHillClimb(mt19937& prng, Alignment* aln, bool total,
 	               int maxIters, const vector<string>& fitnessNames,
-	               int objectiveToImprove){
+	               int objectiveToImprove, bool worsenOthers){
 	auto randIndex = uniform_int_distribution<int>(0,aln->aln.size()-1);
 
 	if(fitnessNames.at(objectiveToImprove) == "Size"){
 
-		//make sure not already total
-		if(aln->v1Unaligned.size() == 0){
-			return;
-		}
-
 		for(int i = 0; i < maxIters; i++){
-			node x = randIndex(prng);
+			//check alignment not total
+			if(aln->v1Unaligned.size() == 0){
+			return;
+			}
 
-			//todo: this loop is O(n). Fix!
-			while(aln->alnMask[x]){
-				x = randIndex(prng);
+			auto randCountdown = uniform_int_distribution<int>(0,aln->v1Unaligned.size());
+
+			int counter = randCountdown(prng);
+
+			auto iter = aln->v1Unaligned.begin();
+			
+			node x;
+
+			while(counter>0){
+				x = *iter;
+				counter--;
 			}
 
 			vector<double> delta = aln->onBitHypothetical(x);
 
 			bool noWorseAtOthers = true;
-			for(int j = 0; j < delta.size(); j++){
-				noWorseAtOthers = noWorseAtOthers && delta.at(j) >= 0;
+
+			if(!worsenOthers){
+				for(int j = 0; j < delta.size(); j++){
+					noWorseAtOthers = noWorseAtOthers && delta.at(j) >= 0;
+				}
 			}
 
 			if(noWorseAtOthers){
@@ -95,7 +104,6 @@ void fastHillClimb(mt19937& prng, Alignment* aln, bool total,
 				y = randIndex(prng);
 			}
 
-			
 			vector<double> delta = aln->doSwapHypothetical(x,y);
 			bool betterAtTgt = false;
 			bool noWorseAtOthers = true;
@@ -103,7 +111,7 @@ void fastHillClimb(mt19937& prng, Alignment* aln, bool total,
 				if(j == objectiveToImprove){
 					betterAtTgt = delta.at(j) > 0;
 				}
-				else{
+				else if(!worsenOthers){
 					noWorseAtOthers = noWorseAtOthers && delta.at(j) >= 0;
 				}
 			}
@@ -114,4 +122,26 @@ void fastHillClimb(mt19937& prng, Alignment* aln, bool total,
 			
 		}
 	}
+}
+
+
+//optimizes objectives 0 and 1, with proportion to 0 determined by last arg
+void proportionalSearch(mt19937& prng, Alignment* aln, bool total,
+	                    int iters, const vector<string>& fitnessNames,
+	                    double proportion){
+
+	auto prob = uniform_real_distribution<double>(0,1);
+
+	for(int i = 0; i < iters; i++){
+		double res = prob(prng);
+		if(res < proportion){
+			fastHillClimb(prng, aln, total,
+	               500, fitnessNames, 0, true);
+		}
+		else{
+			fastHillClimb(prng, aln, total,
+	               500, fitnessNames, 1, true);	
+		}
+	}
+
 }

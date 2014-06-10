@@ -115,6 +115,9 @@ Alignment::Alignment(const Network* n1, const Network* n2,
 	for(int i = 0; i < actualSize; i++){
 		initConservedCount(i,aln[i], alnMask[i]);
 	}
+
+	if(bitscores)
+		currBitscore = sumBLAST();
 }
 
 /*
@@ -216,6 +219,87 @@ Alignment::Alignment(mt19937& prng, float cxswappb,
 	fitnessValid = false;
 }
 
+//performs a fast, greedy matching based on bitscore
+void Alignment::greedyBitscoreMatch(){
+	if(bitscores == nullptr){
+		assert(1==2);
+	}
+
+	aln = vector<node>(net2->nodeToNodeName.size(), -1);
+	v1Unaligned = unordered_set<node>();
+
+	for(int i = 0; i < net1->nodeToNodeName.size(); i++){
+		v1Unaligned.insert(i);
+	}
+
+	unordered_set<node> v2Unaligned;
+	for(int i = 0; i < net2->nodeToNodeName.size(); i++){
+		v2Unaligned.insert(i);
+	}
+
+	unordered_set<node> v1Aligned, v2Aligned;
+
+	while(true){
+		node bestX = -1;
+		node bestY = -1;
+		double bestScore = 0.0; 
+
+		for(auto pair : *bitscores){
+			node x = pair.first;
+			if(!v1Aligned.count(x)){
+				for(auto scorepair : pair.second){
+					node y = scorepair.first;
+					double score = scorepair.second;
+					if(!v2Aligned.count(y) && score > bestScore){
+						bestX = x;
+						bestY = y;
+					}
+				}
+			}
+		}
+
+		if(bestX == -1 || bestY == -1){
+			break;
+		}
+		else{
+			aln[bestX] = bestY;
+			v1Aligned.insert(bestX);
+			v2Aligned.insert(bestY);
+			v2Unaligned.erase(bestY);
+			v1Unaligned.erase(bestX);
+		}
+	}
+
+	//update mask
+	for(int i = 0; i < alnMask.size(); i++){
+		if(v1Aligned.count(i)){
+			alnMask[i] = true;
+		}
+		else{
+			alnMask[i] = false;
+		}
+	}
+
+	//look for unaligned nodes in V1 and align them to unaligned nodes
+	//in V2. 
+	for(int i = 0; i < aln.size(); i++){
+		if(aln[i] == -1){
+			node arbNode = *(v2Unaligned.begin());
+			aln[i] = arbNode;
+			alnMask[i] = false;
+			v1Unaligned.insert(i);
+			v2Unaligned.erase(arbNode);
+		}
+	}
+
+	//initialize conserved counts for fast ICS computation
+	conservedCounts = vector<int>(actualSize);
+	for(int i = 0; i < actualSize; i++){
+		initConservedCount(i,aln[i], alnMask[i]);
+	}
+
+	currBitscore = sumBLAST();
+}
 
 void Alignment::shuf(mt19937& prng, bool uniformsize, 
 	                 bool smallstart, bool total){

@@ -12,4 +12,8 @@ Alignment* hillClimb(mt19937& prng, Alignment* orig, bool total,
 
 void fastHillClimb(mt19937& prng, Alignment* aln, bool total,
 	               int maxIters, const vector<string>& fitnessNames,
-	               int objectiveToImprove);
+	               int objectiveToImprove, bool worsenOthers);
+
+void proportionalSearch(mt19937& prng, Alignment* aln, bool total,
+	                    int iters, const vector<string>& fitnessNames,
+	                    double proportion);
