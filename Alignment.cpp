@@ -239,41 +239,33 @@ void Alignment::greedyBitscoreMatch(){
 
 	unordered_set<node> v1Aligned, v2Aligned;
 
-	while(true){
-		node bestX = -1;
-		node bestY = -1;
-		double bestScore = 0.0; 
-
-		for(auto pair : *bitscores){
-			node x = pair.first;
-			if(!v1Aligned.count(x)){
-				for(auto scorepair : pair.second){
-					node y = scorepair.first;
-					double score = scorepair.second;
-					if(!v2Aligned.count(y) && score > bestScore){
-						bestX = x;
-						bestY = y;
-					}
-				}
+	for(auto n1 : v1Unaligned){
+		node bestN2 = -1;
+		double bestScore = 0.0;
+		for(auto n2 : v2Unaligned){
+			if(bitscores->count(n1) && bitscores->at(n1).count(n2)
+			   && bitscores->at(n1).at(n2) > bestScore ){
+				bestN2 = n2;
+				bestScore = bitscores->at(n1).at(n2);
+			}
+			else if(bestN2 == -1){
+				bestN2 = n2;
 			}
 		}
 
-		if(bestX == -1 || bestY == -1){
-			break;
-		}
-		else{
-			aln[bestX] = bestY;
-			v1Aligned.insert(bestX);
-			v2Aligned.insert(bestY);
-			v2Unaligned.erase(bestY);
-			v1Unaligned.erase(bestX);
-		}
+		aln[n1] = bestN2;
+		v1Aligned.insert(n1);
+		v2Aligned.insert(bestN2);
+		v2Unaligned.erase(bestN2);
+		//NOTE: can't change v1Unaligned here because we're iterating over it.
+		//instead changed in the for loop updating the mask below.
 	}
 
 	//update mask
 	for(int i = 0; i < alnMask.size(); i++){
 		if(v1Aligned.count(i)){
 			alnMask[i] = true;
+			v1Unaligned.erase(i);
 		}
 		else{
 			alnMask[i] = false;

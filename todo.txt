@@ -31,6 +31,10 @@ as a post-processing step of extracting high-confidence sub-alignments.
 add the ability to specify a list of fitnesses to dominate as a stopping condition.
 Maybe go another 10000 generations after dominating the last one.
 
+add seed-and-extend with random restart
+
+add seeding by lots of hillclimbers optimizing objectives in different proportion
+
 REFACTORING
 -----------
 
