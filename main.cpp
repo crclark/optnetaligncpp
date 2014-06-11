@@ -76,7 +76,76 @@ int main(int ac, char* av[])
 			}
 		}	
 		else{
-			
+			//hillclimb initialization is slow, so we will make it multithreaded
+
+			//set up a list of proportions to use for each aln
+			vector<double> proportions(popsize);
+			for(int i = 0; i < proportions.size(); i++){
+				proportions[i] = double(i)/double(popsize);
+			}
+
+			auto worker = [&](int begin,
+				              int end,
+				              int seed){
+				mt19937 tg(seed + clock());
+				int numSearchIters = 10000;
+				for(int i = begin; i != end; ++i){
+					pop[i] = new Alignment(net1,net2,bitPtr);
+					pop[i]->shuf(tg,false,false,total);
+					pop[i]->computeFitness(fitnessNames);
+					if(fitnessNames.size()>1){
+						proportionalSearch(tg, pop[i], total,
+		                    numSearchIters, fitnessNames,
+		                    proportions[i]);
+					}
+					else{
+						fastHillClimb(tg, pop[i], total,
+	                    10000, fitnessNames,
+	               		0, true);
+					}
+					kids[i] = new Alignment(net1,net2,bitPtr);
+					kids[i]->shuf(tg,false,false,total);
+					kids[i]->computeFitness(fitnessNames);
+					if(fitnessNames.size()>1){
+						proportionalSearch(tg, kids[i], total,
+		                    numSearchIters, fitnessNames,
+		                    proportions[i]);
+					}
+					else{
+						fastHillClimb(tg, kids[i], total,
+	                    numSearchIters, fitnessNames,
+	               		0, true);
+					}
+				}
+
+			};
+
+			//launch the threads!
+			const int grainsize = popsize / nthreads;
+			//first for pop
+			if(nthreads == 1){
+				worker(0, pop.size(),g());
+			}
+			else{
+				vector<boost::thread> threads(nthreads);
+				int start_spot = 0;
+				for(int i = 0; i < threads.size() - 1; i++){
+					threads[i] = boost::thread(worker, start_spot, start_spot + grainsize, i);
+				    start_spot += grainsize;									
+				}
+				threads.back() = boost::thread(worker, start_spot, pop.size(), nthreads);
+
+				for(auto&& i : threads){
+					i.join();
+				}
+			}
+
+			//one last thing: create a greedy bitscore matching
+			if(bitPtr){
+				pop[popsize - 1] = new Alignment(net1,net2,bitPtr);
+				pop[popsize - 1]->greedyBitscoreMatch();
+				pop[popsize - 1]->computeFitness(fitnessNames);
+			}
 		}
 
 		//main loop
@@ -180,7 +249,7 @@ int main(int ac, char* av[])
 
 						  fastHillClimb(tg, *it, total,
 	                         hillclimbiters, fitnessNames,
-	                         obj);
+	                         obj, false);
 					}
 				}
 
