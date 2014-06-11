@@ -43,6 +43,7 @@ int main(int ac, char* av[])
 		const bool uniformsize = vm.count("uniformsize");
 		const bool smallstart = vm.count("smallstart");
 		const bool finalstats = vm.count("finalstats");
+		const bool seeding = vm.count("seeding");
 		const string outprefix = vm["outprefix"].as<string>();
 		const int hillclimbiters = vm.count("hillclimbiters") 
 		                           ? vm["hillclimbiters"].as<int>() 
@@ -58,22 +59,24 @@ int main(int ac, char* av[])
 		const unsigned int popsize = vm.count("popsize") 
 		                             ? vm["popsize"].as<int>()
 		                             : 100;
-		vector<Alignment*> pop;
-		for(int i = 0; i < popsize; i++){	
-			Alignment* aln = new Alignment(net1,net2, bitPtr);
-			aln->shuf(g, uniformsize, smallstart, total);
-			aln->computeFitness(fitnessNames);
-			pop.push_back(aln);
-		}
-		if(verbose){
-			cout<<"creating initial children"<<endl;
-		}
-		vector<Alignment*> kids;
-		for(int i = 0; i < popsize; i++){
-			Alignment* aln = new Alignment(net1,net2, bitPtr);
-			aln->shuf(g, uniformsize, smallstart, total);
-			aln->computeFitness(fitnessNames);
-			kids.push_back(aln);
+		vector<Alignment*> pop(popsize,nullptr);
+		vector<Alignment*> kids(popsize,nullptr);
+
+		if(!seeding){
+			for(int i = 0; i < popsize; i++){	
+				pop[i] = new Alignment(net1,net2, bitPtr);
+				pop[i]->shuf(g, uniformsize, smallstart, total);
+				pop[i]->computeFitness(fitnessNames);
+			}
+			
+			for(int i = 0; i < popsize; i++){
+				kids[i] = new Alignment(net1,net2, bitPtr);
+				kids[i]->shuf(g, uniformsize, smallstart, total);
+				kids[i]->computeFitness(fitnessNames);
+			}
+		}	
+		else{
+			
 		}
 
 		//main loop
@@ -95,7 +98,7 @@ int main(int ac, char* av[])
 				combinedPtrs.at(i) = ptr;
 			}
 			
-			
+
 			vector<vector<Alignment*> > fronts = nonDominatedSort(combinedPtrs);
 
 			normalizeFitnesses(combinedPtrs);

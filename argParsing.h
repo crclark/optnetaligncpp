@@ -104,10 +104,8 @@ argRetVals handleArgs(int ac, char* av[]){
 			           "when execution completes. Used to find good parameter "
 			           "values through experimentation.")
 		("seeding", "When set, attempts to start with better-than-random "
-			        "alignments by creating randomized seed-and-extend "
-			        "alignments to serve as the initial population. "
-			        "Must be used in conjunction with bit scores or E-"
-			        "values.")
+			        "alignments by creating randomized local search "
+			        "alignments to serve as the initial population. ")
 		("tournsel", "When set, use tournament selection "
 			         "to choose parents for crossover. Otherwise, uses "
 			         "random selection.")

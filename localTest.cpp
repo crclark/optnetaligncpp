@@ -52,10 +52,10 @@ int main(int ac, char* av[])
 		mt19937 g(14);
 		//initialize population
 		
-		/*
+		
 		Alignment* aln = new Alignment(net1,net2, &bitscores);
-		//aln->greedyBitscoreMatch();
-		aln->shuf(g,false,false,total);
+		aln->greedyBitscoreMatch();
+		//aln->shuf(g,false,false,total);
 		aln->computeFitness(fitnessNames);
 		
 		//todo: instead of just flipping obj, switch according to some
@@ -74,8 +74,9 @@ int main(int ac, char* av[])
 			cout<<"Generation "<<i<<" complete."<<endl;
 		}
 		aln->save("localTest.aln");
-		*/
+		
 
+		/*
 		vector<Alignment*> pop(10, nullptr);
 		double prop = 0.0;
 		for(int i = 0; i < 10; i++){
@@ -104,6 +105,7 @@ int main(int ac, char* av[])
 			}
 			cout<<endl;
 		}
+		*/
 	}
 	catch(exception& e){
 		cerr << "error: " << e.what() << endl;
