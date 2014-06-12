@@ -122,7 +122,7 @@ int main(int ac, char* av[])
 
 			//launch the threads!
 			const int grainsize = popsize / nthreads;
-			//first for pop
+
 			if(nthreads == 1){
 				worker(0, pop.size(),g());
 			}

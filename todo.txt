@@ -33,7 +33,9 @@ Maybe go another 10000 generations after dominating the last one.
 
 add seed-and-extend with random restart
 
-add seeding by lots of hillclimbers optimizing objectives in different proportion
+add GOC as an objective-- that could get us to competitive results much faster and more reliably.
+
+add an alternative crowding distance calculator that uses alignment space distances
 
 REFACTORING
 -----------
@@ -48,3 +50,7 @@ LOCAL SEARCH ALONE
 ------------------
 Alternating between optimizing ICS/EC and bitscore sum each iteration. This seems
 to get to an EC of about .15 really quickly on dm-hs, but then it starts to slowly fall. This isn't bad, but it's a lot worse than it could be given the GA performance. Bitscore sum, OTOH, increases very slowly compared to other methods but seems to keep increasing for much longer compared to topological fit. Also, it could be that this way of trying to compromise between the two objectives simply doesn't work well.
+
+SEEDING
+-------
+After seeding, the GA portion of the program appears to go much more slowly than otherwise, although the diversity of the results is much better. It could be that the hillclimbers all found their own hills and the space between them is completely flat, so combining them isn't helping much. Unfortunately, though, it seems bitscore sum is not increasing much either, even though we are also seeding with a greedy matching based on bitscore.
