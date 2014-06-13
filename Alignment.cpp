@@ -610,10 +610,11 @@ double Alignment::fastICSNumerator() const{
 }
 
 double Alignment::fastICS() const{
-	if(fastICSDenominator() == 0.0){
+	double denom = fastICSDenominator();
+	if(denom == 0.0){
 		return 0.0;
 	}
-	return fastICSNumerator() / fastICSDenominator();
+	return fastICSNumerator() / denom;
 }
 
 double Alignment::sumBLAST() const{
