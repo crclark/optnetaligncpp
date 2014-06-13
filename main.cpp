@@ -14,7 +14,10 @@
 #include "argParsing.h"
 #include "nsga-ii.h"
 #include "localSearch.h"
+
+#include "tbb/tbb.h"
 using namespace std;
+using namespace tbb;
 namespace po = boost::program_options;
 
 
@@ -62,91 +65,69 @@ int main(int ac, char* av[])
 		vector<Alignment*> pop(popsize,nullptr);
 		vector<Alignment*> kids(popsize,nullptr);
 
-		if(!seeding){
-			for(int i = 0; i < popsize; i++){	
-				pop[i] = new Alignment(net1,net2, bitPtr);
-				pop[i]->shuf(g, uniformsize, smallstart, total);
-				pop[i]->computeFitness(fitnessNames);
-			}
-			
-			for(int i = 0; i < popsize; i++){
-				kids[i] = new Alignment(net1,net2, bitPtr);
-				kids[i]->shuf(g, uniformsize, smallstart, total);
-				kids[i]->computeFitness(fitnessNames);
-			}
-		}	
-		else{
-			//hillclimb initialization is slow, so we will make it multithreaded
+        //hillclimb initialization is slow, so we will make it multithreaded
 
-			//set up a list of proportions to use for each aln
-			vector<double> proportions(popsize);
-			for(int i = 0; i < proportions.size(); i++){
-				proportions[i] = double(i)/double(popsize);
-			}
+        //set up a list of proportions to use for each aln
+        vector<double> proportions(popsize);
+        for(int i = 0; i < proportions.size(); i++){
+            proportions[i] = double(i)/double(popsize);
+        }
 
-			auto worker = [&](int begin,
-				              int end,
-				              int seed){
-				mt19937 tg(seed + clock());
-				int numSearchIters = 10000;
-				for(int i = begin; i != end; ++i){
-					pop[i] = new Alignment(net1,net2,bitPtr);
-					pop[i]->shuf(tg,false,false,total);
-					pop[i]->computeFitness(fitnessNames);
-					if(fitnessNames.size()>1){
-						proportionalSearch(tg, pop[i], total,
-		                    numSearchIters, fitnessNames,
-		                    proportions[i]);
-					}
-					else{
-						fastHillClimb(tg, pop[i], total,
-	                    10000, fitnessNames,
-	               		0, true);
-					}
-					kids[i] = new Alignment(net1,net2,bitPtr);
-					kids[i]->shuf(tg,false,false,total);
-					kids[i]->computeFitness(fitnessNames);
-					if(fitnessNames.size()>1){
-						proportionalSearch(tg, kids[i], total,
-		                    numSearchIters, fitnessNames,
-		                    proportions[i]);
-					}
-					else{
-						fastHillClimb(tg, kids[i], total,
-	                    numSearchIters, fitnessNames,
-	               		0, true);
-					}
-				}
+        auto worker = [&](const blocked_range<size_t>& r){
+            mt19937 tg(clock());
+            if(seeding){
+                int numSearchIters = 1000;
+                for(int i = r.begin(); i != r.end(); ++i){
+                    pop[i] = new Alignment(net1,net2,bitPtr);
+                    pop[i]->shuf(tg,false,false,total);
+                    pop[i]->computeFitness(fitnessNames);
+                    if(fitnessNames.size()>1){
+                        proportionalSearch(tg, pop[i], total,
+                            numSearchIters, fitnessNames,
+                            proportions[i]);
+                    }
+                    else{
+                        fastHillClimb(tg, pop[i], total,
+                        numSearchIters, fitnessNames,
+                        0, true);
+                    }
+                    kids[i] = new Alignment(net1,net2,bitPtr);
+                    kids[i]->shuf(tg,false,false,total);
+                    kids[i]->computeFitness(fitnessNames);
+                    if(fitnessNames.size()>1){
+                        proportionalSearch(tg, kids[i], total,
+                            numSearchIters, fitnessNames,
+                            proportions[i]);
+                    }
+                    else{
+                        fastHillClimb(tg, kids[i], total,
+                        numSearchIters, fitnessNames,
+                        0, true);
+                    }
+                }
+            }
+            else{
+                for(int i = r.begin(); i != r.end(); ++i){
+                    pop[i] = new Alignment(net1,net2, bitPtr);
+                    pop[i]->shuf(tg, uniformsize, smallstart, total);
+                    pop[i]->computeFitness(fitnessNames);
+                    kids[i] = new Alignment(net1,net2, bitPtr);
+                    kids[i]->shuf(tg, uniformsize, smallstart, total);
+                    kids[i]->computeFitness(fitnessNames);
+                }
+            }
 
-			};
+        };
 
-			//launch the threads!
-			const int grainsize = popsize / nthreads;
+        parallel_for(blocked_range<size_t>(0,popsize),worker);
 
-			if(nthreads == 1){
-				worker(0, pop.size(),g());
-			}
-			else{
-				vector<boost::thread> threads(nthreads);
-				int start_spot = 0;
-				for(int i = 0; i < threads.size() - 1; i++){
-					threads[i] = boost::thread(worker, start_spot, start_spot + grainsize, i);
-				    start_spot += grainsize;									
-				}
-				threads.back() = boost::thread(worker, start_spot, pop.size(), nthreads);
-
-				for(auto&& i : threads){
-					i.join();
-				}
-			}
-
-			//one last thing: create a greedy bitscore matching
-			if(bitPtr){
-				pop[popsize - 1] = new Alignment(net1,net2,bitPtr);
-				pop[popsize - 1]->greedyBitscoreMatch();
-				pop[popsize - 1]->computeFitness(fitnessNames);
-			}
-		}
+        //one last thing: create a greedy bitscore matching
+        if(bitPtr && seeding){
+            pop[popsize - 1] = new Alignment(net1,net2,bitPtr);
+            pop[popsize - 1]->greedyBitscoreMatch();
+            pop[popsize - 1]->computeFitness(fitnessNames);
+        }
+		
 
 		//main loop
 		if(verbose){
@@ -205,11 +186,9 @@ int main(int ac, char* av[])
 			kids = vector<Alignment*>(popsize);
 
 			//this will be executed by each thread.
-			auto worker = [&](vector<Alignment*>::iterator begin,
-				              vector<Alignment*>::iterator end,
-				              int seed){
-				mt19937 tg(seed + clock());
-				for(auto it = begin; it != end; ++it){
+			auto worker = [&](const blocked_range<size_t>& r){
+				mt19937 tg(clock());
+				for(auto i = r.begin(); i != r.end(); ++i){
 					uniform_real_distribution<double> dist(0.0,1.0);
 					double prob = dist(tg);
 					if(prob <= 0.7){
@@ -227,18 +206,18 @@ int main(int ac, char* av[])
 							parents.push_back(pop[par1]);
 							parents.push_back(pop[par2]);
 						}
-						*it = new Alignment(tg,cxswappb,*parents[0],
+						kids[i] = new Alignment(tg,cxswappb,*parents[0],
 							               *parents[1], total);
 						if(prob > 0.2){
-							(*it)->mutate(tg,mutswappb,total);
+							kids[i]->mutate(tg,mutswappb,total);
 						}
 					}
 					else{
 						vector<Alignment*> parents = binSel(tg,pop,(popsize/10));
-						(*it) = new Alignment(*parents[0]);
-						(*it)->mutate(tg,mutswappb,total);
+						kids[i] = new Alignment(*parents[0]);
+						kids[i]->mutate(tg,mutswappb,total);
 					}
-					(*it)->computeFitness(fitnessNames);
+					kids[i]->computeFitness(fitnessNames);
 
 					//do local search by hill-climbing on a random objective
 					if(hillclimbiters != 0){
@@ -247,7 +226,7 @@ int main(int ac, char* av[])
 
 						  int obj = objGen(tg);
 
-						  fastHillClimb(tg, *it, total,
+						  fastHillClimb(tg, kids[i], total,
 	                         hillclimbiters, fitnessNames,
 	                         obj, false);
 					}
@@ -255,24 +234,7 @@ int main(int ac, char* av[])
 
 			};
 
-			const int grainsize = popsize / nthreads;
-			if(nthreads == 1){
-				worker(kids.begin(), kids.end(),g());
-			}
-			else{
-				vector<boost::thread> threads(nthreads);
-				auto work_iter = kids.begin();
-				for(int i = 0; i < threads.size() - 1; i++){
-					threads[i] = boost::thread(worker, work_iter, work_iter + grainsize,
-						                i);
-				    work_iter += grainsize;									
-				}
-				threads.back() = boost::thread(worker, work_iter, kids.end(), nthreads);
-
-				for(auto&& i : threads){
-					i.join();
-				}
-			}
+			parallel_for(blocked_range<size_t>(0,popsize),worker);
 
 			
 			if(verbose){
