@@ -45,10 +45,6 @@ argRetVals handleArgs(int ac, char* av[]){
 			                          "Same format expected as first network "
 			                          "file.")
 		("outprefix", po::value<string>(), "Prefix for all output files.")
-		("nthreads", po::value<int>(), "Number of threads to use. More will "
-			                           "generally allow the program to run "
-			                           "faster. If unspecified, defaults to "
-			                           "the number of cores in your machine.")
 		("total", "When set, restricts alignments to total alignment only."
 			      " Otherwise, one of the objectives will be alignment size")
 		("uniformsize", "When set, and --total is not, the initial population"
@@ -106,6 +102,8 @@ argRetVals handleArgs(int ac, char* av[]){
 		("seeding", "When set, attempts to start with better-than-random "
 			        "alignments by creating randomized local search "
 			        "alignments to serve as the initial population. ")
+        ("nooutput", "When set, does not output final alignments to" 
+                     " disk.")
 		("tournsel", "When set, use tournament selection "
 			         "to choose parents for crossover. Otherwise, uses "
 			         "random selection.")
@@ -147,7 +145,7 @@ argRetVals handleArgs(int ac, char* av[]){
 		//throw ArgError(vm["net1"].as<string>;
 	}
 
-	if(!vm.count("outprefix")){
+	if(!vm.count("outprefix") && !vm.count("nooutput")){
 		throw ArgError("outprefix must be specified.");
 	}
 

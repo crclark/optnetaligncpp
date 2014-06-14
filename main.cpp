@@ -33,8 +33,7 @@ int main(int ac, char* av[])
 		BLASTDict evalues = get<4>(vals);
 		vector<string> fitnessNames = get<5>(vals);
 
-		const int nthreads = vm.count("nthreads") ? vm["nthreads"].as<int>()
-		                                          : 1;
+		
 		const float mutswappb = vm.count("mutswappb")  
 		                             ? vm["mutswappb"].as<float>()
 		                             : 0.005;
@@ -47,6 +46,7 @@ int main(int ac, char* av[])
 		const bool smallstart = vm.count("smallstart");
 		const bool finalstats = vm.count("finalstats");
 		const bool seeding = vm.count("seeding");
+        const bool nooutput = vm.count("nooutput");
 		const string outprefix = vm["outprefix"].as<string>();
 		const int hillclimbiters = vm.count("hillclimbiters") 
 		                           ? vm["hillclimbiters"].as<int>() 
@@ -263,34 +263,35 @@ int main(int ac, char* av[])
 		allAlns.insert(allAlns.end(), pop.begin(), pop.end());
 		allAlns.insert(allAlns.end(), kids.begin(), kids.end());
 		vector<vector<Alignment* > > fronts = nonDominatedSort(allAlns);
+        
+        if(!nooutput){
+            string infoFilename = outprefix + ".info";
+            ofstream infoFile(infoFilename);
 
-		string infoFilename = outprefix + ".info";
-		ofstream infoFile(infoFilename);
+            //make infoFile column labels
+            infoFile << "filename";
 
-		//make infoFile column labels
-		infoFile << "filename";
+            for(auto str : fitnessNames){
+                infoFile << '\t' << str;
+            }
 
-		for(auto str : fitnessNames){
-			infoFile << '\t' << str;
-		}
+            infoFile << endl;
 
-		infoFile << endl;
+            //output all alignments in the first front
+            for(int i = 0; i < fronts[0].size(); i++){
+                string filename = outprefix + "_" + to_string(i) + ".aln";
+                fronts[0][i]->save(filename);
 
-		//output all alignments in the first front
-		for(int i = 0; i < fronts[0].size(); i++){
-			string filename = outprefix + "_" + to_string(i) + ".aln";
-			fronts[0][i]->save(filename);
+                infoFile << filename;
 
-			infoFile << filename;
+                //write summary info to infoFile
+                for(int j = 0; j < fronts[0][i]->fitness.size(); j++){
+                    infoFile << '\t' << fronts[0][i]->fitness[j];
+                }
 
-			//write summary info to infoFile
-			for(int j = 0; j < fronts[0][i]->fitness.size(); j++){
-				infoFile << '\t' << fronts[0][i]->fitness[j];
-			}
-
-			infoFile << endl;
-		}
-
+                infoFile << endl;
+            }
+        }
 
 	}
 	catch(exception& e){
