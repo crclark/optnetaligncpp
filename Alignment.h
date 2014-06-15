@@ -8,14 +8,18 @@
 
 #include "blastinfo.h"
 #include "Network.h"
+#include "goc.h"
 
 class Alignment{
 public:	
+    //simplest constructor creates an arbitrary non-random alignment
 	Alignment(const Network* n1, const Network* n2, 
-		      const BLASTDict* bit);
+		      const BLASTDict* bit, const GOCDict* goc);
+    //load alignment from file
 	Alignment(const Network* n1, const Network* n2, string filename,
-		      const BLASTDict* bit);
-	Alignment(mt19937& prng, float cxswappb, 
+		      const BLASTDict* bit, const GOCDict* goc);
+	//crossover constructor (UPMX)
+    Alignment(mt19937& prng, float cxswappb, 
 		             const Alignment& p1,
 		             const Alignment& p2,
 		             bool total = true);
@@ -32,6 +36,7 @@ public:
 	double ics() const;
 	
 	double sumBLAST() const;
+    double sumGOC() const;
 	double alnSize() const;	
 	vector<node> aln;
 	vector<bool> alnMask; //indicates whether the corresponding node
@@ -68,7 +73,15 @@ public:
 	//returns by how much updateBitscore would change currBitscore
 	double hypotheticalBitscoreDelta(node n1, node n2old, node n2new,
 		                             bool oldMask, bool newMask) const;
-
+    
+    //same stuff for GOC
+    double currGOC;
+    const GOCDict* gocs;
+    void updateGOC(node n1, node n2old, node n2new, bool oldMask,
+                   bool newMask);
+    double hypotheticalGOCDelta(node n1, node n2old, node n2new,
+                                bool oldMask, bool newMask) const;
+    
 	//stored info version of ICS for fast computation
 	//(incrementally update as the alignment changes)
 	double fastICSDenominator() const;

@@ -19,7 +19,7 @@ using namespace std;
 //this constructor just creates an arbitrary non-random alignment.
 //Make it a random one by calling shuf()
 Alignment::Alignment(const Network* n1, const Network* n2,
-	                 const BLASTDict* bit){
+	                 const BLASTDict* bit, const GOCDict* goc){
 	unsigned int size = n2->nodeToNodeName.size();
 	aln = vector<node>(size,-1);
 	alnMask = vector<bool>(size,true);
@@ -35,6 +35,7 @@ Alignment::Alignment(const Network* n1, const Network* n2,
 	domRank = -1;
 	crowdDist = -1.0;
 	bitscores = bit;
+    gocs = goc;
 	actualSize = net1->nodeToNodeName.size();
 	//initialize conserved counts for fast ICS computation
 	conservedCounts = vector<int>(actualSize);
@@ -45,19 +46,21 @@ Alignment::Alignment(const Network* n1, const Network* n2,
 
 Alignment::Alignment(const Network* n1, const Network* n2, 
 	                 string filename,
-	                 const BLASTDict* bit){
-	int size = n2->nodeNameToNode.size();
+	                 const BLASTDict* bit, const GOCDict* goc){
+	int size = n2->nodeToNodeName.size();
+    //todo: nodeNameToNode is sometimes a different size than 
+    //nodeToNodeName and I can't figure out why.
 	aln = vector<node>(size,-1);
 	alnMask = vector<bool>(size,true);
 	fitnessValid = false;
 	domRank = -1;
 	crowdDist = -1.0;
 	bitscores = bit;
+    gocs = goc;
 	net1 = n1;
 	net2 = n2;
 	actualSize = net1->nodeToNodeName.size();
 	ifstream infile(filename);
-	cout<<"loading from "<<filename<<endl;
 	if(!infile){
 		throw LineReadException(string("Alignment file ")+filename+
 			                    string(" failed to open!"));
@@ -69,7 +72,9 @@ Alignment::Alignment(const Network* n1, const Network* n2,
 	for(int i = 0; i < net2->nodeToNodeName.size(); i++){
 		v2Unaligned.insert(i);
 	}
-
+    assert(v2Unaligned.size() == aln.size());
+    
+    int count = 0;
 	//process each line
 	while(getline(infile,line)){
 		//cout<<"parsing line: "<<line<<endl;
@@ -85,12 +90,17 @@ Alignment::Alignment(const Network* n1, const Network* n2,
 		
 		}
 		
+        if(!net1->nodeNameToNode.count(a)){
+            continue;
+        }
 		u = net1->nodeNameToNode.at(a);
+        
 		if(!net2->nodeNameToNode.count(b)){
-			cout<<"node "<<b<<" not found in net2!"<<endl;
+            continue;
 		}
 		v = net2->nodeNameToNode.at(b);
 		
+        count++;
 		aln[u] = v;
 		v2Unaligned.erase(v);
 		//cout<<"node "<<a<<" (int: "<<u<<") aligned to node "
@@ -115,9 +125,12 @@ Alignment::Alignment(const Network* n1, const Network* n2,
 	for(int i = 0; i < actualSize; i++){
 		initConservedCount(i,aln[i], alnMask[i]);
 	}
-
+    
 	if(bitscores)
 		currBitscore = sumBLAST();
+        
+    if(gocs)
+        currGOC = sumGOC();
 }
 
 /*
@@ -163,8 +176,10 @@ Alignment::Alignment(mt19937& prng, float cxswappb,
 	numThatDominate = -1;
 	crowdDist = -1.0;
 	bitscores = par1->bitscores;
+    gocs = par1->gocs;
 	actualSize = par1->actualSize;
 	currBitscore = par1->currBitscore;
+    currGOC = par1->currGOC;
 	conservedCounts = par1->conservedCounts;
 	net1 = par1->net1;
 	net2 = par1->net2;
@@ -353,6 +368,9 @@ void Alignment::shuf(mt19937& prng, bool uniformsize,
 	}
 	if(bitscores)
 		currBitscore = sumBLAST();
+        
+    if(gocs)
+        currGOC = sumGOC();
 
 	//initialize conserved counts for fast ICS computation
 	conservedCounts = vector<int>(actualSize);
@@ -391,6 +409,7 @@ void Alignment::mutate(mt19937& prng, float mutswappb, bool total){
 			}
 			updateBitscore(i, aln[i], aln[i], !alnMask[i],
 		                   alnMask[i]);
+            updateGOC(i,aln[i],aln[i],!alnMask[i],alnMask[i]);
 			updateConservedCount(i, aln[i], aln[i], !alnMask[i],
 		                         alnMask[i], -1);
 		}
@@ -427,34 +446,48 @@ void Alignment::doSwap(node x, node y){
 	}
 
 	updateBitscore(x, aln[y], aln[x], alnMask[y], alnMask[x]);
+    updateGOC(x, aln[y], aln[x], alnMask[y], alnMask[x]);
 	updateConservedCount(x, aln[y], aln[x], alnMask[y], alnMask[x],
 		                 -1);
 	updateConservedCount(y, aln[x], aln[y], alnMask[x], alnMask[y],
 		                 x);
 	updateBitscore(y, aln[x], aln[y], alnMask[x], alnMask[y]);
+    updateGOC(y, aln[x], aln[y], alnMask[x], alnMask[y]);
 }
 
 //todo: test this
 vector<double> Alignment::doSwapHypothetical(node x, node y) const{
-	vector<double> toReturn(fitness.size(),0.0);
-
+	vector<double> toReturn;
+    
 	node hypAlnx = aln[y];
 	node hypAlny = aln[x];
-
+    
 	bool hypAlnMskx = alnMask[y];
 	bool hypAlnMsky = alnMask[x];
-
-	toReturn[0] += hypotheticalConservedCountDelta(x, hypAlny, hypAlnx,
+    
+    double ccDelt = 0.0;
+	ccDelt += hypotheticalConservedCountDelta(x, hypAlny, hypAlnx,
 	               hypAlnMsky, hypAlnMskx, -1);
-	toReturn[0] += hypotheticalConservedCountDelta(y,hypAlnx,hypAlny,
+	ccDelt += hypotheticalConservedCountDelta(y,hypAlnx,hypAlny,
 		           hypAlnMskx, hypAlnMsky, x);
-
+    toReturn.push_back(ccDelt);
 	if(bitscores != nullptr){
-		toReturn[1] += hypotheticalBitscoreDelta(x, hypAlny, hypAlnx,
+        double bitDelt = 0.0;
+		bitDelt += hypotheticalBitscoreDelta(x, hypAlny, hypAlnx,
 			           hypAlnMsky, hypAlnMskx);
-		toReturn[1] += hypotheticalBitscoreDelta(y, hypAlnx, hypAlny,
+		bitDelt += hypotheticalBitscoreDelta(y, hypAlnx, hypAlny,
 			           hypAlnMskx, hypAlnMsky);
+        toReturn.push_back(bitDelt);
 	}
+    
+    if(gocs != nullptr){
+        double gocDelt = 0.0;
+        gocDelt += hypotheticalGOCDelta(x, hypAlny, hypAlnx,
+                    hypAlnMsky, hypAlnMskx);
+        gocDelt += hypotheticalGOCDelta(y, hypAlnx, hypAlny,
+                       hypAlnMskx, hypAlnMsky);
+        toReturn.push_back(gocDelt);
+    }
 
 	return toReturn;
 }
@@ -464,20 +497,26 @@ void Alignment::onBit(node x){
 	alnMask[x] = true;
 	v1Unaligned.erase(x);
 	updateBitscore(x,aln[x],aln[x],old, alnMask[x]);
+    updateGOC(x, aln[x], aln[x], old, alnMask[x]);
 	updateConservedCount(x,aln[x],aln[x],old, alnMask[x],-1);
 }
 
 //todo: test this
 vector<double> Alignment::onBitHypothetical(node x) const{
-	vector<double> toReturn(fitness.size(), 0.0);
+	vector<double> toReturn;
 
-	toReturn[0] += hypotheticalConservedCountDelta(x, aln[x], aln[x],
-		           false, true, -1);
+	toReturn.push_back(hypotheticalConservedCountDelta(x, aln[x], aln[x],
+		           false, true, -1));
 
 	if(bitscores != nullptr){
-		toReturn[1] += hypotheticalBitscoreDelta(x, aln[x], aln[x],
-			           false, true);
+		toReturn.push_back(hypotheticalBitscoreDelta(x, aln[x], aln[x],
+			           false, true));
 	}
+    
+    if(gocs != nullptr){
+        toReturn.push_back(hypotheticalGOCDelta(x,aln[x],aln[x],
+                           false, true));
+    }
 
 	return toReturn;
 }
@@ -503,6 +542,9 @@ void Alignment::computeFitness(const vector<string>& fitnessNames){
 		if(fitnessNames.at(i) == "Size"){
 			fitness.at(i) = alnSize();
 		}
+        if(fitnessNames.at(i) == "GOC"){
+            fitness.at(i) = currGOC;
+        }
 	}
 	fitnessValid = true;
 }
@@ -629,6 +671,18 @@ double Alignment::sumBLAST() const{
 	return toReturn;
 }
 
+double Alignment::sumGOC() const{
+    double toReturn = 0.0;
+    
+    for(node i = 0; i < actualSize; i++){
+        if(gocs->count(i) && gocs->at(i).count(aln[i]) && alnMask[i]){
+            toReturn += gocs->at(i).at(aln.at(i));
+        }
+    }
+    
+    return toReturn;
+}
+
 double Alignment::alnSize() const{
 	double toReturn = 0.0;
 	for(int i = 0; i < actualSize; i++){
@@ -673,6 +727,12 @@ inline void Alignment::updateBitscore(node n1, node n2old, node n2new,
 	currBitscore += delta;
 }
 
+inline void Alignment::updateGOC(node n1, node n2old, node n2new,
+                                 bool oldMask, bool newMask){
+    
+    currGOC += hypotheticalGOCDelta(n1, n2old, n2new, oldMask, newMask);
+}
+
 double Alignment::hypotheticalBitscoreDelta(node n1, node n2old, node n2new,
 		                             bool oldMask, bool newMask) const{
 	if(!bitscores)
@@ -693,6 +753,27 @@ double Alignment::hypotheticalBitscoreDelta(node n1, node n2old, node n2new,
 		newScore = bitscores->at(n1).at(n2new);
 
 	return newScore - oldScore;	
+}
+
+double Alignment::hypotheticalGOCDelta(node n1, node n2old, node n2new,
+                                       bool oldMask, bool newMask) const
+{
+    if(!gocs)
+        return 0.0;
+    if(n1 >= actualSize)
+        return 0.0;
+        
+    double oldScore = 0.0;
+    
+    if(gocs->count(n1) && gocs->at(n1).count(n2old) && oldMask)
+        oldScore = gocs->at(n1).at(n2old);
+        
+    double newScore = 0.0;
+    
+    if(gocs->count(n1) && gocs->at(n1).count(n2new) && newMask)
+        newScore = gocs->at(n1).at(n2new);
+        
+    return newScore - oldScore;
 }
 
 //ignore parameter is for the edge case where two neighbors are 
@@ -814,10 +895,12 @@ int Alignment::hypotheticalConservedCountDelta(node n1, node n2old, node n2new,
 	                    bool oldMask, bool newMask, node ignore) const{
 	//easy cases first:
 	//check that n1 is not a dummy node:
+    //cout<<"first cond"<<endl;
 	if(n1 >= actualSize){
 		return 0;
 	}
 
+    //cout<<"second cond"<<endl;
 	if(n2old == n2new && oldMask == newMask){
 		return 0;
 	}
@@ -831,7 +914,8 @@ int Alignment::hypotheticalConservedCountDelta(node n1, node n2old, node n2new,
 		return;
 	}
 	*/
-
+    
+    //cout<<"nochange cond"<<endl;
 	if(!newMask && !oldMask){
 		//nothing has changed. We were unaligned, we are still unaligned.
 		return 0;
@@ -849,14 +933,17 @@ int Alignment::hypotheticalConservedCountDelta(node n1, node n2old, node n2new,
 		}
 		return toReturn; //don't fall through to counting conservations that dont exist
 	}
-
+    
+    //cout<<"for neighbors"<<endl;
 	for(auto i : net1->adjList.at(n1)){
 		//need to count self loops one extra time so as to
 		//ensure they are counted correctly when conserved.
 		//otherwise, they will only be counted once
 		//when all other conserved edges get counted twice
 		//(which is why we divide by two in fastICSNumerator())
+        //cout<<"trying n1==i"<<endl;
 		if(n1 == i){
+            cout<<"n1 == i"<<endl;
 			//NOTE: at this point conservedCounts[n1] is zero!
 			//cout<<"in self-loop case!"<<endl;
 			if(newMask && net2->adjMatrix[n2new][n2new]){
@@ -869,18 +956,20 @@ int Alignment::hypotheticalConservedCountDelta(node n1, node n2old, node n2new,
 
 		//todo: we still get small errors in ICS due to the presence of self-
 		//loops (ignoring self-loops when loading network makes them go away).
-
+        //cout<<"trying i == ignore"<<endl;
 		if(i == ignore){
-			//cout<<"i is ignore; continuing"<<endl;
+		//	cout<<"i is ignore; continuing"<<endl;
 			continue;
 		}
+        //cout<<"alnMask[i]"<<endl;
 		if(!alnMask[i]){
 			//cout<<"mask off; continuing"<<endl;
 			continue;
 		}
+        
 		if(net2->adjMatrix[n2new][aln[i]]){
 			//cout<<"aln[i] is neighbor to n2new; edge conserved. n1 conserved "
-			//      "count++"<<endl;
+			 //     "count++"<<endl;
 			toReturn++;
 		}
 		//conservedCount of i either increases by 1,
@@ -906,7 +995,7 @@ int Alignment::hypotheticalConservedCountDelta(node n1, node n2old, node n2new,
 		else if((*alnINbrs)[n2old] &&
 			    !(*alnINbrs)[n2new]){
 			if(conservedCounts[i]>0){
-			//	cout<<"n1 to i used to be conserved and is no longer"<<endl;
+				//cout<<"n1 to i used to be conserved and is no longer"<<endl;
 				toReturn--;
 			}
 		}
@@ -943,6 +1032,3 @@ void Alignment::initConservedCount(node n1, node n2, bool mask){
 		}
 	}
 }
-
-//todo: move all GA algorithms to separate file
-

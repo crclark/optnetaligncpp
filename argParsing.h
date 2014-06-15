@@ -5,6 +5,7 @@
 #include <tuple>
 #include <boost/program_options.hpp>
 
+#include "goc.h"
 #include "Network.h"
 #include "blastinfo.h"
 using namespace std;
@@ -26,7 +27,8 @@ private:
 };
 
 typedef tuple<po::variables_map, Network*, Network*,
-              BLASTDict, BLASTDict, vector<string> > argRetVals; 
+              BLASTDict, BLASTDict, GOCDict, 
+              vector<string> > argRetVals; 
 
 
 argRetVals handleArgs(int ac, char* av[]){
@@ -125,7 +127,7 @@ argRetVals handleArgs(int ac, char* av[]){
 
 	if(!(vm.count("ics") || vm.count("bitscores") || vm.count("evalues")
 		|| vm.count("ec"))
-		|| (vm.count("annotations1") && vm.count("annotations2")) ){
+		&& !(vm.count("annotations1") && vm.count("annotations2")) ){
 		throw ArgError("At least one objective must be specified!");
 	}
 
@@ -185,6 +187,14 @@ argRetVals handleArgs(int ac, char* av[]){
 		evalues = loadBLASTInfo(net1,net2,vm["evalues"].as<string>());
 		fitnessNames.push_back("EvalsSum");
 	}
+    
+    GOCDict gocs;
+    
+    if(vm.count("annotations1") && vm.count("annotations2")){
+        gocs = loadGOC(net1,net2,vm["annotations1"].as<string>(),
+                           vm["annotations2"].as<string>());
+        fitnessNames.push_back("GOC");
+    }
 
 	if(!vm.count("total")){
 		fitnessNames.push_back("Size");
@@ -205,5 +215,5 @@ argRetVals handleArgs(int ac, char* av[]){
 			           "may be specified.");
 	}
 
-	return argRetVals(vm,net1,net2,bitscores,evalues, fitnessNames);
+	return argRetVals(vm,net1,net2,bitscores,evalues,gocs,fitnessNames);
 }

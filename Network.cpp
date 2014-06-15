@@ -5,6 +5,7 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
+#include <assert.h>
 using namespace std;
 
 
@@ -29,12 +30,12 @@ Network::Network(string filename){
 			throw LineReadException(string("Parse error in network: ") + filename +
 				                   string("on line: ") + line + "\n");
 		}
-
+/*
 		if(a == b){
 			ignoredSelfLoops++;
 			continue;
 		}
-
+*/
 		if(!alreadySeen.count(a)){
 			alreadySeen.insert(a);
 			nodeToNodeName[count] = a;
@@ -43,7 +44,7 @@ Network::Network(string filename){
 			count++;
 		}
 		else{
-			u = nodeNameToNode[a];
+			u = nodeNameToNode.at(a);
 		}
 
 		if(!alreadySeen.count(b)){
@@ -54,7 +55,7 @@ Network::Network(string filename){
 			count++;
 		}
 		else{
-			v = nodeNameToNode[b];
+			v = nodeNameToNode.at(b);
 		}
 
 		if(u == v){
@@ -82,6 +83,8 @@ Network::Network(string filename){
 			adjMatrix[n][m] = true;
 		}
 	}
+    
+    assert(nodeNameToNode.size() == nodeToNodeName.size());
 }
 
 int Network::degree(node x) const{

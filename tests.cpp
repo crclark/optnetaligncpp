@@ -22,6 +22,7 @@
 #include "Network.h"
 #include "blastinfo.h"
 #include "nsga-ii.h"
+#include "goc.h"
 using namespace std;
 
 bool approxEqual(double x, double y){
@@ -53,7 +54,7 @@ BOOST_AUTO_TEST_CASE( bitscoreSum_match_1 )
     Network net2("../optnetalign/tests/small.net");
     BLASTDict b = loadBLASTInfo(&net1,&net2,
     	                        "../optnetalign/tests/small.bitScores");
-    Alignment a= Alignment(&net1,&net2,"../optnetalign/tests/small.aln",&b);
+    Alignment a= Alignment(&net1,&net2,"../optnetalign/tests/small.aln",&b,nullptr);
     double sumbit = a.sumBLAST();
     //std::cout<<"sumbit is "<<sumbit<<std::endl;
     BOOST_CHECK(approxEqual(2.0,a.sumBLAST()));
@@ -69,7 +70,7 @@ BOOST_AUTO_TEST_CASE( bitscoreSum_match_2 )
     Network net2("../optnetalign/tests/small.net");
     BLASTDict b = loadBLASTInfo(&net1,&net2,
     	                        "../optnetalign/tests/small.bitScores");
-    Alignment a2 = Alignment(&net1,&net2,"../optnetalign/tests/small2.aln",&b);
+    Alignment a2 = Alignment(&net1,&net2,"../optnetalign/tests/small2.aln",&b,nullptr);
     double sumbit2 = a2.sumBLAST();
     std::cout<<"sumbit2 is "<<sumbit2<<std::endl;
     BOOST_CHECK(approxEqual(sumbit2,0.0));
@@ -80,7 +81,7 @@ BOOST_AUTO_TEST_CASE( currBitscore_consistent ){
     Network net2("../optnetalign/tests/small.net");
     BLASTDict b = loadBLASTInfo(&net1,&net2,
     	                        "../optnetalign/tests/small.bitScores");
-    Alignment a2 = Alignment(&net1,&net2,&b);
+    Alignment a2 = Alignment(&net1,&net2,&b,nullptr);
     mt19937 g1(12);
     a2.shuf(g1,false,false,true);
     double sumbit2 = a2.sumBLAST();
@@ -94,7 +95,7 @@ BOOST_AUTO_TEST_CASE( bitscoreSum_match_3 )
     Network net2("../optnetalign/tests/bittest2.net");
     BLASTDict b = loadBLASTInfo(&net1,&net2,
     	                        "../optnetalign/tests/bittest.sim");
-    Alignment a2 = Alignment(&net1,&net2,&b);
+    Alignment a2 = Alignment(&net1,&net2,&b,nullptr);
     double sumbit2 = a2.sumBLAST();
     std::cout<<"sumbit2 is "<<sumbit2<<std::endl;
     BOOST_CHECK(approxEqual(sumbit2,11.0+22.0+33.0+44.0));
@@ -105,9 +106,9 @@ BOOST_AUTO_TEST_CASE( currBitscore_consistent_2 ){
     Network net2("../optnetalign/tests/bittest2.net");
     BLASTDict b = loadBLASTInfo(&net1,&net2,
     	                        "../optnetalign/tests/bittest.sim");
-    Alignment a2 = Alignment(&net1,&net2,&b);
+    Alignment a2 = Alignment(&net1,&net2,&b,nullptr);
     
-    Alignment a3 = Alignment(&net1,&net2,&b);
+    Alignment a3 = Alignment(&net1,&net2,&b,nullptr);
     mt19937 g1(12);
     a2.shuf(g1,false,false,false);
     a3.shuf(g1,false,false,false);
@@ -123,7 +124,7 @@ BOOST_AUTO_TEST_CASE( currBitscore_consistent_3 ){
     Network net2("../optnetalign/tests/bittest2.net");
     BLASTDict b = loadBLASTInfo(&net1,&net2,
     	                        "../optnetalign/tests/bittest.sim");
-    Alignment a2 = Alignment(&net1,&net2,&b);
+    Alignment a2 = Alignment(&net1,&net2,&b,nullptr);
     a2.currBitscore = a2.sumBLAST();
     mt19937 g1(12);
     a2.mutate(g1,0.25);
@@ -138,7 +139,7 @@ BOOST_AUTO_TEST_CASE( currBitscore_consistent_4 ){
     Network net2("../optnetalign/tests/bittest2.net");
     BLASTDict b = loadBLASTInfo(&net1,&net2,
     	                        "../optnetalign/tests/bittest.sim");
-    Alignment a2 = Alignment(&net1,&net2,&b);
+    Alignment a2 = Alignment(&net1,&net2,&b,nullptr);
     a2.currBitscore = a2.sumBLAST();
     node temp = a2.aln[1];
     a2.aln[1] = a2.aln[2];
@@ -156,9 +157,9 @@ BOOST_AUTO_TEST_CASE( currBitscore_consistent_5 ){
     Network net2("../optnetalign/tests/cg1b.net");
     BLASTDict b = loadBLASTInfo(&net1,&net2,
     	                        "../optnetalign/tests/cg1.sim");
-    Alignment a2 = Alignment(&net1,&net2,&b);
+    Alignment a2 = Alignment(&net1,&net2,&b,nullptr);
     
-    Alignment a3 = Alignment(&net1,&net2,&b);
+    Alignment a3 = Alignment(&net1,&net2,&b,nullptr);
     mt19937 g1(12);
     a2.shuf(g1,false,false,false);
     a3.shuf(g1,false,false,false);
@@ -174,9 +175,9 @@ BOOST_AUTO_TEST_CASE( currBitscore_consistent_6 ){
     Network net2("../optnetalign/tests/cg1b.net");
     BLASTDict b = loadBLASTInfo(&net1,&net2,
     	                        "../optnetalign/tests/cg1.sim");
-    Alignment a2 = Alignment(&net1,&net2,&b);
+    Alignment a2 = Alignment(&net1,&net2,&b,nullptr);
     
-    Alignment a3 = Alignment(&net1,&net2,&b);
+    Alignment a3 = Alignment(&net1,&net2,&b,nullptr);
     mt19937 g1(1244);
     a2.shuf(g1,false,false,true);
     a3.shuf(g1,false,false,true);
@@ -199,9 +200,9 @@ BOOST_AUTO_TEST_CASE( save_load_inverses )
 {
 	Network net1("../optnetalign/tests/lccstest1.net");
 	Network net2("../optnetalign/tests/lccstest2.net");
-	Alignment aln1(&net1,&net2,"../optnetalign/tests/lccstest.aln",nullptr);
+	Alignment aln1(&net1,&net2,"../optnetalign/tests/lccstest.aln",nullptr,nullptr);
 	aln1.save("../optnetalign/tests/testSavecpp.aln");
-	Alignment aln2(&net1,&net2,"../optnetalign/tests/testSavecpp.aln",nullptr);
+	Alignment aln2(&net1,&net2,"../optnetalign/tests/testSavecpp.aln",nullptr,nullptr);
 
 	for(int i = 0; i < net1.nodeToNodeName.size(); i++){
 		BOOST_CHECK(aln1.aln[i] == aln2.aln[i]);
@@ -212,7 +213,7 @@ BOOST_AUTO_TEST_CASE( rand_aln_consistent )
 {
 	Network net1("../optnetalign/tests/lccstest1.net");
 	Network net2("../optnetalign/tests/lccstest2.net");
-	Alignment aln1(&net1,&net2,nullptr);
+	Alignment aln1(&net1,&net2,nullptr,nullptr);
 	set<node> v2Set;
 	//check that alignment is valid permutation.
 	for(int i = 0; i < aln1.aln.size(); i++){
@@ -227,7 +228,7 @@ BOOST_AUTO_TEST_CASE( load_aln_consistent )
 {
 	Network net1("../optnetalign/tests/cg1a.net");
 	Network net2("../optnetalign/tests/cg1b.net");
-	Alignment aln1(&net1,&net2,"../optnetalign/tests/cg1.aln",nullptr);
+	Alignment aln1(&net1,&net2,"../optnetalign/tests/cg1.aln",nullptr,nullptr);
 	set<node> v2Set;
 	vector<int> counts(aln1.aln.size(),0);
 
@@ -267,7 +268,7 @@ BOOST_AUTO_TEST_CASE( ics_match_1 )
 {
 	Network net1("../optnetalign/tests/lccstest1.net");
 	Network net2("../optnetalign/tests/lccstest2.net");
-	Alignment aln(&net1,&net2,"../optnetalign/tests/lccstest.aln",nullptr);
+	Alignment aln(&net1,&net2,"../optnetalign/tests/lccstest.aln",nullptr,nullptr);
 	double ics = aln.ics();
 	BOOST_CHECK(approxEqual(ics,0.8));
 }
@@ -276,7 +277,7 @@ BOOST_AUTO_TEST_CASE( ics_match_2 )
 {
 	Network net1("../optnetalign/tests/lccstest1.net");
 	Network net2("../optnetalign/tests/lccstest2.net");
-	Alignment aln(&net1,&net2,"../optnetalign/tests/lccstest2.aln",nullptr);
+	Alignment aln(&net1,&net2,"../optnetalign/tests/lccstest2.aln",nullptr,nullptr);
 	double ics = aln.ics();
 	BOOST_CHECK(approxEqual(ics,0.0));
 }
@@ -285,7 +286,7 @@ BOOST_AUTO_TEST_CASE( ics_match_3 )
 {
 	Network net1("../optnetalign/tests/newmetrica.net");
 	Network net2("../optnetalign/tests/newmetricb.net");
-	Alignment aln(&net1,&net2,"../optnetalign/tests/newmetric.aln",nullptr);
+	Alignment aln(&net1,&net2,"../optnetalign/tests/newmetric.aln",nullptr,nullptr);
 	double ics = aln.ics();
 	BOOST_CHECK(approxEqual(ics,0.666666666666666));
 }
@@ -296,7 +297,7 @@ BOOST_AUTO_TEST_CASE( ics_match_4 )
 {
 	Network net1("../optnetalign/tests/cg1a.net");
 	Network net2("../optnetalign/tests/cg1b.net");
-	Alignment aln(&net1,&net2,"../optnetalign/tests/cg1.aln",nullptr);
+	Alignment aln(&net1,&net2,"../optnetalign/tests/cg1.aln",nullptr,nullptr);
 	double ics = aln.ics();
 	BOOST_CHECK(approxEqual(ics,0.8253323173313013));
 }
@@ -305,7 +306,7 @@ BOOST_AUTO_TEST_CASE( ics_match_5 )
 {
 	Network net1("../optnetalign/tests/cg1a.net");
 	Network net2("../optnetalign/tests/cg1b.net");
-	Alignment aln(&net1,&net2,"../optnetalign/tests/cg1partial.aln",nullptr);
+	Alignment aln(&net1,&net2,"../optnetalign/tests/cg1partial.aln",nullptr,nullptr);
 	double ics = aln.ics();
 	BOOST_CHECK(approxEqual(ics,0.920399546905571));
 }
@@ -314,7 +315,7 @@ BOOST_AUTO_TEST_CASE( consistent_after_mutate )
 {
 	Network net1("../optnetalign/tests/cg1a.net");
 	Network net2("../optnetalign/tests/cg1b.net");
-	Alignment aln(&net1,&net2,"../optnetalign/tests/cg1.aln",nullptr);
+	Alignment aln(&net1,&net2,"../optnetalign/tests/cg1.aln",nullptr,nullptr);
 	mt19937 g1(12);
 	aln.mutate(g1, 0.3);
 	set<node> v2Set;
@@ -332,8 +333,8 @@ BOOST_AUTO_TEST_CASE( consistent_after_crossover )
 {
 	Network net1("../optnetalign/tests/cg1a.net");
 	Network net2("../optnetalign/tests/cg1b.net");
-	Alignment aln(&net1,&net2,"../optnetalign/tests/cg1.aln",nullptr);
-	Alignment aln2(&net1,&net2,"../optnetalign/tests/cg1partial.aln",nullptr);
+	Alignment aln(&net1,&net2,"../optnetalign/tests/cg1.aln",nullptr,nullptr);
+	Alignment aln2(&net1,&net2,"../optnetalign/tests/cg1partial.aln",nullptr,nullptr);
 	mt19937 g1(12);
 	Alignment child(g1, 0.3, aln, aln2);
 	set<node> v2Set;
@@ -351,22 +352,22 @@ BOOST_AUTO_TEST_CASE( nondominated_sort )
 {
 	Network net1("../optnetalign/tests/cg1a.net");
 	Network net2("../optnetalign/tests/cg1b.net");
-	Alignment aln1(&net1,&net2,"../optnetalign/tests/cg1.aln",nullptr);
+	Alignment aln1(&net1,&net2,"../optnetalign/tests/cg1.aln",nullptr,nullptr);
 	aln1.fitness.push_back(0.7);
 	aln1.fitness.push_back(0.8);
-	Alignment aln2(&net1,&net2,nullptr);
+	Alignment aln2(&net1,&net2,nullptr,nullptr);
 	aln2.fitness.push_back(0.75);
 	aln2.fitness.push_back(0.75);
-	Alignment aln3(&net1,&net2,nullptr);
+	Alignment aln3(&net1,&net2,nullptr,nullptr);
 	aln3.fitness.push_back(0.8);
 	aln3.fitness.push_back(0.7);
-	Alignment aln4(&net1,&net2,nullptr);
+	Alignment aln4(&net1,&net2,nullptr,nullptr);
 	aln4.fitness.push_back(0.4);
 	aln4.fitness.push_back(0.6);
-	Alignment aln5(&net1,&net2,nullptr);
+	Alignment aln5(&net1,&net2,nullptr,nullptr);
 	aln5.fitness.push_back(0.5);
 	aln5.fitness.push_back(0.5);
-	Alignment aln6(&net1,&net2,nullptr);
+	Alignment aln6(&net1,&net2,nullptr,nullptr);
 	aln6.fitness.push_back(0.6);
 	aln6.fitness.push_back(0.4);
 	vector<Alignment*> toSort;
@@ -407,19 +408,19 @@ BOOST_AUTO_TEST_CASE( crowding_dist_assignment )
 {
 	Network net1("../optnetalign/tests/cg1a.net");
 	Network net2("../optnetalign/tests/cg1b.net");
-	Alignment aln1(&net1,&net2,nullptr);
+	Alignment aln1(&net1,&net2,nullptr,nullptr);
 	aln1.fitness.push_back(0.6);
 	aln1.fitness.push_back(0.9);
-	Alignment aln2(&net1,&net2,nullptr);
+	Alignment aln2(&net1,&net2,nullptr,nullptr);
 	aln2.fitness.push_back(0.7);
 	aln2.fitness.push_back(0.8);
-	Alignment aln3(&net1,&net2,nullptr);
+	Alignment aln3(&net1,&net2,nullptr,nullptr);
 	aln3.fitness.push_back(0.75);
 	aln3.fitness.push_back(0.75);
-	Alignment aln4(&net1,&net2,nullptr);
+	Alignment aln4(&net1,&net2,nullptr,nullptr);
 	aln4.fitness.push_back(0.8);
 	aln4.fitness.push_back(0.7);
-	Alignment aln5(&net1,&net2,nullptr);
+	Alignment aln5(&net1,&net2,nullptr,nullptr);
 	aln5.fitness.push_back(0.9);
 	aln5.fitness.push_back(0.6);
 	vector<Alignment*> front;
@@ -447,8 +448,8 @@ BOOST_AUTO_TEST_CASE( fast_ics_works_total_crossover ){
 	cout<<endl<<"BEGIN fast_ics_works_total_crossover"<<endl;
 	Network net1("../optnetalign/tests/cg1a.net");
 	Network net2("../optnetalign/tests/cg1b.net");
-	Alignment aln1(&net1,&net2,nullptr);
-	Alignment aln2(&net1,&net2,nullptr);
+	Alignment aln1(&net1,&net2,nullptr,nullptr);
+	Alignment aln2(&net1,&net2,nullptr,nullptr);
 	mt19937 g1(12);
 	aln1.shuf(g1,false,false,true);
 	aln2.shuf(g1,false,false,true);
@@ -464,8 +465,8 @@ BOOST_AUTO_TEST_CASE( fast_ics_works_partial_crossover ){
 	cout<<endl<<"BEGIN fast_ics_works_partial_crossover"<<endl;
 	Network net1("../optnetalign/tests/selflooptest.net");
 	Network net2("../optnetalign/tests/selflooptest.net");
-	Alignment aln1(&net1,&net2,nullptr);
-	Alignment aln2(&net1,&net2,nullptr);
+	Alignment aln1(&net1,&net2,nullptr,nullptr);
+	Alignment aln2(&net1,&net2,nullptr,nullptr);
 	mt19937 g1(12);
 	//aln1.shuf(g1,false,false,false);
 	//aln2.shuf(g1,false,false,false);
@@ -481,7 +482,7 @@ BOOST_AUTO_TEST_CASE( fast_ics_works_total_mutation ){
 	cout<<endl<<"BEGIN fast_ics_works_total_mutation"<<endl;
 	Network net1("../optnetalign/tests/cg1a.net");
 	Network net2("../optnetalign/tests/cg1b.net");
-	Alignment aln1(&net1,&net2,nullptr);
+	Alignment aln1(&net1,&net2,nullptr,nullptr);
 	mt19937 g1(12);
 	aln1.shuf(g1,false,false,true);
 	aln1.mutate(g1,0.1,true);
@@ -496,7 +497,7 @@ BOOST_AUTO_TEST_CASE( fast_ics_works_total_repeat_mutation ){
 	cout<<endl<<"BEGIN fast_ics_works_total_repeat_mutation"<<endl;
 	Network net1("../optnetalign/tests/cg1a.net");
 	Network net2("../optnetalign/tests/cg1b.net");
-	Alignment aln1(&net1,&net2,nullptr);
+	Alignment aln1(&net1,&net2,nullptr,nullptr);
 	mt19937 g1(12);
 	aln1.shuf(g1,false,false,true);
 	for(int i = 0; i < 100; i++){
@@ -513,7 +514,7 @@ BOOST_AUTO_TEST_CASE( fast_ics_works_partial_mutation ){
 	cout<<endl<<"BEGIN fast_ics_works_partial_mutation"<<endl;
 	Network net1("../optnetalign/tests/cg1a.net");
 	Network net2("../optnetalign/tests/cg1b.net");
-	Alignment aln1(&net1,&net2,nullptr);
+	Alignment aln1(&net1,&net2,nullptr,nullptr);
 	mt19937 g1(4);
 	aln1.shuf(g1,false,false,false);
 	cout<<"BEFORE MUTATION"<<endl;
@@ -547,7 +548,7 @@ BOOST_AUTO_TEST_CASE( fast_ics_works_partial_repeat_mutation ){
 	cout<<endl<<"BEGIN fast_ics_works_total_repeat_mutation"<<endl;
 	Network net1("../optnetalign/tests/cg1a.net");
 	Network net2("../optnetalign/tests/cg1b.net");
-	Alignment aln1(&net1,&net2,nullptr);
+	Alignment aln1(&net1,&net2,nullptr,nullptr);
 	mt19937 g1(12);
 	aln1.shuf(g1,false,false,false);
 	for(int i = 0; i < 100; i++){
@@ -565,7 +566,7 @@ BOOST_AUTO_TEST_CASE( fast_ics_works_after_init_total ){
 	cout<<endl<<"BEGIN fast_ics_works_after_init_total"<<endl;
 	Network net1("../optnetalign/tests/cg1a.net");
 	Network net2("../optnetalign/tests/cg1b.net");
-	Alignment aln1(&net1,&net2,nullptr);
+	Alignment aln1(&net1,&net2,nullptr,nullptr);
 	mt19937 g1(12);
 	aln1.shuf(g1,false,false,true);
 	double ics = aln1.ics();
@@ -580,7 +581,7 @@ BOOST_AUTO_TEST_CASE( fast_ics_works_after_init_partial ){
 	cout<<endl<<"BEGIN fast_ics_works_after_init_partial"<<endl;
 	Network net1("../optnetalign/tests/cg1a.net");
 	Network net2("../optnetalign/tests/cg1b.net");
-	Alignment aln1(&net1,&net2,nullptr);
+	Alignment aln1(&net1,&net2,nullptr,nullptr);
 	mt19937 g1(123);
 	aln1.shuf(g1,false,false,false);
 	double ics = aln1.ics();
@@ -594,7 +595,7 @@ BOOST_AUTO_TEST_CASE( do_swap_consistent_ics ){
 	cout<<endl<<"BEGIN do_swap_consistent_ics"<<endl;
 	Network net1("../optnetalign/tests/selflooptest.net");
 	Network net2("../optnetalign/tests/selflooptest.net");
-	Alignment aln1(&net1,&net2,nullptr);
+	Alignment aln1(&net1,&net2,nullptr,nullptr);
 	mt19937 g1(124);
 	aln1.shuf(g1,false,false,true);
 	
@@ -650,15 +651,14 @@ BOOST_AUTO_TEST_CASE( hypothetical_swap_correct ){
 	cout<<endl<<"BEGIN hypothetical_swap_correct"<<endl;
 	Network net1("../optnetalign/tests/lccstest1.net");
 	Network net2("../optnetalign/tests/lccstest2.net");
-	Alignment aln1(&net1,&net2,"../optnetalign/tests/lccstest.aln",nullptr);
+	Alignment aln1(&net1,&net2,"../optnetalign/tests/lccstest.aln",nullptr,nullptr);
 	mt19937 g1(123);
 	vector<string> fitnessNames;
 	fitnessNames.push_back("ICS");
 	aln1.computeFitness(fitnessNames);
 
-	uniform_int_distribution<int> randIndex(0,aln1.aln.size());
-
-
+	uniform_int_distribution<int> randIndex(0,aln1.aln.size()-1);
+    
 	for(int i = 0; i < 100; i++){
 		node x = randIndex(g1);
 		node y = x;
@@ -672,9 +672,8 @@ BOOST_AUTO_TEST_CASE( hypothetical_swap_correct ){
 		for(int j = 0; j < aln1.conservedCounts.size(); j++){
 			sumBefore += aln1.conservedCounts[j];
 		}
-
+    
 		aln1.doSwap(x,y);
-
 		int sumAfter = 0;
 		for(int j = 0; j < aln1.conservedCounts.size(); j++){
 			sumAfter += aln1.conservedCounts[j];
@@ -696,7 +695,7 @@ BOOST_AUTO_TEST_CASE( hypothetical_swap_correct ){
 BOOST_AUTO_TEST_CASE( v1unaligned_consistent_after_load ){
 	Network net1("../optnetalign/tests/cg1a.net");
 	Network net2("../optnetalign/tests/cg1b.net");
-	Alignment aln(&net1, &net2, "../optnetalign/tests/cg1partial.aln", nullptr);
+	Alignment aln(&net1, &net2, "../optnetalign/tests/cg1partial.aln", nullptr,nullptr);
 
 	for(int i = 0; i < aln.alnMask.size(); i++){
 		if(!aln.alnMask[i])
@@ -709,7 +708,7 @@ BOOST_AUTO_TEST_CASE( v1unaligned_consistent_after_load ){
 BOOST_AUTO_TEST_CASE( v1unaligned_consistent_after_shuf ){
 	Network net1("../optnetalign/tests/cg1a.net");
 	Network net2("../optnetalign/tests/cg1b.net");
-	Alignment aln(&net1, &net2, nullptr);
+	Alignment aln(&net1, &net2, nullptr,nullptr);
 	mt19937 g(12);
 	aln.shuf(g, false, false, false);
 
@@ -724,7 +723,7 @@ BOOST_AUTO_TEST_CASE( v1unaligned_consistent_after_shuf ){
 BOOST_AUTO_TEST_CASE( v1unaligned_consistent_after_onBit ){
 	Network net1("../optnetalign/tests/cg1a.net");
 	Network net2("../optnetalign/tests/cg1b.net");
-	Alignment aln(&net1, &net2, nullptr);
+	Alignment aln(&net1, &net2, nullptr,nullptr);
 	mt19937 g(12);
 	aln.shuf(g, false, false, false);
 
@@ -748,7 +747,7 @@ BOOST_AUTO_TEST_CASE( greedy_match_aln_consistent ){
 	Network net1("../optnetalign/tests/cg1a.net");
 	Network net2("../optnetalign/tests/cg1b.net");
 	BLASTDict b = loadBLASTInfo(&net1,&net2,"../optnetalign/tests/cg1.sim");
-	Alignment aln(&net1,&net2,&b);
+	Alignment aln(&net1,&net2,&b,nullptr);
 
 	//check that if a node is in v1Unaligned, then it is unaligned
 	for(auto n : aln.v1Unaligned){
@@ -774,7 +773,7 @@ BOOST_AUTO_TEST_CASE( self_similarity_is_one){
 	Network net1("../optnetalign/tests/cg1a.net");
 	Network net2("../optnetalign/tests/cg1b.net");
 	BLASTDict b = loadBLASTInfo(&net1,&net2,"../optnetalign/tests/cg1.sim");
-	Alignment aln(&net1,&net2,"../optnetalign/tests/cg1.aln",&b);
+	Alignment aln(&net1,&net2,"../optnetalign/tests/cg1.aln",&b,nullptr);
 	BOOST_CHECK(approxEqual(alnSimilarity(&aln,&aln),1.0));
 
 }
@@ -782,11 +781,54 @@ BOOST_AUTO_TEST_CASE( self_similarity_is_one){
 BOOST_AUTO_TEST_CASE(similarity_check){
 	Network net1("../optnetalign/tests/cg1a.net");
 	Network net2("../optnetalign/tests/cg1b.net");
-	Alignment aln1(&net1,&net2,"../optnetalign/tests/cg1.aln",nullptr);
-	Alignment aln2(&net1,&net2,"../optnetalign/tests/cg1partial.aln",nullptr);
+	Alignment aln1(&net1,&net2,"../optnetalign/tests/cg1.aln",nullptr,nullptr);
+	Alignment aln2(&net1,&net2,"../optnetalign/tests/cg1partial.aln",nullptr,nullptr);
 	double sim = alnSimilarity(&aln1,&aln2);
 	BOOST_CHECK(approxEqual(sim,0.8891585761));
 }
+
+BOOST_AUTO_TEST_CASE(goc_test){
+    Network net1("../optnetalign/tests/small.net");
+    Network net2 = net1;
+    string fp = "../optnetalign/tests/small.annos";
+    cout<<"Loading gocs"<<endl;
+    GOCDict gocs = loadGOC(&net1,&net2,fp,fp);
+    cout<<"Calling aln constructor"<<endl; 
+    Alignment aln(&net1,&net2,nullptr,&gocs);
+    mt19937 g(1);
+    cout<<"calling shuf"<<endl;
+    aln.shuf(g,false,false,true);
+    BOOST_CHECK(approxEqual(aln.sumGOC(),2.0));
+}
+
+BOOST_AUTO_TEST_CASE(currGOC_after_doSwap){
+    Network net1("../optnetalign/tests/small.net");
+    Network net2 = net1;
+    string fp = "../optnetalign/tests/small.annos";
+    cout<<"Loading gocs"<<endl;
+    GOCDict gocs = loadGOC(&net1,&net2,fp,fp);
+    cout<<"Calling aln constructor"<<endl; 
+    Alignment aln(&net1,&net2,nullptr,&gocs);
+    mt19937 g(1);
+    cout<<"calling shuf"<<endl;
+    aln.shuf(g,false,false,true);
+    aln.doSwap(0,1);
+    BOOST_CHECK(approxEqual(aln.currGOC,2.0));
+}
+
+BOOST_AUTO_TEST_CASE( GOC_correct_after_load ){
+    cout<<"BEGIN GOC_correct_after_load"<<endl;
+    Network net1("../optnetalign/tests/dmela.net");
+    Network net2("../optnetalign/tests/hsapi.net");
+    GOCDict gocs = loadGOC(&net1,&net2,
+                           "../optnetalign/tests/dmela.annos",
+                           "../optnetalign/tests/hsapi.annos");
+    
+    Alignment aln(&net1,&net2,"../optnetalign/tests/dm-hs-netal.aln",nullptr,&gocs);
+    cout<<"sum of GOC is "<<aln.sumGOC()<<endl;
+    BOOST_CHECK(approxEqual(39.7137,aln.sumGOC()));
+}
+
 //____________________________________________________________________________//
 
 // EOF

@@ -31,7 +31,8 @@ int main(int ac, char* av[])
 		Network* net2 = get<2>(vals);
 		BLASTDict bitscores = get<3>(vals);
 		BLASTDict evalues = get<4>(vals);
-		vector<string> fitnessNames = get<5>(vals);
+        GOCDict gocs = get<5>(vals);
+		vector<string> fitnessNames = get<6>(vals);
 
 		
 		const float mutswappb = vm.count("mutswappb")  
@@ -47,13 +48,17 @@ int main(int ac, char* av[])
 		const bool finalstats = vm.count("finalstats");
 		const bool seeding = vm.count("seeding");
         const bool nooutput = vm.count("nooutput");
-		const string outprefix = vm["outprefix"].as<string>();
+		const string outprefix = vm.count("outprefix") ? 
+                                 vm["outprefix"].as<string>()
+                                 : "nooutprefixgiven";
 		const int hillclimbiters = vm.count("hillclimbiters") 
 		                           ? vm["hillclimbiters"].as<int>() 
 		                           : 0; 
 
-		const BLASTDict* bitPtr = vm.count("bitscores") ? &bitscores : nullptr;
-
+		const BLASTDict* bitPtr = vm.count("bitscores") ? &bitscores 
+                                  : nullptr;
+        const GOCDict* gocsPtr = vm.count("annotations1") ? &gocs 
+                                 : nullptr;
 		mt19937 g(14);
 		//initialize population
 		if(verbose){
@@ -78,7 +83,7 @@ int main(int ac, char* av[])
             if(seeding){
                 int numSearchIters = 1000;
                 for(int i = r.begin(); i != r.end(); ++i){
-                    pop[i] = new Alignment(net1,net2,bitPtr);
+                    pop[i] = new Alignment(net1,net2,bitPtr,gocsPtr);
                     pop[i]->shuf(tg,false,false,total);
                     pop[i]->computeFitness(fitnessNames);
                     if(fitnessNames.size()>1){
@@ -91,7 +96,7 @@ int main(int ac, char* av[])
                         numSearchIters, fitnessNames,
                         0, true);
                     }
-                    kids[i] = new Alignment(net1,net2,bitPtr);
+                    kids[i] = new Alignment(net1,net2,bitPtr,gocsPtr);
                     kids[i]->shuf(tg,false,false,total);
                     kids[i]->computeFitness(fitnessNames);
                     if(fitnessNames.size()>1){
@@ -108,10 +113,10 @@ int main(int ac, char* av[])
             }
             else{
                 for(int i = r.begin(); i != r.end(); ++i){
-                    pop[i] = new Alignment(net1,net2, bitPtr);
+                    pop[i] = new Alignment(net1,net2, bitPtr,gocsPtr);
                     pop[i]->shuf(tg, uniformsize, smallstart, total);
                     pop[i]->computeFitness(fitnessNames);
-                    kids[i] = new Alignment(net1,net2, bitPtr);
+                    kids[i] = new Alignment(net1,net2, bitPtr,gocsPtr);
                     kids[i]->shuf(tg, uniformsize, smallstart, total);
                     kids[i]->computeFitness(fitnessNames);
                 }
@@ -123,7 +128,7 @@ int main(int ac, char* av[])
 
         //one last thing: create a greedy bitscore matching
         if(bitPtr && seeding){
-            pop[popsize - 1] = new Alignment(net1,net2,bitPtr);
+            pop[popsize - 1] = new Alignment(net1,net2,bitPtr,gocsPtr);
             pop[popsize - 1]->greedyBitscoreMatch();
             pop[popsize - 1]->computeFitness(fitnessNames);
         }
@@ -244,7 +249,7 @@ int main(int ac, char* av[])
 			}
 		}
 
-		if(verbose){
+		if(verbose && !nooutput){
 			cout<<"Finished!"<<endl;
 			cout<<"Writing alignments in Pareto front"<<endl;
 		}
