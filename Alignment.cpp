@@ -945,7 +945,7 @@ int Alignment::hypotheticalConservedCountDelta(node n1, node n2old, node n2new,
 		//(which is why we divide by two in fastICSNumerator())
         //cout<<"trying n1==i"<<endl;
 		if(n1 == i){
-            cout<<"n1 == i"<<endl;
+            //cout<<"n1 == i"<<endl;
 			//NOTE: at this point conservedCounts[n1] is zero!
 			//cout<<"in self-loop case!"<<endl;
 			if(newMask && net2->adjMatrix[n2new][n2new]){
