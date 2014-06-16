@@ -219,11 +219,13 @@ Alignment::Alignment(mt19937& prng, float cxswappb,
 			updateBitscore(i,temp1,temp2,temp1Mask,alnMask[i]);
 			updateConservedCount(i, temp1, temp2, temp1Mask, alnMask[i],
 				                 -1);
+			updateGOC(i,temp1,temp2,temp1Mask,alnMask[i]);
 			updateBitscore(par1Indices[temp2],temp2,temp1,
 				           par1bool, alnMask[par1Indices[temp2]]);
 			updateConservedCount(par1Indices[temp2],temp2,temp1,
 				                 par1bool, alnMask[par1Indices[temp2]],i);
-
+			updateGOC(par1Indices[temp2],temp2,temp1,par1bool,
+				      alnMask[par1Indices[temp2]]);
 			//swap index records 
 			int itemp = par1Indices[temp1];
 			par1Indices[temp1] = par1Indices[temp2];

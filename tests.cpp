@@ -815,7 +815,7 @@ BOOST_AUTO_TEST_CASE(currGOC_after_doSwap){
     aln.doSwap(0,1);
     BOOST_CHECK(approxEqual(aln.currGOC,2.0));
 }
-
+/*
 BOOST_AUTO_TEST_CASE( GOC_correct_after_load ){
     cout<<"BEGIN GOC_correct_after_load"<<endl;
     Network net1("../optnetalign/tests/dmela.net");
@@ -827,6 +827,104 @@ BOOST_AUTO_TEST_CASE( GOC_correct_after_load ){
     Alignment aln(&net1,&net2,"../optnetalign/tests/dm-hs-netal.aln",nullptr,&gocs);
     cout<<"sum of GOC is "<<aln.sumGOC()<<endl;
     BOOST_CHECK(approxEqual(39.7137,aln.sumGOC()));
+}
+*/
+BOOST_AUTO_TEST_CASE( GOC_consistent ){
+	cout<<"BEGIN GOC_consistent"<<endl;
+	Network net1("../optnetalign/tests/lccstest1.net");
+	Network net2("../optnetalign/tests/lccstest1.net");
+	GOCDict gocs = loadGOC(&net1,&net2,
+		                   "../optnetalign/tests/lccstest1.annos",
+		                   "../optnetalign/tests/lccstest1.annos");
+	Alignment aln(&net1,&net2,"../optnetalign/tests/lccstest1iso.aln",nullptr,&gocs);
+	BOOST_CHECK(approxEqual(4.0, aln.sumGOC()));
+	BOOST_CHECK(approxEqual(4.0, aln.currGOC));
+	aln.doSwap(0,1);
+	BOOST_CHECK(approxEqual(2.666666666666, aln.currGOC));
+	BOOST_CHECK(approxEqual(2.666666666666, aln.sumGOC()));
+}
+
+BOOST_AUTO_TEST_CASE( GOC_after_cx ){
+	cout<<"BEGIN GOC_after_cx"<<endl;
+	Network net1("../optnetalign/tests/lccstest1.net");
+	Network net2("../optnetalign/tests/lccstest1.net");
+	GOCDict gocs = loadGOC(&net1, &net2,
+		                   "../optnetalign/tests/lccstest1.annos",
+		                   "../optnetalign/tests/lccstest1.annos");
+	Alignment aln(&net1,&net2,"../optnetalign/tests/lccstest1iso.aln",nullptr,&gocs);
+	Alignment aln2(&net1,&net2,"../optnetalign/tests/lccstest1other.aln",nullptr,&gocs);
+	vector<string> fitnessNames;
+	fitnessNames.push_back("GOC");
+	aln.computeFitness(fitnessNames);
+	aln2.computeFitness(fitnessNames);
+	mt19937 g(1);
+	Alignment alnChild(g,0.5,aln,aln2,true);
+	alnChild.computeFitness(fitnessNames);
+	cout<<"Child alignment is: "<<endl;
+	for(int i = 0; i < alnChild.aln.size(); i++){
+		cout<<net1.nodeToNodeName.at(i)<<" "<<net1.nodeToNodeName.at(alnChild.aln[i])<<endl;
+	}
+	BOOST_CHECK(approxEqual(aln.currGOC,aln.sumGOC()));
+}
+
+BOOST_AUTO_TEST_CASE( GOC_after_mut ){
+	cout<<"BEGIN GOC_after_mut"<<endl;
+	Network net1("../optnetalign/tests/lccstest1.net");
+	Network net2("../optnetalign/tests/lccstest1.net");
+	GOCDict gocs = loadGOC(&net1, &net2,
+		                   "../optnetalign/tests/lccstest1.annos",
+		                   "../optnetalign/tests/lccstest1.annos");
+	Alignment aln(&net1,&net2,"../optnetalign/tests/lccstest1iso.aln",nullptr,&gocs);
+	vector<string> fitnessNames;
+	fitnessNames.push_back("GOC");
+	aln.computeFitness(fitnessNames);
+	mt19937 g(1);
+	aln.mutate(g,0.5,true);
+	cout<<"Mutated alignment is: "<<endl;
+	for(int i = 0; i < aln.aln.size(); i++){
+		cout<<net1.nodeToNodeName.at(i)<<" "<<net1.nodeToNodeName.at(aln.aln[i])<<endl;
+	}
+	BOOST_CHECK(approxEqual(aln.currGOC,aln.sumGOC()));
+}
+
+BOOST_AUTO_TEST_CASE( GOC_after_mut_partial ){
+	cout<<"BEGIN GOC_after_mut_partial"<<endl;
+	Network net1("../optnetalign/tests/lccstest1.net");
+	Network net2("../optnetalign/tests/lccstest1.net");
+	GOCDict gocs = loadGOC(&net1, &net2,
+		                   "../optnetalign/tests/lccstest1.annos",
+		                   "../optnetalign/tests/lccstest1.annos");
+	Alignment aln(&net1,&net2,nullptr,&gocs);
+	vector<string> fitnessNames;
+	fitnessNames.push_back("GOC");
+	aln.computeFitness(fitnessNames);
+	mt19937 g(1);
+	aln.shuf(g,false,false,false);
+	aln.computeFitness(fitnessNames);
+	aln.mutate(g,0.5,true);
+	BOOST_CHECK(approxEqual(aln.currGOC,aln.sumGOC()));	
+}
+
+BOOST_AUTO_TEST_CASE( GOC_after_cx_partial ){
+	cout<<"BEGIN GOC_after_cx_partial"<<endl;
+	Network net1("../optnetalign/tests/lccstest1.net");
+	Network net2("../optnetalign/tests/lccstest1.net");
+	GOCDict gocs = loadGOC(&net1, &net2,
+		                   "../optnetalign/tests/lccstest1.annos",
+		                   "../optnetalign/tests/lccstest1.annos");
+	Alignment aln(&net1,&net2,nullptr,&gocs);
+	Alignment aln2(&net1,&net2,nullptr,&gocs);
+	vector<string> fitnessNames;
+	fitnessNames.push_back("GOC");
+	aln.computeFitness(fitnessNames);
+	aln2.computeFitness(fitnessNames);
+	mt19937 g(1);
+	aln.shuf(g,false,false,false);
+	aln2.shuf(g,false,false,false);
+	aln.computeFitness(fitnessNames);
+	aln2.computeFitness(fitnessNames);
+	Alignment child(g,0.5,aln,aln2,false);
+	BOOST_CHECK(approxEqual(child.currGOC,child.sumGOC()));	
 }
 
 //____________________________________________________________________________//

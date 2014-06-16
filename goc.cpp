@@ -6,6 +6,8 @@
 #include <iostream>
 #include <algorithm>
 #include <iterator>
+#include <cmath>
+#include <assert.h>
 using namespace std;
 
 #include "goc.h"
@@ -29,7 +31,18 @@ GOCDict loadGOC(Network* net1, Network* net2,
                              pair2.second.begin(),pair2.second.end(),
                              inserter(in,in.begin()));
                              
-            double toStore = double(un.size())/double(in.size());
+            double toStore = double(in.size())/double(un.size());
+            if(!isfinite(toStore)){
+                cout<<"GOC not finite for pair "<<pair1.first<<" "<<pair2.first;
+                cout<<"Intersection is: "<<endl;
+                for(auto x : in){
+                    cout<<x<<endl;
+                }
+                cout<<"Union is: "<<endl;
+                for(auto x : un){
+                    cout<<x<<endl;
+                }
+            }
             toReturn[pair1.first][pair2.first] = toStore;
         }
     }
