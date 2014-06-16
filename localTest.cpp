@@ -28,7 +28,8 @@ int main(int ac, char* av[])
 		Network* net2 = get<2>(vals);
 		BLASTDict bitscores = get<3>(vals);
 		BLASTDict evalues = get<4>(vals);
-		vector<string> fitnessNames = get<5>(vals);
+		GOCDict gocs = get<5>(vals);
+		vector<string> fitnessNames = get<6>(vals);
 
 		const int nthreads = vm.count("nthreads") ? vm["nthreads"].as<int>()
 		                                          : 1;
@@ -46,26 +47,29 @@ int main(int ac, char* av[])
 		const string outprefix = vm["outprefix"].as<string>();
 
 		const BLASTDict* bitPtr = vm.count("bitscores") ? &bitscores : nullptr;
-
+		const GOCDict* gocPtr = vm.count("annotations1") ? &gocs : nullptr;
 		const int generations = vm["generations"].as<int>();
 
 		mt19937 g(14);
 		//initialize population
 		
 		
-		Alignment* aln = new Alignment(net1,net2, &bitscores);
-		aln->greedyBitscoreMatch();
-		//aln->shuf(g,false,false,total);
+		Alignment* aln = new Alignment(net1,net2, &bitscores, &gocs);
+		//aln->greedyBitscoreMatch();
+		aln->shuf(g,false,false,total);
 		aln->computeFitness(fitnessNames);
 		
 		//todo: instead of just flipping obj, switch according to some
 		//input time proportion.
 		//fast hill climb version
 		cout<<"starting main loop"<<endl;
-		int obj = 1;
+		
 		for(int i = 0; i < generations; i++){
-			fastHillClimb(g, aln, total,
-	               500, fitnessNames, obj,true);
+			for(int j = 0; j<fitnessNames.size(); j++){
+				fastHillClimb(g, aln, total,
+	               500, fitnessNames, j,true);	
+			}
+			
 			for(int j = 0; j <fitnessNames.size();j++){
 				cout<<"current "<<fitnessNames.at(j)<<" is "
 				    <<aln->fitness.at(j)<<endl;
