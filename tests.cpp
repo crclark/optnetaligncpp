@@ -31,6 +31,7 @@ bool approxEqual(double x, double y){
 
 //____________________________________________________________________________//
 
+
 // most frequently you implement test cases as a free functions with automatic registration
 BOOST_AUTO_TEST_CASE( bitscores_correct_length )
 {
@@ -273,12 +274,30 @@ BOOST_AUTO_TEST_CASE( ics_match_1 )
 	BOOST_CHECK(approxEqual(ics,0.8));
 }
 
+BOOST_AUTO_TEST_CASE( fast_ics_match_1 )
+{
+	Network net1("../optnetalign/tests/lccstest1.net");
+	Network net2("../optnetalign/tests/lccstest2.net");
+	Alignment aln(&net1,&net2,"../optnetalign/tests/lccstest.aln",nullptr,nullptr);
+	double ics = aln.fastICS();
+	BOOST_CHECK(approxEqual(ics,0.8));
+}
+
 BOOST_AUTO_TEST_CASE( ics_match_2 )
 {
 	Network net1("../optnetalign/tests/lccstest1.net");
 	Network net2("../optnetalign/tests/lccstest2.net");
 	Alignment aln(&net1,&net2,"../optnetalign/tests/lccstest2.aln",nullptr,nullptr);
 	double ics = aln.ics();
+	BOOST_CHECK(approxEqual(ics,0.0));
+}
+
+BOOST_AUTO_TEST_CASE( fast_ics_match_2 )
+{
+	Network net1("../optnetalign/tests/lccstest1.net");
+	Network net2("../optnetalign/tests/lccstest2.net");
+	Alignment aln(&net1,&net2,"../optnetalign/tests/lccstest2.aln",nullptr,nullptr);
+	double ics = aln.fastICS();
 	BOOST_CHECK(approxEqual(ics,0.0));
 }
 
@@ -291,14 +310,32 @@ BOOST_AUTO_TEST_CASE( ics_match_3 )
 	BOOST_CHECK(approxEqual(ics,0.666666666666666));
 }
 
+BOOST_AUTO_TEST_CASE( fast_ics_match_3 )
+{
+	Network net1("../optnetalign/tests/newmetrica.net");
+	Network net2("../optnetalign/tests/newmetricb.net");
+	Alignment aln(&net1,&net2,"../optnetalign/tests/newmetric.aln",nullptr,nullptr);
+	double ics = aln.fastICS();
+	BOOST_CHECK(approxEqual(ics,0.666666666666666));
+}
+
 //todo: the following 2 tests are broken while self-loops are ignored.
-/*
+
 BOOST_AUTO_TEST_CASE( ics_match_4 )
 {
 	Network net1("../optnetalign/tests/cg1a.net");
 	Network net2("../optnetalign/tests/cg1b.net");
 	Alignment aln(&net1,&net2,"../optnetalign/tests/cg1.aln",nullptr,nullptr);
 	double ics = aln.ics();
+	BOOST_CHECK(approxEqual(ics,0.8253323173313013));
+}
+
+BOOST_AUTO_TEST_CASE( fast_ics_match_4 )
+{
+	Network net1("../optnetalign/tests/cg1a.net");
+	Network net2("../optnetalign/tests/cg1b.net");
+	Alignment aln(&net1,&net2,"../optnetalign/tests/cg1.aln",nullptr,nullptr);
+	double ics = aln.fastICS();
 	BOOST_CHECK(approxEqual(ics,0.8253323173313013));
 }
 
@@ -310,7 +347,16 @@ BOOST_AUTO_TEST_CASE( ics_match_5 )
 	double ics = aln.ics();
 	BOOST_CHECK(approxEqual(ics,0.920399546905571));
 }
-*/
+
+BOOST_AUTO_TEST_CASE( fast_ics_match_5 )
+{
+	Network net1("../optnetalign/tests/cg1a.net");
+	Network net2("../optnetalign/tests/cg1b.net");
+	Alignment aln(&net1,&net2,"../optnetalign/tests/cg1partial.aln",nullptr,nullptr);
+	double ics = aln.fastICS();
+	BOOST_CHECK(approxEqual(ics,0.920399546905571));
+}
+
 BOOST_AUTO_TEST_CASE( consistent_after_mutate )
 {
 	Network net1("../optnetalign/tests/cg1a.net");
@@ -461,22 +507,51 @@ BOOST_AUTO_TEST_CASE( fast_ics_works_total_crossover ){
 	BOOST_CHECK(approxEqual(ics,fastICS));
 }
 
+
 BOOST_AUTO_TEST_CASE( fast_ics_works_partial_crossover ){
 	cout<<endl<<"BEGIN fast_ics_works_partial_crossover"<<endl;
-	Network net1("../optnetalign/tests/selflooptest.net");
-	Network net2("../optnetalign/tests/selflooptest.net");
-	Alignment aln1(&net1,&net2,nullptr,nullptr);
-	Alignment aln2(&net1,&net2,nullptr,nullptr);
-	mt19937 g1(12);
-	//aln1.shuf(g1,false,false,false);
-	//aln2.shuf(g1,false,false,false);
-	Alignment child(g1,0.2,aln1,aln2,false);
-	double ics = child.ics();
-	double fastICS = child.fastICS();
-	cout<<"ICS is "<<ics<<endl;
-	cout<<"Fast ICS is "<<fastICS<<endl;
-	BOOST_CHECK(approxEqual(ics,fastICS));
+	for(int i = 0; i < 1000; i++){
+		cout<<"-------------------"<<endl;
+		Network net1("../optnetalign/tests/selflooptest.net");
+		Network net2("../optnetalign/tests/selflooptest.net");
+		Alignment aln1(&net1,&net2,nullptr,nullptr);
+		Alignment aln2(&net1,&net2,nullptr,nullptr);
+		mt19937 g1(i);
+		aln1.shuf(g1,false,false,false);
+		aln2.shuf(g1,false,false,false);
+		cout<<"aln1 is :"<<endl;
+		for(int i = 0; i < aln1.aln.size(); i++){
+			cout<<net1.nodeToNodeName.at(i)<<" "
+				<<net2.nodeToNodeName.at(aln1.aln[i])
+				<<" "<<aln1.alnMask[i]<<endl;
+		}
+		cout<<"aln1.currConservedCount is: "<<aln1.currConservedCount<<endl;
+
+		cout<<"aln2 is :"<<endl;
+		for(int i = 0; i < aln1.aln.size(); i++){
+			cout<<net1.nodeToNodeName.at(i)<<" "
+				<<net2.nodeToNodeName.at(aln2.aln[i])
+				<<" "<<aln2.alnMask[i]<<endl;
+		}
+		cout<<"aln2.currConservedCount is: "<<aln2.currConservedCount<<endl;
+
+		Alignment child(g1,0.2,aln1,aln2,false);
+
+		cout<<"child is :"<<endl;
+		for(int i = 0; i < aln1.aln.size(); i++){
+			cout<<net1.nodeToNodeName.at(i)<<" "
+				<<net2.nodeToNodeName.at(child.aln[i])
+				<<" "<<child.alnMask[i]<<endl;
+		}
+		cout<<"child.currConservedCount is: "<<child.currConservedCount<<endl;
+		double ics = child.ics();
+		double fastICS = child.fastICS();
+		cout<<"ICS is "<<ics<<endl;
+		cout<<"Fast ICS is "<<fastICS<<endl;
+		BOOST_CHECK(approxEqual(ics,fastICS));
+	}
 }
+
 
 BOOST_AUTO_TEST_CASE( fast_ics_works_total_mutation ){
 	cout<<endl<<"BEGIN fast_ics_works_total_mutation"<<endl;
@@ -517,26 +592,9 @@ BOOST_AUTO_TEST_CASE( fast_ics_works_partial_mutation ){
 	Alignment aln1(&net1,&net2,nullptr,nullptr);
 	mt19937 g1(4);
 	aln1.shuf(g1,false,false,false);
-	cout<<"BEFORE MUTATION"<<endl;
-
+	
 	aln1.mutate(g1,0.1,false);
 	
-	cout<<"AFTER MUTATION"<<endl;
-	
-	vector<int> badCounts = aln1.conservedCounts;
-	//reinit counts to correct them
-	for(int i = 0; i < aln1.actualSize; i++){
-		aln1.initConservedCount(i,aln1.aln[i], aln1.alnMask[i]);
-	}
-	vector<int> goodCounts = aln1.conservedCounts;
-	for(int i = 0; i < goodCounts.size(); i++){
-		if(badCounts[i] != goodCounts[i]){
-			cout<<i<<" (AKA "<<net1.nodeToNodeName.at(i)
-				<<") count should be "<<goodCounts[i]
-                <<" but is actually "<<badCounts[i]<<endl;
-		}
-	}
-	aln1.conservedCounts = badCounts;
 	double ics = aln1.ics();
 	double fastICS = aln1.fastICS();
 	cout<<"ICS is "<<ics<<endl;
@@ -599,19 +657,7 @@ BOOST_AUTO_TEST_CASE( do_swap_consistent_ics ){
 	mt19937 g1(124);
 	aln1.shuf(g1,false,false,true);
 	
-	cout<<"before doSwap:"<<endl;
-	cout<<"Alignment is: "<<endl;
-	for(int i = 0; i < aln1.actualSize; i++){
-		cout<<net1.nodeToNodeName.at(i)<<" "
-		    <<net2.nodeToNodeName.at(aln1.aln[i])<<" mask: "
-		    <<aln1.alnMask[i]<<endl;
-	}
-	cout<<endl<<"Conserved counts are: "<<endl;
-	for(int i = 0; i < aln1.conservedCounts.size(); i++){
-		cout<<net1.nodeToNodeName.at(i)<<" "
-		    <<aln1.conservedCounts[i]<<endl;
-	}
-	cout<<endl;
+	
 	
 	double icsBefore = aln1.ics();
 	double fastICSBefore = aln1.fastICS();
@@ -624,20 +670,6 @@ BOOST_AUTO_TEST_CASE( do_swap_consistent_ics ){
 	//cout<<"x is "<<net1.nodeToNodeName.at(x)<<endl;
 	//cout<<"y is "<<net1.nodeToNodeName.at(y)<<endl;
 	aln1.doSwap(x,y);
-	
-	cout<<"after doSwap:"<<endl;
-	cout<<"Alignment is: "<<endl;
-	for(int i = 0; i < aln1.actualSize; i++){
-		cout<<net1.nodeToNodeName.at(i)<<" "
-		    <<net2.nodeToNodeName.at(aln1.aln[i])<<" mask: "
-		    <<aln1.alnMask[i]<<endl;
-	}
-	cout<<endl<<"Conserved counts are: "<<endl;
-	for(int i = 0; i < aln1.conservedCounts.size(); i++){
-		cout<<net1.nodeToNodeName.at(i)<<" "
-		    <<aln1.conservedCounts[i]<<endl;
-	}
-	cout<<endl;
 	
 	double ics = aln1.ics();
 	double fastICS = aln1.fastICS();
@@ -668,16 +700,10 @@ BOOST_AUTO_TEST_CASE( hypothetical_swap_correct ){
 		vector<double> delta = aln1.doSwapHypothetical(x,y);
 
 		//get sum of conservedCounts before swapping
-		int sumBefore = 0;
-		for(int j = 0; j < aln1.conservedCounts.size(); j++){
-			sumBefore += aln1.conservedCounts[j];
-		}
+		int sumBefore = aln1.currConservedCount;
     
 		aln1.doSwap(x,y);
-		int sumAfter = 0;
-		for(int j = 0; j < aln1.conservedCounts.size(); j++){
-			sumAfter += aln1.conservedCounts[j];
-		}
+		int sumAfter = aln1.currConservedCount;
 
 		int diff = sumAfter - sumBefore;
 		if(diff != 2*delta[0]){
@@ -815,20 +841,7 @@ BOOST_AUTO_TEST_CASE(currGOC_after_doSwap){
     aln.doSwap(0,1);
     BOOST_CHECK(approxEqual(aln.currGOC,2.0));
 }
-/*
-BOOST_AUTO_TEST_CASE( GOC_correct_after_load ){
-    cout<<"BEGIN GOC_correct_after_load"<<endl;
-    Network net1("../optnetalign/tests/dmela.net");
-    Network net2("../optnetalign/tests/hsapi.net");
-    GOCDict gocs = loadGOC(&net1,&net2,
-                           "../optnetalign/tests/dmela.annos",
-                           "../optnetalign/tests/hsapi.annos");
-    
-    Alignment aln(&net1,&net2,"../optnetalign/tests/dm-hs-netal.aln",nullptr,&gocs);
-    cout<<"sum of GOC is "<<aln.sumGOC()<<endl;
-    BOOST_CHECK(approxEqual(39.7137,aln.sumGOC()));
-}
-*/
+
 BOOST_AUTO_TEST_CASE( GOC_consistent ){
 	cout<<"BEGIN GOC_consistent"<<endl;
 	Network net1("../optnetalign/tests/lccstest1.net");
@@ -926,6 +939,22 @@ BOOST_AUTO_TEST_CASE( GOC_after_cx_partial ){
 	Alignment child(g,0.5,aln,aln2,false);
 	BOOST_CHECK(approxEqual(child.currGOC,child.sumGOC()));	
 }
+
+
+/*
+BOOST_AUTO_TEST_CASE( GOC_correct_after_load ){
+    cout<<"BEGIN GOC_correct_after_load"<<endl;
+    Network net1("../optnetalign/tests/dmela.net");
+    Network net2("../optnetalign/tests/hsapi.net");
+    GOCDict gocs = loadGOC(&net1,&net2,
+                           "../optnetalign/tests/dmela.annos",
+                           "../optnetalign/tests/hsapi.annos");
+    
+    Alignment aln(&net1,&net2,"../optnetalign/tests/dm-hs-netal.aln",nullptr,&gocs);
+    cout<<"sum of GOC is "<<aln.sumGOC()<<endl;
+    BOOST_CHECK(approxEqual(39.7137,aln.sumGOC()));
+}
+*/
 
 //____________________________________________________________________________//
 

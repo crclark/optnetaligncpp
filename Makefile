@@ -9,6 +9,9 @@ profile:
 ubuntu:
 	icc main.cpp Network.cpp blastinfo.cpp Alignment.cpp nsga-ii.cpp localSearch.cpp goc.cpp -o optnetalign -prof-use -ipo -prof-dir. -use-intel-optimized-headers -tbb -par-num-threads=8 -opt-mem-layout-trans=3 -opt-subscript-in-range -ansi-alias -fno-alias -O3 -xHost -unroll-aggressive -opt-calloc -no-prec-div -Wall -std=c++11 -I /usr/include/ -L /usr/lib/x86_64-linux-gnu/ -lboost_filesystem -lboost_system -lboost_program_options -lboost_thread	
 
+test:
+	clang++ tests.cpp blastinfo.cpp Alignment.cpp Network.cpp nsga-ii.cpp localSearch.cpp goc.cpp -o test -std=c++11 -I /usr/local/Cellar/boost/1.53.0/include/ -L /usr/local/Cellar/boost/1.53.0/lib -lboost_unit_test_framework-mt
+
 testubuntu:
 	clang++ tests.cpp blastinfo.cpp Alignment.cpp Network.cpp nsga-ii.cpp localSearch.cpp goc.cpp -o test -std=c++11 -I /usr/local/Cellar/boost/1.53.0/include/ -L /usr/local/Cellar/boost/1.53.0/lib -lboost_unit_test_framework
 

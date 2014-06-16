@@ -89,10 +89,9 @@ public:
 	double fastICS() const;
 	const Network* net1;
 	const Network* net2;
-	//conservedCounts counts the number of conserved edges that node i
-	//is incident to. Summing it and dividing by 2 (to fix double-counting)
-	//gives the number of conserved edges in the alignment.
-	vector<int> conservedCounts;
+	int currConservedCount; //stores current number of conserved edges. Actual number.
+	                        //does not double count.
+	int conservedCount(node n1, node n2, bool mask, node ignore) const;
 	void updateConservedCount(node n1, node n2old, node n2new, bool oldMask,
 		                     bool newMask, node ignore);
 	int hypotheticalConservedCountDelta(node n1, node n2old, node n2new, 
