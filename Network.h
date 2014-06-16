@@ -95,7 +95,6 @@ public:
 	unordered_map<node,string> nodeToNodeName;
 	unordered_map<string,node> nodeNameToNode;
 
-	unordered_map<node, unordered_set<node> > adjList;
+	vector<vector<node> > adjList;
 	vector<vector<bool>> adjMatrix;
-	int numSelfLoops;
 };

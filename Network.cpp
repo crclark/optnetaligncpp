@@ -11,10 +11,8 @@ using namespace std;
 
 Network::Network(string filename){
 	unsigned int count = 0;
-	numSelfLoops = 0;
-	int ignoredSelfLoops = 0;
 	unordered_set<string> alreadySeen;
-
+	adjList = vector<vector<node> >();
 	ifstream infile(filename);
 	if(!infile){
 		throw LineReadException(string("Given network file ")+filename+
@@ -30,16 +28,13 @@ Network::Network(string filename){
 			throw LineReadException(string("Parse error in network: ") + filename +
 				                   string("on line: ") + line + "\n");
 		}
-/*
-		if(a == b){
-			ignoredSelfLoops++;
-			continue;
-		}
-*/
+
 		if(!alreadySeen.count(a)){
 			alreadySeen.insert(a);
 			nodeToNodeName[count] = a;
 			nodeNameToNode[a] = count;
+			auto toPushBack = vector<node>();
+			adjList.push_back(toPushBack);
 			u = count;
 			count++;
 		}
@@ -51,6 +46,8 @@ Network::Network(string filename){
 			alreadySeen.insert(b);
 			nodeToNodeName[count] = b;
 			nodeNameToNode[b] = count;
+			auto toPushBack = vector<node>();
+			adjList.push_back(toPushBack);
 			v = count;
 			count++;
 		}
@@ -58,18 +55,17 @@ Network::Network(string filename){
 			v = nodeNameToNode.at(b);
 		}
 
-		if(u == v){
-			numSelfLoops++;
-		}
-
 		Edge e = Edge(u,v);
 
 		edges.insert(e);
 
-		//update adjacency list:
-		adjList[u].insert(v);
-		adjList[v].insert(u);
+		adjList.at(u).push_back(v);
+		if(u != v){
+			adjList.at(v).push_back(u);
+		}
+
 	}
+
 
 	//cout<<"ignored "<<ignoredSelfLoops<<" self-loops"<<endl;
 	//set up adjacency matrix
@@ -77,10 +73,11 @@ Network::Network(string filename){
 		adjMatrix.push_back(vector<bool>(nodeToNodeName.size(),false));
 	}
 
-	for(auto i = adjList.begin(); i != adjList.end(); i++){
-		node n = i->first;
-		for(auto m : i->second){
-			adjMatrix[n][m] = true;
+	assert(nodeNameToNode.size() == adjList.size());
+
+	for(int i = 0; i < adjList.size(); i++){
+		for(int j = 0; j < adjList.at(i).size(); j++){
+			adjMatrix[i][adjList.at(i).at(j)] = true;
 		}
 	}
     
@@ -88,11 +85,5 @@ Network::Network(string filename){
 }
 
 int Network::degree(node x) const{
-	if(adjList.count(x) == 0){
-		return 0;
-	}
-
-	else{
-		return adjList.at(x).size();
-	}
+	return adjList.at(x).size();
 }

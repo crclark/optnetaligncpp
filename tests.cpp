@@ -490,6 +490,66 @@ BOOST_AUTO_TEST_CASE( adjacency_list_correct ){
 	BOOST_CHECK(net1.degree(net1.nodeNameToNode.at("4")) == 3);
 }
 
+BOOST_AUTO_TEST_CASE( adjList_correct_selfloop ){
+	Network net1("../optnetalign/tests/selflooptest.net");
+	BOOST_CHECK(net1.degree(net1.nodeNameToNode.at("1")) == 2);
+}
+
+BOOST_AUTO_TEST_CASE( adjList_adjMatrix_consistent ){
+	Network net1("../optnetalign/tests/cg1a.net");
+
+	cout<<"BEGIN adjList_adjMatrix_consistent"<<endl;
+
+	cout<<"Checking that all adjList elems are in adjMatrix"<<endl;
+	for(int i = 0; i < net1.adjList.size(); i++){
+		for(int j = 0; j < net1.adjList.at(i).size(); j++){
+			BOOST_CHECK(net1.adjMatrix[i][net1.adjList.at(i).at(j)]);
+			BOOST_CHECK(net1.adjMatrix[net1.adjList.at(i).at(j)][i]);
+		}
+	}
+
+	cout<<"Checking that all adjMatrix neighbors are in adjList"<<endl;
+	for(int i = 0; i < net1.adjMatrix.size(); i++){
+		for(int j = 0; j < net1.adjMatrix.at(i).size(); j++){
+			if(net1.adjMatrix.at(j).at(i)){
+				bool found = false;
+				for(int k = 0; k < net1.adjList.at(i).size(); k++){
+					if(net1.adjList.at(i).at(k) == j){
+						found = true;
+					}
+				}
+				BOOST_CHECK(found);
+
+				bool found2 = false;
+				for(int k = 0; k < net1.adjList.at(j).size(); k++){
+					if(net1.adjList.at(j).at(k) == i){
+						found2 = true;
+					}
+				}
+				BOOST_CHECK(found2);
+			}
+			else{ //if not aligned in matrix, assure not aligned in list
+				bool notFound = true;
+				for(int k = 0; k < net1.adjList.at(i).size(); k++){
+					if(net1.adjList.at(i).at(k) == j){
+						notFound = false;
+					}
+				}
+				BOOST_CHECK(notFound);
+
+				bool notFound2 = true;
+				for(int k = 0; k < net1.adjList.at(j).size(); k++){
+					if(net1.adjList.at(j).at(k) == i){
+						notFound2 = false;
+					}
+				}
+				BOOST_CHECK(notFound2);
+			}
+		}
+	}
+}
+
+
 BOOST_AUTO_TEST_CASE( fast_ics_works_total_crossover ){
 	cout<<endl<<"BEGIN fast_ics_works_total_crossover"<<endl;
 	Network net1("../optnetalign/tests/cg1a.net");
@@ -510,7 +570,7 @@ BOOST_AUTO_TEST_CASE( fast_ics_works_total_crossover ){
 
 BOOST_AUTO_TEST_CASE( fast_ics_works_partial_crossover ){
 	cout<<endl<<"BEGIN fast_ics_works_partial_crossover"<<endl;
-	for(int i = 0; i < 1000; i++){
+	for(int i = 0; i < 1; i++){
 		cout<<"-------------------"<<endl;
 		Network net1("../optnetalign/tests/selflooptest.net");
 		Network net2("../optnetalign/tests/selflooptest.net");
@@ -706,9 +766,9 @@ BOOST_AUTO_TEST_CASE( hypothetical_swap_correct ){
 		int sumAfter = aln1.currConservedCount;
 
 		int diff = sumAfter - sumBefore;
-		if(diff != 2*delta[0]){
+		if(diff != delta[0]){
 			cout<<"diff: "<<diff<<endl;
-			cout<<"2*delta[0]: "<<2*delta[0]<<endl;
+			cout<<"delta[0]: "<<delta[0]<<endl;
 			cout<<"x: "<<x<<endl;
 			cout<<"y: "<<y<<endl;
 		}
