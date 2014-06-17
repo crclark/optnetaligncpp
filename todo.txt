@@ -13,15 +13,6 @@ consider adding archive
 
 consider self-adaptive mutation probabilities
 
-there is some kind of bug in fastICS when the networks contain self-loops.
-	This can cause fastICS to under or over estimate ICS when there are 
-	a lot of self-loops. Currently, ignoring self-loops when reading 
-	networks, but that causes a couple ICS tests to fail (since they 
-	are comparing against ICS computations that don't ignore self-loops).
-	So, those tests are commented out.
-	In the long run, it would be good to fix this bug, but it is taking
-	an inordinate amount of time right now.
-
 write tests for v1Unaligned being correct after all modifying ops.
 
 consider abandoning size optimization if total alignment optimization
@@ -33,9 +24,11 @@ Maybe go another 10000 generations after dominating the last one.
 
 add seed-and-extend with random restart
 
-add GOC as an objective-- that could get us to competitive results much faster and more reliably.
-
 add an alternative crowding distance calculator that uses alignment space distances
+
+add the ability to load all alignments in a given directory as the initial population.
+Just do a non-dominated sort on them after loading them, then take popsize many of them
+as the first population.
 
 REFACTORING
 -----------

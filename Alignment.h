@@ -23,7 +23,7 @@ public:
 		             const Alignment& p1,
 		             const Alignment& p2,
 		             bool total = true);
-	void greedyBitscoreMatch();
+	void greedyMatch(bool bit);
 	void shuf(mt19937& prng, bool uniformsize,
 	          bool smallstart, bool total); //shuffles the alignment to make it completely random
 	void mutate(mt19937& prng, float mutswappb, bool total = true);

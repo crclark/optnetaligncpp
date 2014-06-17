@@ -241,11 +241,18 @@ Alignment::Alignment(mt19937& prng, float cxswappb,
 	fitnessValid = false;
 }
 
-//performs a fast, greedy matching based on bitscore
-void Alignment::greedyBitscoreMatch(){
-	if(bitscores == nullptr){
+//performs a fast, greedy matching based on bitscore or GOC
+//does bitscores when arg is true, and GOC otherwise.
+void Alignment::greedyMatch(bool bit){
+	if(bit && bitscores == nullptr){
 		assert(1==2);
 	}
+
+	if(!bit && gocs == nullptr){
+		assert(1==2);
+	}
+
+	auto dict = bit ? bitscores : gocs;
 
 	aln = vector<node>(net2->nodeToNodeName.size(), -1);
 	v1Unaligned = unordered_set<node>();
@@ -265,10 +272,10 @@ void Alignment::greedyBitscoreMatch(){
 		node bestN2 = -1;
 		double bestScore = 0.0;
 		for(auto n2 : v2Unaligned){
-			if(bitscores->count(n1) && bitscores->at(n1).count(n2)
-			   && bitscores->at(n1).at(n2) > bestScore ){
+			if(dict->count(n1) && dict->at(n1).count(n2)
+			   && dict->at(n1).at(n2) > bestScore ){
 				bestN2 = n2;
-				bestScore = bitscores->at(n1).at(n2);
+				bestScore = dict->at(n1).at(n2);
 			}
 			else if(bestN2 == -1){
 				bestN2 = n2;
@@ -309,7 +316,11 @@ void Alignment::greedyBitscoreMatch(){
 	//initialize conserved counts for fast ICS computation
 	currConservedCount = ics()*fastICSDenominator();
 
-	currBitscore = sumBLAST();
+	if(bitscores)
+		currBitscore = sumBLAST();
+
+	if(gocs)
+		currGOC = sumGOC();
 }
 
 void Alignment::shuf(mt19937& prng, bool uniformsize, 

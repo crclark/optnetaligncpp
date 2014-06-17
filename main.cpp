@@ -81,7 +81,7 @@ int main(int ac, char* av[])
         auto worker = [&](const blocked_range<size_t>& r){
             mt19937 tg(clock());
             if(seeding){
-                int numSearchIters = 1000;
+                int numSearchIters = 100000;
                 for(int i = r.begin(); i != r.end(); ++i){
                     pop[i] = new Alignment(net1,net2,bitPtr,gocsPtr);
                     pop[i]->shuf(tg,false,false,total);
@@ -126,10 +126,16 @@ int main(int ac, char* av[])
 
         parallel_for(blocked_range<size_t>(0,popsize),worker);
 
-        //one last thing: create a greedy bitscore matching
-        if(bitPtr && seeding){
+        //one last thing: create a greedy matching.
+        //prefers GOC if it is defined
+        if(gocsPtr && seeding){
+        	pop[popsize-1] = new Alignment(net1,net2,bitPtr,gocsPtr);
+        	pop[popsize-1]->greedyMatch(false);
+        	pop[popsize-1]->computeFitness(fitnessNames);
+        }
+        else if(bitPtr && seeding){
             pop[popsize - 1] = new Alignment(net1,net2,bitPtr,gocsPtr);
-            pop[popsize - 1]->greedyBitscoreMatch();
+            pop[popsize - 1]->greedyMatch(true);
             pop[popsize - 1]->computeFitness(fitnessNames);
         }
 		
