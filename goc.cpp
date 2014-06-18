@@ -32,17 +32,6 @@ GOCDict loadGOC(Network* net1, Network* net2,
                              inserter(in,in.begin()));
                              
             double toStore = double(in.size())/double(un.size());
-            if(!isfinite(toStore)){
-                cout<<"GOC not finite for pair "<<pair1.first<<" "<<pair2.first;
-                cout<<"Intersection is: "<<endl;
-                for(auto x : in){
-                    cout<<x<<endl;
-                }
-                cout<<"Union is: "<<endl;
-                for(auto x : un){
-                    cout<<x<<endl;
-                }
-            }
             toReturn[pair1.first][pair2.first] = toStore;
         }
     }
