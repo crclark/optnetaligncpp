@@ -15,8 +15,7 @@ void fastHillClimb(RandGenT& prng, Alignment* aln, bool total,
 	               int objectiveToImprove, bool worsenOthers);
 
 void correctHillClimb(RandGenT& prng, Alignment* aln, bool total,
-					  int maxIters, const vector<string>& fitnessNames,
-					  int objectiveToImprove, bool worsenOthers);
+					  int maxIters, const vector<string>& fitnessNames);
 
 void proportionalSearch(RandGenT& prng, Alignment* aln, bool total,
 	                    int iters, const vector<string>& fitnessNames,
