@@ -139,7 +139,7 @@ todo: add secondary crossover op for changing mask. Or something.
 todo: this currently ignores the mask of the parents and maintains
       the mask of the current alignment.
 */
-Alignment::Alignment(mt19937& prng, float cxswappb, 
+Alignment::Alignment(RandGenT& prng, float cxswappb, 
 	                        const Alignment& p1,
 		                    const Alignment& p2,
 		                    bool total){
@@ -157,7 +157,8 @@ Alignment::Alignment(mt19937& prng, float cxswappb,
 		par2 = &p1;
 	}
 
-	vector<node> par1Indices(size,-1);
+	vector<node> par1Indices(size);
+	//node par1Indices[size]; //todo: benchmark this (and also test it!)
 	for(int i = 0; i < size; i++){
 		par1Indices[par1->aln[i]] = i;
 	}
@@ -323,7 +324,7 @@ void Alignment::greedyMatch(bool bit){
 		currGOC = sumGOC();
 }
 
-void Alignment::shuf(mt19937& prng, bool uniformsize, 
+void Alignment::shuf(RandGenT& prng, bool uniformsize, 
 	                 bool smallstart, bool total){
 	shuffle(aln.begin(),aln.end(), prng);
 	if(!total){
@@ -393,7 +394,7 @@ void Alignment::shuf(mt19937& prng, bool uniformsize,
 
 //todo: add secondary mutate op for changing mask
 
-void Alignment::mutate(mt19937& prng, float mutswappb, bool total){
+void Alignment::mutate(RandGenT& prng, float mutswappb, bool total){
 	int size = aln.size();
 	uniform_real_distribution<float> fltgen(0.0,1.0);
 	//size-2 because of increment below

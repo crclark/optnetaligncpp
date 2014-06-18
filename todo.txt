@@ -30,6 +30,9 @@ add the ability to load all alignments in a given directory as the initial popul
 Just do a non-dominated sort on them after loading them, then take popsize many of them
 as the first population.
 
+try getting rid of edge set in Network class. Not really used anymore, except in slow ICS, which
+is used to initialize conserved count.
+
 REFACTORING
 -----------
 

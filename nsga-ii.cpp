@@ -22,7 +22,7 @@ vector<vector<Alignment*> > nonDominatedSort(const vector<Alignment*>& in){
 				continue;
 			}
 			if(dominates(in[i],in[j])){
-				in[i]->dominated.insert(in[j]);
+				in[i]->dominated.push_back(in[j]);
 			}
 			else if(dominates(in[j],in[i])){
 				in[i]->numThatDominate++;
@@ -148,7 +148,7 @@ bool crowdedComp(Alignment* aln1, Alignment* aln2){
 //preconditions: tournSize smaller than in
 //all in elems have crowdDist and domCount calculated
 //returns two alignment pointers
-vector<Alignment*> binSel(mt19937& prng,
+vector<Alignment*> binSel(RandGenT& prng,
 	                      const vector<Alignment*>& in, 
 	                      unsigned int tournSize){
 	vector<unsigned int> indices(in.size());

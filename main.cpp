@@ -59,7 +59,7 @@ int main(int ac, char* av[])
                                   : nullptr;
         const GOCDict* gocsPtr = vm.count("annotations1") ? &gocs 
                                  : nullptr;
-		mt19937 g(14);
+		RandGenT g(14);
 		//initialize population
 		if(verbose){
 			cout<<"creating initial population"<<endl;
@@ -79,7 +79,7 @@ int main(int ac, char* av[])
         }
 
         auto worker = [&](const blocked_range<size_t>& r){
-            mt19937 tg(clock());
+            RandGenT tg(clock());
             if(seeding){
                 int numSearchIters = 100000;
                 for(int i = r.begin(); i != r.end(); ++i){
@@ -198,7 +198,7 @@ int main(int ac, char* av[])
 
 			//this will be executed by each thread.
 			auto worker = [&](const blocked_range<size_t>& r){
-				mt19937 tg(clock());
+				RandGenT tg(clock());
 				for(auto i = r.begin(); i != r.end(); ++i){
 					uniform_real_distribution<double> dist(0.0,1.0);
 					double prob = dist(tg);

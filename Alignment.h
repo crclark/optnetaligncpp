@@ -19,14 +19,14 @@ public:
 	Alignment(const Network* n1, const Network* n2, string filename,
 		      const BLASTDict* bit, const GOCDict* goc);
 	//crossover constructor (UPMX)
-    Alignment(mt19937& prng, float cxswappb, 
+    Alignment(RandGenT& prng, float cxswappb, 
 		             const Alignment& p1,
 		             const Alignment& p2,
 		             bool total = true);
 	void greedyMatch(bool bit);
-	void shuf(mt19937& prng, bool uniformsize,
+	void shuf(RandGenT& prng, bool uniformsize,
 	          bool smallstart, bool total); //shuffles the alignment to make it completely random
-	void mutate(mt19937& prng, float mutswappb, bool total = true);
+	void mutate(RandGenT& prng, float mutswappb, bool total = true);
 	void doSwap(node x, node y);
 	vector<double> doSwapHypothetical(node x, node y) const;
 	void onBit(node x);
@@ -61,7 +61,7 @@ public:
 	int actualSize; //number of nodes in net1
 	int domRank; //which front this aln is in. 0 is best, 1 is 2nd best, etc.
 	int numThatDominate; //how many others in the population dominate this one.
-	unordered_set<Alignment*> dominated;//set of alns this aln dominates.
+	vector<Alignment*> dominated;//set of alns this aln dominates.
 	double crowdDist;
 
 	//new fitness system

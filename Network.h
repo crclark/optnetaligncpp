@@ -4,8 +4,10 @@
 #include <vector>
 #include <string>
 #include <unordered_map>
+#include <random>
 using namespace std;
 
+typedef mt19937 RandGenT; //note: minstd_rand0 may be somewhat faster
 typedef int node;
 
 //for giving parse errors

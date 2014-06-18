@@ -10,7 +10,7 @@
 using namespace std;
 
 //local search improving one specified objective
-Alignment* hillClimb(mt19937& prng, Alignment* orig, bool total,
+Alignment* hillClimb(RandGenT& prng, Alignment* orig, bool total,
 	                 int maxIters, const vector<string>& fitnessNames,
 	                 int objectiveToImprove){
 	int size = orig->actualSize;
@@ -53,7 +53,7 @@ Alignment* hillClimb(mt19937& prng, Alignment* orig, bool total,
 	return curr;
 }
 
-void fastHillClimb(mt19937& prng, Alignment* aln, bool total,
+void fastHillClimb(RandGenT& prng, Alignment* aln, bool total,
 	               int maxIters, const vector<string>& fitnessNames,
 	               int objectiveToImprove, bool worsenOthers){
 	auto randIndex = uniform_int_distribution<int>(0,aln->aln.size()-1);
@@ -126,7 +126,7 @@ void fastHillClimb(mt19937& prng, Alignment* aln, bool total,
 
 
 //optimizes objectives 0 and 1, with proportion to 0 determined by last arg
-void proportionalSearch(mt19937& prng, Alignment* aln, bool total,
+void proportionalSearch(RandGenT& prng, Alignment* aln, bool total,
 	                    int iters, const vector<string>& fitnessNames,
 	                    double proportion){
 
