@@ -230,16 +230,12 @@ int main(int ac, char* av[])
 					}
 					kids[i]->computeFitness(fitnessNames);
 
-					//do local search by hill-climbing on a random objective
+					//do local search by hill-climbing 
 					if(hillclimbiters != 0){
-						uniform_int_distribution<int> 
-						  objGen(0,fitnessNames.size() -1);
-
-						  int obj = objGen(tg);
-
-						  fastHillClimb(tg, kids[i], total,
-	                         hillclimbiters, fitnessNames,
-	                         obj, false);
+						  //this hillclimb tries to improve all objectives. May want to try
+						  //a version that optimizes one at expense of others, or something
+						  correctHillClimb(tg, kids[i], total,
+	                         hillclimbiters, fitnessNames);
 					}
 				}
 
