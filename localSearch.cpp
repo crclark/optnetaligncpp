@@ -125,6 +125,44 @@ void fastHillClimb(RandGenT& prng, Alignment* aln, bool total,
 }
 
 
+//instead of using the buggy hypotheticals, do an actual swap and
+//check for improvement, undoing if worse.
+void correctHillClimb(RandGenT& prng, Alignment* aln, bool total,
+					  int maxIters, const vector<string>& fitnessNames,
+					  int objectiveToImprove, bool worsenOthers){
+	
+	auto randIndex = uniform_int_distribution<int>(0,aln->aln.size()-1);
+
+	for(int i = 0; i < maxIters; i++){
+		node x = randIndex(prng);
+		node y = x;
+		while(y == x){
+			y = randIndex(prng);
+		}
+
+		vector<double> currFit = aln->fitness;
+
+		aln->doSwap(x,y);
+		aln->computeFitness(fitnessNames);
+
+		vector<double> newFit = aln->fitness;
+
+		bool improved = true;
+
+		for(int j = 0; j < currFit.size(); j++){
+			if(newFit[j] < currFit[j]){
+				improved = false;
+			}
+		}
+
+		//if not an improvement, undo the swap
+		if(!improved){
+			aln->doSwap(x,y);
+			aln->computeFitness(fitnessNames);
+		} 
+	}
+}
+
 //optimizes objectives 0 and 1, with proportion to 0 determined by last arg
 void proportionalSearch(RandGenT& prng, Alignment* aln, bool total,
 	                    int iters, const vector<string>& fitnessNames,
@@ -135,11 +173,11 @@ void proportionalSearch(RandGenT& prng, Alignment* aln, bool total,
 	for(int i = 0; i < iters; i++){
 		double res = prob(prng);
 		if(res < proportion){
-			fastHillClimb(prng, aln, total,
+			correctHillClimb(prng, aln, total,
 	               500, fitnessNames, 0, true);
 		}
 		else{
-			fastHillClimb(prng, aln, total,
+			correctHillClimb(prng, aln, total,
 	               500, fitnessNames, 1, true);	
 		}
 	}

@@ -66,7 +66,7 @@ int main(int ac, char* av[])
 		
 		for(int i = 0; i < generations; i++){
 			for(int j = 0; j<fitnessNames.size(); j++){
-				fastHillClimb(g, aln, total,
+				correctHillClimb(g, aln, total,
 	               500, fitnessNames, j,true);	
 			}
 			

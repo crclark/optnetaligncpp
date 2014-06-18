@@ -81,6 +81,7 @@ public:
                    bool newMask);
     double hypotheticalGOCDelta(node n1, node n2old, node n2new,
                                 bool oldMask, bool newMask) const;
+    double hypotheticalGOCSwap(node x, node y) const;
     
 	//stored info version of ICS for fast computation
 	//(incrementally update as the alignment changes)

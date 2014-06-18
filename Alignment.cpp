@@ -499,10 +499,7 @@ vector<double> Alignment::doSwapHypothetical(node x, node y) const{
     
     if(gocs != nullptr){
         double gocDelt = 0.0;
-        gocDelt += hypotheticalGOCDelta(x, hypAlny, hypAlnx,
-                    hypAlnMsky, hypAlnMskx);
-        gocDelt += hypotheticalGOCDelta(y, hypAlnx, hypAlny,
-                       hypAlnMskx, hypAlnMsky);
+        gocDelt = hypotheticalGOCSwap(x,y);
         toReturn.push_back(gocDelt);
     }
 
@@ -787,6 +784,33 @@ double Alignment::hypotheticalGOCDelta(node n1, node n2old, node n2new,
         newScore = gocs->at(n1).at(n2new);
         
     return newScore - oldScore;
+}
+
+double Alignment::hypotheticalGOCSwap(node x, node y) const{
+	if(!gocs)
+		return 0.0;
+
+	double oldScore = 0.0;
+
+	if(x < actualSize && gocs->count(x) && gocs->at(x).count(aln[x])
+		&& alnMask[x])
+		oldScore += gocs->at(x).at(aln[x]);
+
+	if(y < actualSize && gocs->count(y) && gocs->at(y).count(aln[y])
+		&& alnMask[y])
+		oldScore += gocs->at(y).at(aln[y]);
+
+	double newScore = 0.0;
+
+	if(x < actualSize && gocs->count(x) && gocs->at(x).count(aln[y])
+		&& alnMask[y])
+		newScore += gocs->at(x).at(aln[y]);
+
+	if(y < actualSize && gocs->count(y) && gocs->at(y).count(aln[x])
+		&& alnMask[x])
+		newScore += gocs->at(y).at(aln[x]);
+
+	return newScore - oldScore;
 }
 
 //takes: n1 in V1, n2 in V2 that n1 is aligned to, mask that indicates
