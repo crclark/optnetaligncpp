@@ -173,11 +173,11 @@ void proportionalSearch(RandGenT& prng, Alignment* aln, bool total,
 		double res = prob(prng);
 		if(res < proportion){
 			correctHillClimb(prng, aln, total,
-	               500, fitnessNames, 0, true);
+	               500, fitnessNames);
 		}
 		else{
 			correctHillClimb(prng, aln, total,
-	               500, fitnessNames, 1, true);	
+	               500, fitnessNames);	
 		}
 	}
 

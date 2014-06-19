@@ -55,7 +55,7 @@ int main(int ac, char* av[])
 		
 		
 		Alignment* aln = new Alignment(net1,net2, &bitscores, &gocs);
-		//aln->greedyBitscoreMatch();
+		//aln->greedyMatch(false);
 		aln->shuf(g,false,false,total);
 		aln->computeFitness(fitnessNames);
 		
@@ -67,49 +67,17 @@ int main(int ac, char* av[])
 		for(int i = 0; i < generations; i++){
 			for(int j = 0; j<fitnessNames.size(); j++){
 				correctHillClimb(g, aln, total,
-	               500, fitnessNames, j,true);	
+	               500, fitnessNames);	
 			}
 			
 			for(int j = 0; j <fitnessNames.size();j++){
 				cout<<"current "<<fitnessNames.at(j)<<" is "
 				    <<aln->fitness.at(j)<<endl;
 			}
-			//obj = (obj + 1) % 3;
 			cout<<"Generation "<<i<<" complete."<<endl;
 		}
-		aln->save("localTest.aln");
+		aln->save(outprefix + "_localTest.aln");
 		
-
-		/*
-		vector<Alignment*> pop(10, nullptr);
-		double prop = 0.0;
-		for(int i = 0; i < 10; i++){
-			prop = 1.0 / (double(i));
-			pop[i] = new Alignment(net1,net2,&bitscores);
-			pop[i]->shuf(g,false,false,total);
-			pop[i]->computeFitness(fitnessNames);
-			cout<<"calling proportionalSearch"<<endl;
-			proportionalSearch(g, pop[i], total,
-	                    100000, fitnessNames,
-	                    prop);
-			cout<<"First alignment: "<<endl;
-			for(int j = 0; j <fitnessNames.size();j++){
-				cout<<fitnessNames.at(j)<<" is "
-				    <<pop[i]->fitness.at(j)<<endl;
-			}
-			cout<<endl;
-		}
-
-		cout.width(7);
-		cout.precision(5);
-		cout<<"SHARED PAIRS"<<endl;
-		for(int i = 0; i < 10; i++){
-			for(int j = 0; j < 10; j++){
-				cout<<alnSimilarity(pop[i],pop[j])<<'\t';
-			}
-			cout<<endl;
-		}
-		*/
 	}
 	catch(exception& e){
 		cerr << "error: " << e.what() << endl;

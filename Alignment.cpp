@@ -642,20 +642,13 @@ double Alignment::fastICSDenominator() const{
 			for(auto y : net2->adjList.at(i)){
 				if(mapped[y]){
 					if(i==y)
-						count += 2;
+						count += 2; //self loops must count twice like others 
 					else
 						count++;
 				}
 			}
 		}
 	}
-
-	//self loops are only counted once instead of twice like
-	//all other edges, so we add the number of self loops to
-	//the count so we count them correctly.
-	//count += net2->numSelfLoops;
-
-	//cout<<"fast denominator count is "<<count<<endl;
 
 	return double(count / 2);
 }
