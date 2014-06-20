@@ -99,5 +99,7 @@ public:
 	int hypotheticalConservedCountDelta(node n1, node n2old, node n2new, 
 		            bool oldMask, bool newMask, node ignore) const;
 	void initConservedCount(node n1, node n2, bool mask);
+
+	//stuff for computing the denominator of ICS quickly
 };
 

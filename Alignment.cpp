@@ -455,9 +455,9 @@ void Alignment::doSwap(node x, node y){
 	int oldConservedY = conservedCount(y, aln[y], alnMask[y],x);
 	node temp = aln[x];
 	aln[x] = aln[y];
-	alnInv[y] = x;
+	alnInv[aln[x]] = x;
 	aln[y] = temp;
-	alnInv[temp] = y;
+	alnInv[aln[y]] = y;
 
 	bool tempb = alnMask[x];
 	alnMask[x] = alnMask[y];

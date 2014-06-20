@@ -1012,14 +1012,14 @@ BOOST_AUTO_TEST_CASE( alnInv_consistent_after_constructors ){
 	}
 
 	Alignment arb2 = arbConstructor;
+	for(int seed = 0; seed < 10000; seed++){
+		RandGenT g(seed);
 
-	RandGenT g(1);
-
-	Alignment offspring(g, 0.5, arbConstructor, arb2, true);
-	for(int i = 0; i < offspring.aln.size(); i++){
-		BOOST_CHECK_EQUAL(i, offspring.alnInv[offspring.aln[i]]);
+		Alignment offspring(g, 0.5, arbConstructor, arb2, true);
+		for(int i = 0; i < offspring.aln.size(); i++){
+			BOOST_CHECK_EQUAL(i, offspring.alnInv[offspring.aln[i]]);
+		}
 	}
-
 	Alignment loaded(&net1,&net2,"../optnetalign/tests/cg1.aln", nullptr, nullptr);
 	for(int i = 0; i < loaded.aln.size(); i++){
 		BOOST_CHECK_EQUAL(i, loaded.alnInv[loaded.aln[i]]);
@@ -1067,20 +1067,43 @@ BOOST_AUTO_TEST_CASE( alnInv_consistent_after_mutate ){
 
 	Alignment aln(&net1, &net2, nullptr, nullptr);
 
-	//for(int seed = 0; seed < 100; seed++){
-		RandGenT g(98); //fails on 98
+	for(int seed = 0; seed < 100; seed++){
+		RandGenT g(seed); //fails on 98
 
 		aln.shuf(g, false, false, true);
+		/*
+		cout<<"BEFORE MUTATE"<<endl;
+		cout<<"aln is: "<<endl;
+		for(int i = 0; i < aln.aln.size(); i++){
+			cout<<net1.nodeToNodeName.at(i)<<' '<<net2.nodeToNodeName.at(aln.aln[i])<<endl;
+		}
 
+		cout<<"alnInv is:"<<endl;
+		for(int i = 0; i < aln.alnInv.size(); i++){
+			cout<<net2.nodeToNodeName.at(i)<<" "<<net1.nodeToNodeName.at(aln.alnInv[i])<<endl;
+		}
+		*/
 		aln.mutate(g, 0.05, true);
+		/*
+		cout<<"AFTER MUTATE"<<endl;
+		cout<<"aln is: "<<endl;
+		for(int i = 0; i < aln.aln.size(); i++){
+			cout<<net1.nodeToNodeName.at(i)<<' '<<net2.nodeToNodeName.at(aln.aln[i])<<endl;
+		}
 
+		cout<<"alnInv is: "<<endl;
+		for(int i = 0; i < aln.alnInv.size(); i++){
+			cout<<net2.nodeToNodeName.at(i)<<' '<<net1.nodeToNodeName.at(aln.alnInv[i])<<endl;
+		}
+		*/
 		for(int i = 0; i < aln.aln.size(); i++){
 			BOOST_CHECK_EQUAL(i, aln.alnInv[aln.aln[i]]);
 		}
 		//cout<<"seed is "<<seed<<endl;
 		BOOST_CHECK_EQUAL(aln.aln.size(), aln.alnInv.size());
-	//}
+	}
 }
+
 
 BOOST_AUTO_TEST_CASE( alnInv_consistent_after_doSwap ){
 	
@@ -1090,7 +1113,7 @@ BOOST_AUTO_TEST_CASE( alnInv_consistent_after_doSwap ){
 
 	Alignment aln(&net1, &net2, nullptr, nullptr);
 
-	for(int g = 0; g < 5; g++){
+	for(int g = 0; g < 5000; g++){
 		
 		RandGenT gen(g);
 		auto dist = uniform_int_distribution<int>(0,aln.aln.size()-1);
