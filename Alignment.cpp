@@ -442,6 +442,7 @@ void Alignment::mutate(RandGenT& prng, float mutswappb, bool total){
 		
 		if(!total && fltgen(prng) < mutswappb){
 			int oldConserved = conservedCount(i, aln[i], alnMask[i],-1);
+			int oldInduced = inducedCount(aln[i],-1);
 			alnMask[i] = !alnMask[i];
 			if(alnMask[i]){
 				v1Unaligned.erase(i);
@@ -450,10 +451,12 @@ void Alignment::mutate(RandGenT& prng, float mutswappb, bool total){
 				v1Unaligned.insert(i);
 			}
 			int newConserved = conservedCount(i, aln[i], alnMask[i],-1);
+			int newInduced = inducedCount(aln[i],-1);
 			updateBitscore(i, aln[i], aln[i], !alnMask[i],
 		                   alnMask[i]);
             updateGOC(i,aln[i],aln[i],!alnMask[i],alnMask[i]);
             currConservedCount += (newConserved - oldConserved);
+            currInducedCount += (newInduced - oldInduced);
 		}
 		
 		
