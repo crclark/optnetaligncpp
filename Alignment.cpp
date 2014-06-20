@@ -202,6 +202,8 @@ Alignment::Alignment(RandGenT& prng, float cxswappb,
 				                               aln[par1Indices[temp2]],
 				                               alnMask[par1Indices[temp2]],
 				                               i);
+			int oldInducedI = inducedCount(aln[i],-1);
+			int oldInducedJ = inducedCount(aln[par1Indices[temp2]],aln[i]);
 			aln[i] = temp2;
 			alnInv[temp2] = i;
 			aln[par1Indices[temp2]] = temp1;
@@ -233,6 +235,8 @@ Alignment::Alignment(RandGenT& prng, float cxswappb,
 			int newConservedJ = conservedCount(par1Indices[temp2],
 										   aln[par1Indices[temp2]],
 										   alnMask[par1Indices[temp2]],i);
+			int newInducedI = inducedCount(aln[par1Indices[temp2]],-1);
+			int newInducedJ = inducedCount(aln[i],aln[par1Indices[temp2]]);
 
 			//update currBitscore and conservedCounts
 			updateBitscore(i,temp1,temp2,temp1Mask,alnMask[i]);
@@ -243,6 +247,8 @@ Alignment::Alignment(RandGenT& prng, float cxswappb,
 				      alnMask[par1Indices[temp2]]);
 			currConservedCount += ((newConservedI - oldConservedI) + 
 				                   (newConservedJ - oldConservedJ));
+			currInducedCount += ((newInducedI - oldInducedI) + 
+				                 (newInducedJ - oldInducedJ));
 			//swap index records 
 			int itemp = par1Indices[temp1];
 			par1Indices[temp1] = par1Indices[temp2];
@@ -539,13 +545,16 @@ vector<double> Alignment::doSwapHypothetical(node x, node y) const{
 
 void Alignment::onBit(node x){
 	int oldConserved = conservedCount(x, aln[x], alnMask[x],-1);
+	int oldInduced = inducedCount(aln[x],-1);
 	bool old = alnMask[x];
 	alnMask[x] = true;
 	v1Unaligned.erase(x);
 	updateBitscore(x,aln[x],aln[x],old, alnMask[x]);
     updateGOC(x, aln[x], aln[x], old, alnMask[x]);
     int newConserved = conservedCount(x, aln[x], alnMask[x],-1);
+    int newInduced = inducedCount(aln[x],-1);
 	currConservedCount += (newConserved - oldConserved);
+	currInducedCount += (newInduced - oldInduced);
 }
 
 //todo: test this

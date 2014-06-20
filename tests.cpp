@@ -1227,11 +1227,28 @@ BOOST_AUTO_TEST_CASE( currInducedCount_consistent_after_mutate ){
 	RandGenT g(12);
 	aln.shuf(g,false,false,true);
 
-	for(int i = 0; i < 10000; i++){
+	for(int i = 0; i < 1000; i++){
 		aln.mutate(g,0.25,true);
 		BOOST_CHECK(approxEqual(aln.fastICSDenominator(),(double)aln.currInducedCount));
 	}
 
+}
+
+BOOST_AUTO_TEST_CASE( currInducedCount_consistent_after_crossover ){
+	cout<<"BEGIN currInducedCount_consistent_after_crossover"<<endl;
+	Network net1("../optnetalign/tests/cg1a.net");
+	Network net2("../optnetalign/tests/cg1b.net");
+	Alignment aln(&net1,&net2,nullptr,nullptr);
+	Alignment aln2(&net1,&net2,nullptr,nullptr);
+	for(int seed = 0; seed < 1000; seed++){
+		RandGenT g(seed);
+		aln.shuf(g,false,false,true);
+		aln2.shuf(g,false,false,true);
+
+		Alignment child(g, 0.5, aln, aln2, true);
+
+		BOOST_CHECK(approxEqual(aln.fastICSDenominator(), (double)aln.currInducedCount));
+	}
 }
 
 /*
