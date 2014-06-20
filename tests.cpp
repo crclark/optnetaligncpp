@@ -1133,6 +1133,30 @@ BOOST_AUTO_TEST_CASE( alnInv_consistent_after_doSwap ){
 	
 }
 
+BOOST_AUTO_TEST_CASE( currInducedCount_consistent_after_construction ){
+	Network net1("../optnetalign/tests/cg1a.net");
+	Network net2("../optnetalign/tests/cg1b.net");
+	BLASTDict bits = loadBLASTInfo(&net1,&net2, "../optnetalign/tests/cg1.sim");
+	Alignment aln(&net1, &net2, nullptr, nullptr);
+
+	BOOST_CHECK(approxEqual(aln.fastICSDenominator(), (double)aln.currInducedCount));
+
+	RandGenT g(12);
+
+	aln.shuf(g,false,false,true);
+
+	BOOST_CHECK(approxEqual(aln.fastICSDenominator(), (double)aln.currInducedCount));
+
+	Alignment aln2(&net1, &net2, "../optnetalign/tests/cg1.aln",
+				   nullptr, nullptr);
+
+	BOOST_CHECK(approxEqual(aln2.fastICSDenominator(),(double)aln2.currInducedCount));
+
+	Alignment aln3(&net1, &net2, &bits, nullptr);
+	aln3.greedyMatch(true);
+	BOOST_CHECK(approxEqual(aln3.fastICSDenominator(),(double)aln3.currInducedCount));
+}
+
 /*
 BOOST_AUTO_TEST_CASE( GOC_correct_after_load ){
     cout<<"BEGIN GOC_correct_after_load"<<endl;

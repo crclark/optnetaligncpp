@@ -101,5 +101,6 @@ public:
 	void initConservedCount(node n1, node n2, bool mask);
 
 	//stuff for computing the denominator of ICS quickly
+	int currInducedCount;
 };
 

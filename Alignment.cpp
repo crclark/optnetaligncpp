@@ -40,7 +40,9 @@ Alignment::Alignment(const Network* n1, const Network* n2,
     gocs = goc;
 	actualSize = net1->nodeToNodeName.size();
 	//initialize conserved counts for fast ICS computation
-	currConservedCount = ics()*fastICSDenominator();
+	double denom = fastICSDenominator();
+	currConservedCount = ics()*denom;
+	currInducedCount = (int)denom;
 }
 
 Alignment::Alignment(const Network* n1, const Network* n2, 
@@ -123,8 +125,9 @@ Alignment::Alignment(const Network* n1, const Network* n2,
 	}
 
 	//initialize conserved counts for fast ICS computation
-	currConservedCount = ics()*fastICSDenominator();
-    
+	double denom = fastICSDenominator();
+	currConservedCount = ics()*denom;
+    currInducedCount = (int)denom;
 	if(bitscores)
 		currBitscore = sumBLAST();
         
@@ -182,6 +185,7 @@ Alignment::Alignment(RandGenT& prng, float cxswappb,
 	currBitscore = par1->currBitscore;
     currGOC = par1->currGOC;
 	currConservedCount = par1->currConservedCount;
+	currInducedCount = par1->currInducedCount;
 	net1 = par1->net1;
 	net2 = par1->net2;
 	v1Unaligned = par1->v1Unaligned;
@@ -325,7 +329,9 @@ void Alignment::greedyMatch(bool bit){
 	}
 
 	//initialize conserved counts for fast ICS computation
-	currConservedCount = ics()*fastICSDenominator();
+	double denom = fastICSDenominator();
+	currConservedCount = ics()*denom;
+	currInducedCount = (int)denom;
 
 	if(bitscores)
 		currBitscore = sumBLAST();
@@ -403,7 +409,9 @@ void Alignment::shuf(RandGenT& prng, bool uniformsize,
         currGOC = sumGOC();
 
 	//initialize currConservedCount for fast ICS computation
-	currConservedCount = ics()*fastICSDenominator();
+	double denom = fastICSDenominator();
+	currConservedCount = ics()*denom;
+	currInducedCount = (int)denom;
 }
 
 //todo: add secondary mutate op for changing mask
