@@ -102,5 +102,6 @@ public:
 
 	//stuff for computing the denominator of ICS quickly
 	int currInducedCount;
+	int inducedCount(node n2, node ignore) const;
 };
 

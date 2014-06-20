@@ -878,3 +878,22 @@ int Alignment::hypotheticalConservedCountDelta(node n1, node n2old, node n2new,
 	int after = conservedCount(n1,n2new,newMask,ignore);
 	return after - before;
 }
+
+
+//returns the number of edges in the subgraph induced by our alignment that
+//are incident to n2 but not incident to ignore.
+int Alignment::inducedCount(node n2, node ignore) const{
+	if(alnInv[n2] >= actualSize || alnMask[alnInv[n2]] == false
+	   || net2->degree(n2) == 0){
+		return 0;
+	}
+	else{
+		int toReturn = 0;
+		for(node x : net2->adjList.at(n2)){
+			if(alnInv[x] < actualSize && alnMask[alnInv[x]] && x != ignore){
+				toReturn++;
+			}
+		}
+		return toReturn;
+	}
+}

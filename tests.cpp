@@ -1134,6 +1134,7 @@ BOOST_AUTO_TEST_CASE( alnInv_consistent_after_doSwap ){
 }
 
 BOOST_AUTO_TEST_CASE( currInducedCount_consistent_after_construction ){
+	cout<<"BEGIN currInducedCount_consistent_after_construction"<<endl;
 	Network net1("../optnetalign/tests/cg1a.net");
 	Network net2("../optnetalign/tests/cg1b.net");
 	BLASTDict bits = loadBLASTInfo(&net1,&net2, "../optnetalign/tests/cg1.sim");
@@ -1157,6 +1158,40 @@ BOOST_AUTO_TEST_CASE( currInducedCount_consistent_after_construction ){
 	BOOST_CHECK(approxEqual(aln3.fastICSDenominator(),(double)aln3.currInducedCount));
 }
 
+
+BOOST_AUTO_TEST_CASE( inducedCount_correct ){
+	//note: this test only works on nets with no self-loops
+	cout<<"BEGIN inducedCount_correct"<<endl;
+	Network net1("../optnetalign/tests/lccstest1.net");
+	Network net2("../optnetalign/tests/lccstest2.net");
+	Alignment aln(&net1,&net2,nullptr,nullptr);
+	
+	for(int seed = 0; seed < 1000; seed++){
+		RandGenT g(seed);
+		aln.shuf(g,false,false,true);
+
+		/*
+		cout<<"aln is: "<<endl;
+		for(int i = 0; i < aln.actualSize; i++){
+			cout<<net1.nodeToNodeName.at(i)<<' '<<net2.nodeToNodeName.at(aln.aln[i])<<endl;
+		}
+
+		cout<<"alnInv is: "<<endl;
+		for(int i = 0; i < aln.alnInv.size(); i++){
+			cout<<net2.nodeToNodeName.at(i)<<' '<<(net1.nodeToNodeName.count(aln.alnInv[i])
+				                                    ? net1.nodeToNodeName.at(aln.alnInv[i])
+				                                    : "unmapped")<<endl;
+		}
+		*/
+		int sum = 0;
+		for(int i = 0; i < aln.alnInv.size(); i++){
+			//cout<<"calling inducedCount for "<<net2.nodeToNodeName.at(i)<<endl;
+			sum += aln.inducedCount(i,-1);
+		}
+
+		BOOST_CHECK(approxEqual(aln.fastICSDenominator(), ((double)sum)/2.0));
+	}
+}
 /*
 BOOST_AUTO_TEST_CASE( GOC_correct_after_load ){
     cout<<"BEGIN GOC_correct_after_load"<<endl;
