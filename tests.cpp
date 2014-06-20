@@ -1192,6 +1192,48 @@ BOOST_AUTO_TEST_CASE( inducedCount_correct ){
 		BOOST_CHECK(approxEqual(aln.fastICSDenominator(), ((double)sum)/2.0));
 	}
 }
+
+BOOST_AUTO_TEST_CASE( currInducedCount_consistent_after_doSwap ){
+	cout<<"BEGIN currInducedCount_consistent_after_doSwap"<<endl;
+	Network net1("../optnetalign/tests/cg1a.net");
+	Network net2("../optnetalign/tests/cg1b.net");
+	Alignment aln(&net1,&net2,nullptr,nullptr);
+
+	for(int seed = 0; seed < 1000; seed++){
+		RandGenT g(seed);
+		aln.shuf(g,false,false,true);
+
+		uniform_int_distribution<int> dist(0,aln.aln.size()-1);
+
+		node x = dist(g);
+		node y = x;
+		while(y == x){
+			y = dist(g);
+		}
+
+		aln.doSwap(x,y);
+
+		BOOST_CHECK(approxEqual(aln.fastICSDenominator(), (double)aln.currInducedCount));
+	}
+
+}
+
+
+BOOST_AUTO_TEST_CASE( currInducedCount_consistent_after_mutate ){
+	cout<<"BEGIN currInducedCount_consistent_after_mutate"<<endl;
+	Network net1("../optnetalign/tests/cg1a.net");
+	Network net2("../optnetalign/tests/cg1b.net");
+	Alignment aln(&net1,&net2,nullptr,nullptr);
+	RandGenT g(12);
+	aln.shuf(g,false,false,true);
+
+	for(int i = 0; i < 10000; i++){
+		aln.mutate(g,0.25,true);
+		BOOST_CHECK(approxEqual(aln.fastICSDenominator(),(double)aln.currInducedCount));
+	}
+
+}
+
 /*
 BOOST_AUTO_TEST_CASE( GOC_correct_after_load ){
     cout<<"BEGIN GOC_correct_after_load"<<endl;

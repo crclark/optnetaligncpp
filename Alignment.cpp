@@ -461,6 +461,8 @@ void Alignment::mutate(RandGenT& prng, float mutswappb, bool total){
 void Alignment::doSwap(node x, node y){
 	int oldConservedX = conservedCount(x, aln[x], alnMask[x],-1);
 	int oldConservedY = conservedCount(y, aln[y], alnMask[y],x);
+	int oldInducedX = inducedCount(aln[x],-1);
+	int oldInducedY = inducedCount(aln[y],aln[x]);
 	node temp = aln[x];
 	aln[x] = aln[y];
 	alnInv[aln[x]] = x;
@@ -488,12 +490,17 @@ void Alignment::doSwap(node x, node y){
 	int newConservedX = conservedCount(x,aln[x],alnMask[x],-1);
 	int newConservedY = conservedCount(y,aln[y],alnMask[y],x);
 
+	int newInducedX = inducedCount(aln[y],-1);
+	int newInducedY = inducedCount(aln[x],aln[y]);
+
 	updateBitscore(x, aln[y], aln[x], alnMask[y], alnMask[x]);
     updateGOC(x, aln[y], aln[x], alnMask[y], alnMask[x]);
 	updateBitscore(y, aln[x], aln[y], alnMask[x], alnMask[y]);
     updateGOC(y, aln[x], aln[y], alnMask[x], alnMask[y]);
     currConservedCount += ((newConservedX - oldConservedX) +
     	                   (newConservedY - oldConservedY));
+    currInducedCount += ((newInducedX - oldInducedX) +
+    	                 (newInducedY - oldInducedY));
 }
 
 //todo: test this
