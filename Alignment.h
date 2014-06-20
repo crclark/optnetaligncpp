@@ -39,6 +39,7 @@ public:
     double sumGOC() const;
 	double alnSize() const;	
 	vector<node> aln;
+	vector<node> alnInv; //stores the inverse of aln
 	vector<bool> alnMask; //indicates whether the corresponding node
 	                      //of V2 is allowed to be aligned to.
 	                      //The idea here is that a node in the larger

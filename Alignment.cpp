@@ -22,12 +22,14 @@ Alignment::Alignment(const Network* n1, const Network* n2,
 	                 const BLASTDict* bit, const GOCDict* goc){
 	unsigned int size = n2->nodeToNodeName.size();
 	aln = vector<node>(size,-1);
+	alnInv = vector<node>(size,-1);
 	alnMask = vector<bool>(size,true);
 	fitnessValid = false;
 	v1Unaligned = unordered_set<node>();
 	v1Unaligned.reserve(n2->nodeToNodeName.size());
 	for(int i = 0; i < size; i++){
 		aln[i] = i;
+		alnInv[i] = i;
 	}
 
 	net1 = n1;
@@ -48,6 +50,7 @@ Alignment::Alignment(const Network* n1, const Network* n2,
     //todo: nodeNameToNode is sometimes a different size than 
     //nodeToNodeName and I can't figure out why.
 	aln = vector<node>(size,-1);
+	alnInv = vector<node>(size,-1);
 	alnMask = vector<bool>(size,true);
 	fitnessValid = false;
 	domRank = -1;
@@ -99,6 +102,7 @@ Alignment::Alignment(const Network* n1, const Network* n2,
 		
         count++;
 		aln[u] = v;
+		alnInv[v] = u;
 		v2Unaligned.erase(v);
 		//cout<<"node "<<a<<" (int: "<<u<<") aligned to node "
 		//    <<b<<" (int: "<<v<<")"<<endl;
@@ -111,6 +115,7 @@ Alignment::Alignment(const Network* n1, const Network* n2,
 		if(aln[i] == -1){
 			node arbNode = *(v2Unaligned.begin());
 			aln[i] = arbNode;
+			alnInv[arbNode] = i;
 			alnMask[i] = false;
 			v1Unaligned.insert(i);
 			v2Unaligned.erase(arbNode);
@@ -165,6 +170,7 @@ Alignment::Alignment(RandGenT& prng, float cxswappb,
 
 	//do standard initialization
 	aln = par1->aln;
+	alnInv = par1->alnInv;
 	alnMask = par1->alnMask;
 	fitnessValid = false;
 	domRank = -1;
@@ -193,8 +199,9 @@ Alignment::Alignment(RandGenT& prng, float cxswappb,
 				                               alnMask[par1Indices[temp2]],
 				                               i);
 			aln[i] = temp2;
+			alnInv[temp2] = i;
 			aln[par1Indices[temp2]] = temp1;
-
+			alnInv[temp1] = par1Indices[temp2];
 			//cout<<"selected to swap:"<<net1->nodeToNodeName.at(i)<<" "
 				//<<net1->nodeToNodeName.at(par1Indices[temp2])<<endl;
 			bool temp1Mask = alnMask[i];
@@ -256,6 +263,7 @@ void Alignment::greedyMatch(bool bit){
 	auto dict = bit ? bitscores : gocs;
 
 	aln = vector<node>(net2->nodeToNodeName.size(), -1);
+	alnInv = aln;
 	v1Unaligned = unordered_set<node>();
 
 	for(int i = 0; i < net1->nodeToNodeName.size(); i++){
@@ -284,6 +292,7 @@ void Alignment::greedyMatch(bool bit){
 		}
 
 		aln[n1] = bestN2;
+		alnInv[bestN2] = n1;
 		v1Aligned.insert(n1);
 		v2Aligned.insert(bestN2);
 		v2Unaligned.erase(bestN2);
@@ -308,6 +317,7 @@ void Alignment::greedyMatch(bool bit){
 		if(aln[i] == -1){
 			node arbNode = *(v2Unaligned.begin());
 			aln[i] = arbNode;
+			alnInv[arbNode] = i;
 			alnMask[i] = false;
 			v1Unaligned.insert(i);
 			v2Unaligned.erase(arbNode);
@@ -327,6 +337,10 @@ void Alignment::greedyMatch(bool bit){
 void Alignment::shuf(RandGenT& prng, bool uniformsize, 
 	                 bool smallstart, bool total){
 	shuffle(aln.begin(),aln.end(), prng);
+	for(int i = 0; i < aln.size(); i++){
+		alnInv[aln[i]] = i;
+	}
+
 	if(!total){
 		if(!uniformsize && !smallstart){
 			uniform_int_distribution<int> coinFlip(0,1);
@@ -441,7 +455,9 @@ void Alignment::doSwap(node x, node y){
 	int oldConservedY = conservedCount(y, aln[y], alnMask[y],x);
 	node temp = aln[x];
 	aln[x] = aln[y];
+	alnInv[y] = x;
 	aln[y] = temp;
+	alnInv[temp] = y;
 
 	bool tempb = alnMask[x];
 	alnMask[x] = alnMask[y];
@@ -537,7 +553,7 @@ vector<double> Alignment::onBitHypothetical(node x) const{
 	return toReturn;
 }
 
-//todo: add support for GO annotations
+
 //todo: maybe something more principled than fitnessNames (so ad hoc!)
 void Alignment::computeFitness(const vector<string>& fitnessNames){
 	fitness = vector<double>(fitnessNames.size(),0.0);
