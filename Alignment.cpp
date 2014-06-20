@@ -698,7 +698,7 @@ double Alignment::fastICSDenominator() const{
 
 
 double Alignment::fastICS() const{
-	double denom = fastICSDenominator();
+	double denom = (double)currInducedCount;
 	if(denom == 0.0){
 		return 0.0;
 	}
