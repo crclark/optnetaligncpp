@@ -605,7 +605,7 @@ void Alignment::computeFitness(const vector<string>& fitnessNames){
             fitness.at(i) = currGOC;
         }
         if(fitnessNames.at(i) == "S3"){
-            double num = (double)currConservedCount
+            double num = (double)currConservedCount;
             double denom = double(net1->edges.size() 
                                   + currInducedCount) - num;
             fitness.at(i) = num/denom;
