@@ -74,6 +74,7 @@ int main(int ac, char* av[])
 				cout<<"current "<<fitnessNames.at(j)<<" is "
 				    <<aln->fitness.at(j)<<endl;
 			}
+            cout<<"EC is "<<((double)(aln->currConservedCount))/((double)(net1->edges.size()))<<endl;
 			cout<<"Generation "<<i<<" complete."<<endl;
 		}
 		aln->save(outprefix + "_localTest.aln");

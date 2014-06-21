@@ -90,6 +90,8 @@ argRetVals handleArgs(int ac, char* av[]){
 			    "an alignment objective.")
 		("ec", "When set, edge correctness score will be used as an "
 			   "alignment objective.")
+        ("s3", "When set, symmetric substructure score will be used as"
+               " an alignment objective.")
 		("verbose", "When set, extra information about the progress of the "
 			        "alignment is printed to stdout.")
 		("mutswappb", po::value<float>(), "Sets the probability of swap "
@@ -126,7 +128,7 @@ argRetVals handleArgs(int ac, char* av[]){
 
 
 	if(!(vm.count("ics") || vm.count("bitscores") || vm.count("evalues")
-		|| vm.count("ec"))
+		|| vm.count("ec") || vm.count("s3"))
 		&& !(vm.count("annotations1") && vm.count("annotations2")) ){
 		throw ArgError("At least one objective must be specified!");
 	}
@@ -173,6 +175,10 @@ argRetVals handleArgs(int ac, char* av[]){
 	if(vm.count("ec")){
 		fitnessNames.push_back("EC");
 	}
+
+    if(vm.count("s3")){
+        fitnessNames.push_back("S3");
+    }
 
 	BLASTDict bitscores;
 
