@@ -92,9 +92,8 @@ int main(int ac, char* av[])
                             proportions[i]);
                     }
                     else{
-                        fastHillClimb(tg, pop[i], total,
-                        numSearchIters, fitnessNames,
-                        0, true);
+                        correctHillClimb(tg, pop[i], total,
+                        numSearchIters, fitnessNames);
                     }
                     kids[i] = new Alignment(net1,net2,bitPtr,gocsPtr);
                     kids[i]->shuf(tg,false,false,total);
@@ -105,9 +104,8 @@ int main(int ac, char* av[])
                             proportions[i]);
                     }
                     else{
-                        fastHillClimb(tg, kids[i], total,
-                        numSearchIters, fitnessNames,
-                        0, true);
+                        correctHillClimb(tg, kids[i], total,
+                        numSearchIters, fitnessNames);
                     }
                 }
             }

@@ -64,17 +64,39 @@ int main(int ac, char* av[])
 		//fast hill climb version
 		cout<<"starting main loop"<<endl;
 		
+		int gensWithoutImprovement = 0;
+		int mutsDone = 0;
+		vector<double> bestFits(fitnessNames.size(),0.0);
 		for(int i = 0; i < generations; i++){
-			for(int j = 0; j<fitnessNames.size(); j++){
-				correctHillClimb(g, aln, total,
-	               500, fitnessNames);	
+			auto oldFit = aln->fitness;
+			correctHillClimb(g, aln, total,
+               500, fitnessNames);	
+			auto newFit = aln->fitness;
+			for(int q = 0; q < newFit.size(); q++){
+				if(newFit[q] > bestFits[q]){
+					bestFits[q] = newFit[q];
+				}
 			}
-			
+			if(!dominates(newFit,oldFit)){
+				gensWithoutImprovement++;
+			}
+			else{
+				gensWithoutImprovement = 0;
+			}
+			if(i > 10000 && gensWithoutImprovement == (i/1000)){
+				aln->mutate(g, 0.001, total);
+				aln->computeFitness(fitnessNames);
+				gensWithoutImprovement = 0;
+				mutsDone++;
+			}
 			for(int j = 0; j <fitnessNames.size();j++){
 				cout<<"current "<<fitnessNames.at(j)<<" is "
 				    <<aln->fitness.at(j)<<endl;
+				cout<<"best "<<fitnessNames.at(j)<<" is "
+				    <<bestFits.at(j)<<endl;
 			}
             cout<<"EC is "<<((double)(aln->currConservedCount))/((double)(net1->edges.size()))<<endl;
+            cout<<"Mutations performed: "<<mutsDone<<endl;
 			cout<<"Generation "<<i<<" complete."<<endl;
 		}
 		aln->save(outprefix + "_localTest.aln");

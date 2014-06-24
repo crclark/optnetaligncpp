@@ -11,8 +11,10 @@ using namespace std;
 
 //instead of using the buggy hypotheticals, do an actual swap and
 //check for improvement, undoing if worse.
+//when obj is specified, only checks for improvement in objective obj
 void correctHillClimb(RandGenT& prng, Alignment* aln, bool total,
-					  int maxIters, const vector<string>& fitnessNames){
+					  int maxIters, const vector<string>& fitnessNames,
+					  int obj = -1){
 	
 	auto randIndex = uniform_int_distribution<int>(0,aln->aln.size()-2);
 
@@ -32,8 +34,15 @@ void correctHillClimb(RandGenT& prng, Alignment* aln, bool total,
 
 		bool improved = true;
 
-		for(int j = 0; j < currFit.size(); j++){
-			if(newFit[j] < currFit[j]){
+		if(obj == -1){
+			for(int j = 0; j < currFit.size(); j++){
+				if(newFit[j] < currFit[j]){
+					improved = false;
+				}
+			}
+		}
+		else{
+			if(newFit[obj] <= currFit[obj]){
 				improved = false;
 			}
 		}
@@ -57,11 +66,11 @@ void proportionalSearch(RandGenT& prng, Alignment* aln, bool total,
 		double res = prob(prng);
 		if(res < proportion){
 			correctHillClimb(prng, aln, total,
-	               500, fitnessNames);
+	               500, fitnessNames,0);
 		}
 		else{
 			correctHillClimb(prng, aln, total,
-	               500, fitnessNames);	
+	               500, fitnessNames,1);	
 		}
 	}
 

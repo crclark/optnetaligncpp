@@ -27,7 +27,7 @@ void normalizeFitnesses(vector<Alignment*>& in);
 void setCrowdingDists(vector<Alignment*>& in);
 
 //returns true iff aln1 dominates aln2
-bool dominates(Alignment* aln1, Alignment* aln2);
+bool dominates(const vector<double>& fitness1, const vector<double>& fitness2);
 
 //implements crowded-comparison operator from Deb et al. 2002
 bool crowdedComp(Alignment* aln1, Alignment* aln2);

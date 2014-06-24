@@ -21,10 +21,10 @@ vector<vector<Alignment*> > nonDominatedSort(const vector<Alignment*>& in){
 			if(i == j){
 				continue;
 			}
-			if(dominates(in[i],in[j])){
+			if(dominates(in[i]->fitness,in[j]->fitness)){
 				in[i]->dominated.push_back(in[j]);
 			}
-			else if(dominates(in[j],in[i])){
+			else if(dominates(in[j]->fitness,in[i]->fitness)){
 				in[i]->numThatDominate++;
 			}
 		}
@@ -117,14 +117,14 @@ void setCrowdingDists(vector<Alignment*>& in){
 }
 
 //returns true if aln1 Pareto dominates aln2
-bool dominates(Alignment* aln1, Alignment* aln2){
+bool dominates(const vector<double>& fitness1, const vector<double>& fitness2){
 	bool oneBigger = false;
 
-	for(int i = 0; i < aln1->fitness.size(); i++){
-		if(aln1->fitness[i] < aln2->fitness[i]){
+	for(int i = 0; i < fitness1.size(); i++){
+		if(fitness1[i] < fitness2[i]){
 			return false;
 		}
-		if(aln1->fitness[i] > aln2->fitness[i]){
+		if(fitness1[i] > fitness2[i]){
 			oneBigger = true;
 		}
 	}
