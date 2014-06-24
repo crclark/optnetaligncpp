@@ -6,14 +6,6 @@
 #include <random>
 #include <vector>
 
-Alignment* hillClimb(RandGenT& prng, Alignment* orig, bool total,
-	                 int maxIters, const vector<string>& fitnessNames,
-	                 int objectiveToImprove);
-
-void fastHillClimb(RandGenT& prng, Alignment* aln, bool total,
-	               int maxIters, const vector<string>& fitnessNames,
-	               int objectiveToImprove, bool worsenOthers);
-
 void correctHillClimb(RandGenT& prng, Alignment* aln, bool total,
 					  int maxIters, const vector<string>& fitnessNames);
 

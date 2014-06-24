@@ -46,6 +46,8 @@ LOCAL SEARCH ALONE
 ------------------
 Appears to work extremely well now that I've fixed the bugs in the hillclimbing logic. State-of-the-art results on dm-hs.
 
+New result! Can get ICS up to .92 while EC is just .33! Investigate! Consider switching to S3.
+
 SEEDING
 -------
 After seeding, the GA portion of the program appears to go much more slowly than otherwise, although the diversity of the results is much better. It could be that the hillclimbers all found their own hills and the space between them is completely flat, so combining them isn't helping much. Unfortunately, though, it seems bitscore sum is not increasing much either, even though we are also seeding with a greedy matching based on bitscore.
