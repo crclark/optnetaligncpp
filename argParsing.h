@@ -139,7 +139,7 @@ argRetVals handleArgs(int ac, char* av[]){
 			           "or neither.");
 	}
 
-	if(vm.count("seeding") && !(vm.count("bitscores") || vm.count("evalues"))){
+	if(vm.count("seeding") && !(vm.count("bitscores") || vm.count("evalues") || vm.count("annotations2"))){
 		throw ArgError("Seeding requires either bitscore or E-value data.");
 	}
 

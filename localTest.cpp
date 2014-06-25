@@ -83,7 +83,7 @@ int main(int ac, char* av[])
 			else{
 				gensWithoutImprovement = 0;
 			}
-			if(i > 10000 && gensWithoutImprovement == (i/1000)){
+			if(i > 10000 && gensWithoutImprovement == (i/100)){
 				aln->mutate(g, 0.001, total);
 				aln->computeFitness(fitnessNames);
 				gensWithoutImprovement = 0;

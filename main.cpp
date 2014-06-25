@@ -81,7 +81,7 @@ int main(int ac, char* av[])
         auto worker = [&](const blocked_range<size_t>& r){
             RandGenT tg(clock());
             if(seeding){
-                int numSearchIters = 100000;
+                int numSearchIters = 1000000;
                 for(int i = r.begin(); i != r.end(); ++i){
                     pop[i] = new Alignment(net1,net2,bitPtr,gocsPtr);
                     pop[i]->shuf(tg,false,false,total);
@@ -202,7 +202,7 @@ int main(int ac, char* av[])
 					double prob = dist(tg);
 					if(prob <= 0.7){
 						vector<Alignment*> parents;
-						if(tournsel){
+						if((popsize/10) > 2 && tournsel){
 							parents = binSel(tg,pop,(popsize/10));
 						}
 						else{

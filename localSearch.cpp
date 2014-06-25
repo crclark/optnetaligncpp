@@ -14,7 +14,7 @@ using namespace std;
 //when obj is specified, only checks for improvement in objective obj
 void correctHillClimb(RandGenT& prng, Alignment* aln, bool total,
 					  int maxIters, const vector<string>& fitnessNames,
-					  int obj = -1){
+					  int obj){
 	
 	auto randIndex = uniform_int_distribution<int>(0,aln->aln.size()-2);
 

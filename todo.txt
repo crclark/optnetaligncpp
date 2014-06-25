@@ -5,8 +5,6 @@ to create local ones. Should try to take from the best representatives of
 the whole front-- might want to look at distance in alignment space as well
 as objective space to do so.
 
-add random seed to arguments so that experiments are more easily reproducible
-
 add logging of mean and max over time for plotting purposes
 
 make sure asserts are turned off in optimized version
@@ -20,6 +18,8 @@ write tests for v1Unaligned being correct after all modifying ops.
 consider abandoning size optimization if total alignment optimization
 performance continues to be much better. Instead, might want to do partiality
 as a post-processing step of extracting high-confidence sub-alignments.
+
+try ACO. 
 
 add the ability to specify a list of fitnesses to dominate as a stopping condition.
 Maybe go another 10000 generations after dominating the last one.
@@ -35,18 +35,15 @@ as the first population.
 try getting rid of edge set in Network class. Not really used anymore, except in slow ICS, which
 is used to initialize conserved count.
 
-NOTE: I am currently trying to memoize the denominator of ICS in the same way that the numerator
-is. If this can be done, hillclimbing on ICS could be performed roughly 500-1000x faster.
-
 REFACTORING
 -----------
 
 
 LOCAL SEARCH ALONE
 ------------------
-Appears to work extremely well now that I've fixed the bugs in the hillclimbing logic. State-of-the-art results on dm-hs.
 
-New result! Can get ICS up to .92 while EC is just .33! Investigate! Consider switching to S3.
+ Can get ICS up to .92 while EC is just .33! ICS appears to thus be misleading.
+ Switching to S3, but need to think more about these topological fitness functions.
 
 SEEDING
 -------
