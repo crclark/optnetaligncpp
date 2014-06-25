@@ -12,4 +12,4 @@ void correctHillClimb(RandGenT& prng, Alignment* aln, bool total,
 
 void proportionalSearch(RandGenT& prng, Alignment* aln, bool total,
 	                    int iters, const vector<string>& fitnessNames,
-	                    double proportion);
+	                    int obj, double proportion);

@@ -55,22 +55,30 @@ void correctHillClimb(RandGenT& prng, Alignment* aln, bool total,
 	}
 }
 
-//optimizes objectives 0 and 1, with proportion to 0 determined by last arg
+//optimizes given objective with time proportional to given proportion,
+//and evenly distributes the rest of hillclimbing time to the other
+//objectives.
 void proportionalSearch(RandGenT& prng, Alignment* aln, bool total,
 	                    int iters, const vector<string>& fitnessNames,
-	                    double proportion){
+	                    int obj, double proportion){
 
 	auto prob = uniform_real_distribution<double>(0,1);
+
+	auto randObj = uniform_int_distribution<int>(0,fitnessNames.size()-1);
 
 	for(int i = 0; i < iters; i++){
 		double res = prob(prng);
 		if(res < proportion){
 			correctHillClimb(prng, aln, total,
-	               500, fitnessNames,0);
+	               500, fitnessNames,obj);
 		}
 		else{
+			int robj = obj;
+			while(robj == obj){
+				robj = randObj(prng);
+			}
 			correctHillClimb(prng, aln, total,
-	               500, fitnessNames,1);	
+	               500, fitnessNames,robj);	
 		}
 	}
 

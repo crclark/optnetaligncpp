@@ -89,7 +89,7 @@ int main(int ac, char* av[])
                     if(fitnessNames.size()>1){
                         proportionalSearch(tg, pop[i], total,
                             numSearchIters, fitnessNames,
-                            proportions[i]);
+                            0, proportions[i]);
                     }
                     else{
                         correctHillClimb(tg, pop[i], total,
@@ -101,7 +101,7 @@ int main(int ac, char* av[])
                     if(fitnessNames.size()>1){
                         proportionalSearch(tg, kids[i], total,
                             numSearchIters, fitnessNames,
-                            proportions[i]);
+                            0, proportions[i]);
                     }
                     else{
                         correctHillClimb(tg, kids[i], total,
