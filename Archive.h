@@ -26,5 +26,5 @@ class Archive{
 public:
 	void insert(Alignment* aln);
 	void shrinkToSize(int size);
-	set<Alignment*> nonDominatedSet;
+	vector<Alignment*> nonDominated;
 };

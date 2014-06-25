@@ -11,14 +11,14 @@
 //any aln given to Archive can be deleted at any time!
 void Archive::insert(Alignment* aln){
 
-	vector<Alignment*> dominatedByAln;
+	set<Alignment*> dominatedByAln;
 
 	bool alnIsDominated = false;
 
-	for(auto p : nonDominatedSet){
+	for(auto p : nonDominated){
 
 		if(dominates(aln->fitness,p->fitness)){
-			dominatedByAln.push_back(p);
+			dominatedByAln.insert(p);
 		}
 		else if(dominates(p->fitness,aln->fitness)){
 			alnIsDominated = true;
@@ -31,44 +31,40 @@ void Archive::insert(Alignment* aln){
 		return;
 	}
 	else{
-		for(auto p : dominatedByAln){
-			nonDominatedSet.erase(p);
-			delete p;
+		vector<Alignment*> newNonDominated;
+		
+		for(auto p : nonDominated){
+			if(dominatedByAln.count(p)){
+				delete p;
+			}
+			else{
+				newNonDominated.push_back(p);
+			}
 		}
-		nonDominatedSet.insert(aln);
+		newNonDominated.push_back(aln);
+		nonDominated = newNonDominated;
 		return;
 	}
 }
 
 void Archive::shrinkToSize(int size){
 
-	if(size >= nonDominatedSet.size()){
+	if(size >= nonDominated.size()){
 		return;
 	}
 
-	vector<Alignment*> nonDominatedVector;
-	copy(nonDominatedSet.begin(), nonDominatedSet.end(), back_inserter(nonDominatedVector));
+	normalizeFitnesses(nonDominated);
+	setCrowdingDists(nonDominated);
 
-	normalizeFitnesses(nonDominatedVector);
-	setCrowdingDists(nonDominatedVector);
-
-	sort(nonDominatedVector.begin(), nonDominatedVector.end(), 
+	sort(nonDominated.begin(), nonDominated.end(), 
 		[](Alignment* p1, Alignment* p2){
 			return p1->crowdDist > p2->crowdDist;
 		}
 	);
 
-	set<Alignment*> newSet;
-
-	for(int i = 0; i < nonDominatedVector.size(); i++){
-		if(i < size){
-			newSet.insert(nonDominatedVector[i]);
-		}
-		else{
-			delete nonDominatedVector[i];
-		}
+	while(nonDominated.size() > size){
+		delete nonDominated.back();
+		nonDominated.pop_back();
 	}
-
-	nonDominatedSet = newSet;
 
 }

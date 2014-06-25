@@ -57,6 +57,9 @@ int main(int ac, char* av[])
 		const BLASTDict* bitPtr = vm.count("bitscores") ? &bitscores : nullptr;
 		const GOCDict* gocPtr = vm.count("annotations1") ? &gocs : nullptr;
 		const int generations = vm["generations"].as<int>();
+		const int hillclimbiters = vm.count("hillclimbiters") 
+		                           ? vm["hillclimbiters"].as<int>() 
+		                           : 0; 
 		const unsigned int popsize = vm.count("popsize") 
 		                             ? vm["popsize"].as<int>()
 		                             : 100;
@@ -86,6 +89,9 @@ int main(int ac, char* av[])
 			numThreads++;
 		}
 
+		if(verbose){
+			cout<<"Launching "<<numThreads<<" threads."<<endl;
+		}
 		vector<int> randSeeds;
 
 		for(int i = 0; i < numThreads; i++){
@@ -94,14 +100,108 @@ int main(int ac, char* av[])
 
 		auto worker = [&](int threadNum){
 			RandGenT tg(randSeeds[threadNum] + clock());
+			uniform_real_distribution<double> prob(0.0,1.0);
 			while(numAlnsGenerated < popsize*generations){
 
+				//grab 2 existing alns from archive.
+				//if less than 2 in archive, just create a new one.
+				Alignment* par1;
+				Alignment* par2;
 
+				bool foundAln = true;
+
+				//lock and get from archive, aborting if archive too small
+				{
+					ArchiveMutexType::scoped_lock lock(archiveMutex);
+					int archsize = archive.nonDominated.size();
+					if(archsize < 2){
+						foundAln = false;
+					}
+					else{
+						uniform_int_distribution<int> r(0, archsize-1);
+						int i1 = r(tg);
+						int i2 = i1;
+						while(i1 == i2){
+							i2 = r(tg);
+						}
+
+						par1 = new Alignment(*archive.nonDominated.at(i1));
+						par2 = new Alignment(*archive.nonDominated.at(i2));
+					}
+				}
+
+				//if we didn't get 2 alns from archive, init with random ones
+				if(!foundAln){
+					par1 = new Alignment(net1, net2, bitPtr, gocPtr);
+					par2 = new Alignment(net1, net2, bitPtr, gocPtr);
+					par1->shuf(tg, uniformsize, smallstart, total);
+					par2->shuf(tg, uniformsize, smallstart, total);
+				}
+
+				Alignment* child;
+
+
+				//do crossover or mutation
+				if(prob(tg) < cxrate){
+					child = new Alignment(tg, cxswappb, par1, par2, total);
+				}
+				else{
+					child = par1;
+					child.mutate(tg, mutswappb, total);
+				}
+
+				//now, the local search...
+				//Should we do proportional or standard?
+				//And what should our stopping criterion be?
+
+				VelocityTracker veltracker;
+				child.computeFitness(fitnessNames);
+				vector<double> initSpeed;
+				//todo: do something better than arbitrary constant here
+				for(int i = 0; i < 100000; i++){
+					vector<double> currFit = child->fitness;
+
+					//todo: do proportional hillclimb instead
+					correctHillClimb(tg, child, total, 500, fitnessNames);
+
+					vector<double> newFit = child->fitness;
+
+					vector<double> delta(newFit.size(), 0.0);
+
+					for(int j = 0; j < delta.size(); j++){
+						delta[j] = newFit[j] - oldFit[j];
+					}
+
+					veltracker.reportDelta(delta);
+
+					if(i == 50){
+						initSpeed = veltracker.getRecentVel();
+					}
+
+					if(i > 5000){
+						bool belowThresh = false;
+						vector<double> currAvgVel = veltracker.getRecentVel();
+						for(int j = 0; j < currAvgVel.size(); j++){
+							//todo: early abort logic here
+						}
+					}
+				}
+
+				//todo: insert in archive and report stats if verbose
 				numAlnsGenerated++;
 			}
 		};
 
-	
+		vector<thread> ts;
+
+		for(int i = 0; i < numThreads; i++){
+			ts.push_back(thread(worker,i));
+		}
+
+		for(int i = 0; i < numThreads; i++){
+			ts[i].join();
+		}
+
 	}
 	catch(exception& e){
 		cerr << "error: " << e.what() << endl;

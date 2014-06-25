@@ -83,3 +83,37 @@ void proportionalSearch(RandGenT& prng, Alignment* aln, bool total,
 	}
 
 }
+
+VelocityTracker::VelocityTracker(){
+	nextSpot = 0;
+	size = 0;
+
+	recentDeltas = vector<vector<double> >(50);
+
+}
+
+void VelocityTracker::reportDelta(vector<double>& in){
+	recentDeltas[nextSpot] = in;
+	nextSpot = (nextSpot + 1) % 50;
+
+	if(size < 50){
+		size++;
+	}
+}
+
+vector<double> VelocityTracker::getRecentVel() const{
+	vector<double> toReturn(recentDeltas[0].size());
+	
+	for(int i = 0; i < size; i++){
+		for(int j = 0; j < recentDeltas.size(); j++){
+			toReturn[j] += recentDeltas[i][j];
+		}
+	}
+	
+	double n = double(size);
+	for(int j = 0; j < toReturn.size(); j++){
+		toReturn[j] /= n;
+	}
+
+	return toReturn;
+}
