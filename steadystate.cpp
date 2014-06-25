@@ -8,6 +8,7 @@
 #include <ctime>
 #include <assert.h>
 #include <boost/program_options.hpp>
+#include <thread>
 
 #include "Alignment.h"
 #include "argParsing.h"
@@ -49,57 +50,7 @@ int main(int ac, char* av[])
 		const GOCDict* gocPtr = vm.count("annotations1") ? &gocs : nullptr;
 		const int generations = vm["generations"].as<int>();
 
-		mt19937 g(14);
-		//initialize population
-		
-		
-		Alignment* aln = new Alignment(net1,net2, &bitscores, &gocs);
-		//aln->greedyMatch(false);
-		aln->shuf(g,false,false,total);
-		aln->computeFitness(fitnessNames);
-		
-		//todo: instead of just flipping obj, switch according to some
-		//input time proportion.
-		//fast hill climb version
-		cout<<"starting main loop"<<endl;
-		
-		int gensWithoutImprovement = 0;
-		int mutsDone = 0;
-		vector<double> bestFits(fitnessNames.size(),0.0);
-		for(int i = 0; i < generations; i++){
-			auto oldFit = aln->fitness;
-			correctHillClimb(g, aln, total,
-               500, fitnessNames);	
-			auto newFit = aln->fitness;
-			for(int q = 0; q < newFit.size(); q++){
-				if(newFit[q] > bestFits[q]){
-					bestFits[q] = newFit[q];
-				}
-			}
-			if(!dominates(newFit,oldFit)){
-				gensWithoutImprovement++;
-			}
-			else{
-				gensWithoutImprovement = 0;
-			}
-			if(i > 10000 && gensWithoutImprovement == (i/100)){
-				aln->mutate(g, 0.001, total);
-				aln->computeFitness(fitnessNames);
-				gensWithoutImprovement = 0;
-				mutsDone++;
-			}
-			for(int j = 0; j <fitnessNames.size();j++){
-				cout<<"current "<<fitnessNames.at(j)<<" is "
-				    <<aln->fitness.at(j)<<endl;
-				cout<<"best "<<fitnessNames.at(j)<<" is "
-				    <<bestFits.at(j)<<endl;
-			}
-            cout<<"EC is "<<((double)(aln->currConservedCount))/((double)(net1->edges.size()))<<endl;
-            cout<<"Mutations performed: "<<mutsDone<<endl;
-			cout<<"Generation "<<i<<" complete."<<endl;
-		}
-		aln->save(outprefix + "_localTest.aln");
-		
+		//todo: program logic here		
 	}
 	catch(exception& e){
 		cerr << "error: " << e.what() << endl;

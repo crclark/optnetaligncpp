@@ -14,8 +14,7 @@ all of NSGA-II. This entails:
 -sorting by the crowded comparison operator
 */
 
-//todo: consider passing vector by reference
-//todo: add more pass-by-reference in general
+
 vector<vector<Alignment*> > nonDominatedSort(const vector<Alignment*>& in);
 
 //precond: all alns have fitnesses computed

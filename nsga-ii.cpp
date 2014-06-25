@@ -107,9 +107,10 @@ void setCrowdingDists(vector<Alignment*>& in){
 		in[numAlns-1]->crowdDist = numeric_limits<double>::max();
 
 		//increment crowding dist for the current objective
+
+		double denom = in[numAlns-1]->fitnessNormalized[m] - in[0]->fitnessNormalized[m];
 		for(int i = 1; i< (numAlns-1); i++){
 			double numerator = in[i+1]->fitnessNormalized[m] - in[i-1]->fitnessNormalized[m];
-			double denom = in[numAlns-1]->fitnessNormalized[m] - in[0]->fitnessNormalized[m];
 			in[i]-> crowdDist += (numerator/denom);
 		}
 
