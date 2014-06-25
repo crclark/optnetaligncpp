@@ -53,7 +53,7 @@ void Archive::shrinkToSize(int size){
 	setCrowdingDists(nonDominatedVector);
 
 	sort(nonDominatedVector.begin(), nonDominatedVector.end(), 
-		[](auto p1, auto p2){
+		[](Alignment* p1, Alignment* p2){
 			return p1->crowdDist > p2->crowdDist;
 		}
 	);

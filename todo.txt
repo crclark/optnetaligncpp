@@ -37,7 +37,7 @@ is used to initialize conserved count.
 
 REFACTORING
 -----------
-
+clean up the Makefile. Currently hideous.
 
 LOCAL SEARCH ALONE
 ------------------
