@@ -40,6 +40,7 @@ int main(int ac, char* av[])
 		                             : 0.005;
 		const float cxswappb = vm.count("cxswappb") ? vm["cxswappb"].as<float>()
 		                                            : 0.1;
+		const float cxrate = vm.count("cxrate") ? vm["cxrate"].as<float>() : 0.7;
 		const bool verbose = vm.count("verbose");
 		const bool tournsel = vm.count("tournsel");
 		const bool total = vm.count("total");
@@ -200,7 +201,7 @@ int main(int ac, char* av[])
 				for(auto i = r.begin(); i != r.end(); ++i){
 					uniform_real_distribution<double> dist(0.0,1.0);
 					double prob = dist(tg);
-					if(prob <= 0.7){
+					if(prob <= cxrate){
 						vector<Alignment*> parents;
 						if((popsize/10) > 2 && tournsel){
 							parents = binSel(tg,pop,(popsize/10));

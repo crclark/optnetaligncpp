@@ -102,6 +102,10 @@ argRetVals handleArgs(int ac, char* av[]){
 		("cxswappb", po::value<float>(), "Sets the probability of swapping "
 			                             "during crossover. See documentation."
 			                             " Default: 0.1")
+		("cxrate", po::value<float>(), "Sets the probability that crossover "
+			                           "will be performed when creating a new "
+			                           "alignment. Otherwise, mutation will be "
+			                           "performed. Default: 0.7.")
 		("finalstats", "When set, prints comma-separated stats to stdout "
 			           "when execution completes. Used to find good parameter "
 			           "values through experimentation.")
@@ -117,6 +121,7 @@ argRetVals handleArgs(int ac, char* av[]){
 			                                 " iterations to perform on each "
 			                                 "member of each new generation."
 			                                 "Default: 0.")
+		("randseed", po::value<int>(), "Specifies random seed. Default: current time.")
 	;
 	
 	po::variables_map vm;
