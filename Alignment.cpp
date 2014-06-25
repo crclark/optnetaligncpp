@@ -610,6 +610,10 @@ void Alignment::computeFitness(const vector<string>& fitnessNames){
                                   + currInducedCount) - num;
             fitness.at(i) = num/denom;
         }
+        if(fitnessNames.at(i) == "S3Denom"){
+        	fitness.at(i) = -(double(net1->edges.size() + currInducedCount)
+        		              -currConservedCount);
+        }
         
 	}
 	fitnessValid = true;
