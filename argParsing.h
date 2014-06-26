@@ -124,7 +124,7 @@ argRetVals handleArgs(int ac, char* av[]){
 		("randseed", po::value<int>(), "Specifies random seed. Default: current time.")
         ("nthreads", po::value<int>(), "Sets number of threads to use. "
                                        "Default: number of cores on "
-                                       "your machine."
+                                       "your machine.")
 	;
 	
 	po::variables_map vm;

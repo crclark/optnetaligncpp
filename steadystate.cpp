@@ -52,6 +52,7 @@ int main(int ac, char* av[])
 		const bool uniformsize = vm.count("uniformsize");
 		const bool smallstart = vm.count("smallstart");
 		const bool finalstats = vm.count("finalstats");
+        const bool nooutput = vm.count("nooutput");
 		const string outprefix = vm["outprefix"].as<string>();
 
 		const BLASTDict* bitPtr = vm.count("bitscores") ? &bitscores : nullptr;
@@ -199,7 +200,7 @@ int main(int ac, char* av[])
                     ArchiveMutexType::scoped_lock lock(archiveMutex);
                     archive.insert(child);
                     if(archive.nonDominated.size() > 2*popsize){
-                        archive.shrink(popsize);
+                        archive.shrinkToSize(popsize);
                     }
                 }
                 
@@ -222,7 +223,53 @@ int main(int ac, char* av[])
 		for(int i = 0; i < numThreads; i++){
 			ts[i].join();
 		}
+        
+        if(verbose){
+            cout<<"Found "<<archive.nonDominated.size()
+                <<"non-dominated alignments."<<endl;
+            cout<<"Writing to disk!"<<endl;
+        }
+        
+        if(finalstats){
+			cout<<popsize;
+			cout<<'\t'<<generations;
+			cout<<'\t'<<mutswappb;
+			cout<<'\t'<<cxswappb;
+			cout<<'\t'<<tournsel;
+			cout<<'\t'<<uniformsize;
+			reportStats(archive.nonDominated,fitnessNames,false);
+			cout<<endl;
+		}
+		
+        if(!nooutput){
+            string infoFilename = outprefix + ".info";
+            ofstream infoFile(infoFilename);
 
+            //make infoFile column labels
+            infoFile << "filename";
+
+            for(auto str : fitnessNames){
+                infoFile << '\t' << str;
+            }
+
+            infoFile << endl;
+
+            //output all alignments in the first front
+            for(int i = 0; i < archive.nonDominated.size(); i++){
+                string filename = outprefix + "_" + to_string(i) + ".aln";
+                archive.nonDominated[i]->save(filename);
+
+                infoFile << filename;
+
+                //write summary info to infoFile
+                for(int j = 0; j < archive.nonDominated[i]->fitness.size(); j++){
+                    infoFile << '\t' << archive.nonDominated[i]->fitness[j];
+                }
+
+                infoFile << endl;
+            }
+        }
+        
 	}
 	catch(exception& e){
 		cerr << "error: " << e.what() << endl;
