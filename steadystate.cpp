@@ -79,7 +79,9 @@ int main(int ac, char* av[])
 		Archive archive;
 
 
-		int numThreads = thread::hardware_concurrency();
+		int numThreads = vm.count("nthreads")
+                         ? vm["nthreads"].as<int>()
+                         : thread::hardware_concurrency();
 
 		if(!numThreads){
 			if(verbose){

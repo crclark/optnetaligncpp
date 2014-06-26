@@ -122,6 +122,9 @@ argRetVals handleArgs(int ac, char* av[]){
 			                                 "member of each new generation."
 			                                 "Default: 0.")
 		("randseed", po::value<int>(), "Specifies random seed. Default: current time.")
+        ("nthreads", po::value<int>(), "Sets number of threads to use. "
+                                       "Default: number of cores on "
+                                       "your machine."
 	;
 	
 	po::variables_map vm;
