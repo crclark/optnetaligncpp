@@ -17,14 +17,12 @@ void correctHillClimb(RandGenT& prng, Alignment* aln, bool total,
 					  int obj){
 	
 	auto randIndex = uniform_int_distribution<int>(0,aln->aln.size()-2);
-
 	for(int i = 0; i < maxIters; i++){
 		node x = randIndex(prng);
 		node y = randIndex(prng);
 		if(y >= x){
 			y++;
 		}
-
 		vector<double> currFit = aln->fitness;
 
 		aln->doSwap(x,y);
@@ -33,7 +31,6 @@ void correctHillClimb(RandGenT& prng, Alignment* aln, bool total,
 		vector<double> newFit = aln->fitness;
 
 		bool improved = true;
-
 		if(obj == -1){
 			for(int j = 0; j < currFit.size(); j++){
 				if(newFit[j] < currFit[j]){
@@ -92,8 +89,8 @@ VelocityTracker::VelocityTracker(){
 
 }
 
-void VelocityTracker::reportDelta(vector<double>& in){
-	recentDeltas[nextSpot] = in;
+void VelocityTracker::reportDelta(const vector<double>& in){
+	recentDeltas[nextSpot] = vector<double>(in);
 	nextSpot = (nextSpot + 1) % 50;
 
 	if(size < 50){
@@ -105,7 +102,7 @@ vector<double> VelocityTracker::getRecentVel() const{
 	vector<double> toReturn(recentDeltas[0].size());
 	
 	for(int i = 0; i < size; i++){
-		for(int j = 0; j < recentDeltas.size(); j++){
+		for(int j = 0; j < recentDeltas[i].size(); j++){
 			toReturn[j] += recentDeltas[i][j];
 		}
 	}

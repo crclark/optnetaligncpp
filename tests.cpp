@@ -23,6 +23,7 @@
 #include "blastinfo.h"
 #include "nsga-ii.h"
 #include "goc.h"
+#include "localSearch.h"
 using namespace std;
 
 bool approxEqual(double x, double y){
@@ -1283,6 +1284,64 @@ BOOST_AUTO_TEST_CASE( currInducedCount_consistent_after_crossover_partial ){
 	}
 }
 
+BOOST_AUTO_TEST_CASE( velTracker_reports_avg ){
+	cout<<"BEGIN velTracker_reports_avg"<<endl;
+	VelocityTracker velTracker;
+
+	vector<double> fakeDelta1 = {1.0, 2.0};
+	vector<double> fakeDelta2 = {2.0, 1.0};
+	vector<double> fakeDelta3 = {1.0, 2.0};
+
+	velTracker.reportDelta(fakeDelta1);
+	velTracker.reportDelta(fakeDelta2);
+	velTracker.reportDelta(fakeDelta3);
+
+	cout<<"reported deltas"<<endl;
+
+	vector<double> averaged = velTracker.getRecentVel();
+
+	BOOST_CHECK(approxEqual(1.33333333333, averaged[0]));
+	BOOST_CHECK(approxEqual(1.66666666666, averaged[1]));
+}
+
+BOOST_AUTO_TEST_CASE( velTracker_rolls_over_properly ){
+	cout<<"BEGIN velTracker_rolls_over_properly"<<endl;
+
+	VelocityTracker velTracker; 
+
+	for(int i = 0; i < 60; i++){
+		vector<double> fakeDelta = {1.0,1.0};
+		velTracker.reportDelta(fakeDelta);
+	}
+
+	vector<double> averaged = velTracker.getRecentVel();
+	BOOST_CHECK(approxEqual(1.0, averaged[0]));
+	BOOST_CHECK(approxEqual(1.0, averaged[1]));
+
+}
+
+BOOST_AUTO_TEST_CASE( velTracker_rolls_over_properly2 ){
+	cout<<"BEGIN velTracker_rolls_over_properly2"<<endl;
+
+	VelocityTracker velTracker;
+
+	for(int i = 0; i < 50; i++){
+		vector<double> fakeDelta = {1.0};
+		velTracker.reportDelta(fakeDelta);
+	}
+
+	double sum = 0;
+	for(int i = 0; i < 50; i++){
+		vector<double> fakeDelta;
+		fakeDelta.push_back(double(i));
+		sum += double(i);
+	}
+
+	sum /= 50.0;
+
+	vector<double> averaged = velTracker.getRecentVel();
+	BOOST_CHECK(approxEqual(sum, averaged[0]));
+}
 
 /*
 BOOST_AUTO_TEST_CASE( GOC_correct_after_load ){

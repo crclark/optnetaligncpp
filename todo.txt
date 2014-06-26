@@ -1,5 +1,7 @@
 add more checks to arg parsing
 
+ensure net1 < net2 in size
+
 start thinking about how to combine alignments from the Pareto front
 to create local ones. Should try to take from the best representatives of
 the whole front-- might want to look at distance in alignment space as well

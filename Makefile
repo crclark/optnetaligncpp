@@ -31,4 +31,4 @@ steadystateMOGA:
 	icc steadystate.cpp Network.cpp blastinfo.cpp Alignment.cpp nsga-ii.cpp localSearch.cpp Archive.cpp goc.cpp -o steadystateMOGA -tbb -std=c++11 -I /usr/local/Cellar/boost/1.53.0/include/ -L /usr/local/Cellar/boost/1.53.0/lib -lboost_program_options-mt
 
 steadystateMOGAUbuntu:
-	icc steadystate.cpp Network.cpp blastinfo.cpp Alignment.cpp nsga-ii.cpp localSearch.cpp Archive.cpp goc.cpp -o steadystateMOGA -tbb -std=c++11 -I /usr/include/ -L /usr/lib/x86_64-linux-gnu/ -lboost_program_options
+	icc steadystate.cpp Network.cpp blastinfo.cpp Alignment.cpp nsga-ii.cpp localSearch.cpp Archive.cpp goc.cpp -o steadystateMOGA -g -tbb -std=c++11 -I /usr/include/ -L /usr/lib/x86_64-linux-gnu/ -lboost_program_options
