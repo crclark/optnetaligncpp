@@ -191,8 +191,15 @@ int main(int ac, char* av[])
                         }
 					}
 				}
-
-				//todo: insert in archive
+                
+                //insert in archive
+				{
+                    ArchiveMutexType::scoped_lock lock(archiveMutex);
+                    archive.insert(child);
+                    if(archive.nonDominated.size() > 2*popsize){
+                        archive.shrink(popsize);
+                    }
+                }
                 
                 if(numAlnsGenerated % 500 == 0){
                     ArchiveMutexType::scoped_lock lock(archiveMutex);
