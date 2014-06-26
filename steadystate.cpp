@@ -143,11 +143,11 @@ int main(int ac, char* av[])
 
 				//do crossover or mutation
 				if(prob(tg) < cxrate){
-					child = new Alignment(tg, cxswappb, par1, par2, total);
+					child = new Alignment(tg, cxswappb, *par1, *par2, total);
 				}
 				else{
 					child = par1;
-					child.mutate(tg, mutswappb, total);
+					child->mutate(tg, mutswappb, total);
 				}
 
 				//now, the local search...
@@ -155,7 +155,7 @@ int main(int ac, char* av[])
 				//And what should our stopping criterion be?
 
 				VelocityTracker veltracker;
-				child.computeFitness(fitnessNames);
+				child->computeFitness(fitnessNames);
 				vector<double> initSpeed;
 				//todo: do something better than arbitrary constant here
 				for(int i = 0; i < 100000; i++){
@@ -169,7 +169,7 @@ int main(int ac, char* av[])
 					vector<double> delta(newFit.size(), 0.0);
 
 					for(int j = 0; j < delta.size(); j++){
-						delta[j] = newFit[j] - oldFit[j];
+						delta[j] = newFit[j] - currFit[j];
 					}
 
 					veltracker.reportDelta(delta);
@@ -179,11 +179,16 @@ int main(int ac, char* av[])
 					}
 
 					if(i > 5000){
-						bool belowThresh = false;
+						bool belowThresh = true;
 						vector<double> currAvgVel = veltracker.getRecentVel();
 						for(int j = 0; j < currAvgVel.size(); j++){
-							//todo: early abort logic here
+							belowThresh &= currAvgVel[j] 
+                                            < 0.01*initSpeed[j];
 						}
+                        
+                        if(belowThresh){
+                            break;
+                        }
 					}
 				}
 
