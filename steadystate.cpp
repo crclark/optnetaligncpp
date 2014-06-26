@@ -192,7 +192,14 @@ int main(int ac, char* av[])
 					}
 				}
 
-				//todo: insert in archive and report stats if verbose
+				//todo: insert in archive
+                
+                if(numAlnsGenerated % 500 == 0){
+                    ArchiveMutexType::scoped_lock lock(archiveMutex);
+                    reportStats(archive.nonDominated, fitnessNames,
+                                total);
+                }
+                
 				numAlnsGenerated++;
 			}
 		};
