@@ -102,12 +102,13 @@ int main(int ac, char* av[])
 		auto worker = [&](int threadNum){
 			RandGenT tg(randSeeds[threadNum] + clock());
 			uniform_real_distribution<double> prob(0.0,1.0);
+			uniform_int_distribution<int> randObj(0, fitnessNames.size()-1);
 			while(numAlnsGenerated < popsize*generations){
 
 				//grab 2 existing alns from archive.
 				//if less than 2 in archive, just create a new one.
-				Alignment* par1;
-				Alignment* par2;
+				Alignment par1(net1, net2, bitPtr, gocPtr);
+				Alignment par2(net1, net2, bitPtr, gocPtr);
 
 				bool foundAln = true;
 
@@ -115,38 +116,33 @@ int main(int ac, char* av[])
 				{
 					ArchiveMutexType::scoped_lock lock(archiveMutex);
 					int archsize = archive.nonDominated.size();
-					if(archsize < 2){
+					if(archsize == 0){
 						foundAln = false;
 					}
 					else{
 						uniform_int_distribution<int> r(0, archsize-1);
 						int i1 = r(tg);
-						int i2 = i1;
-						while(i1 == i2){
-							i2 = r(tg);
-						}
+						int i2 = r(tg);
 
-						par1 = new Alignment(*archive.nonDominated.at(i1));
-						par2 = new Alignment(*archive.nonDominated.at(i2));
+						par1 = Alignment(*archive.nonDominated.at(i1));
+						par2 = Alignment(*archive.nonDominated.at(i2));
 					}
 				}
 
 				//if we didn't get 2 alns from archive, init with random ones
 				if(!foundAln){
-					par1 = new Alignment(net1, net2, bitPtr, gocPtr);
-					par2 = new Alignment(net1, net2, bitPtr, gocPtr);
-					par1->shuf(tg, uniformsize, smallstart, total);
-					par2->shuf(tg, uniformsize, smallstart, total);
+					par1.shuf(tg, uniformsize, smallstart, total);
+					par2.shuf(tg, uniformsize, smallstart, total);
 				}
 
 				Alignment* child;
 
 				//do crossover or mutation
 				if(prob(tg) < cxrate){
-					child = new Alignment(tg, cxswappb, *par1, *par2, total);
+					child = new Alignment(tg, cxswappb, par1, par2, total);
 				}
 				else{
-					child = par1;
+					child = new Alignment(par1);
 					child->mutate(tg, mutswappb, total);
 				}
 
@@ -156,12 +152,17 @@ int main(int ac, char* av[])
 				VelocityTracker veltracker;
 				child->computeFitness(fitnessNames);
 				vector<double> initSpeed;
-
+				//for proportional search, decide which way to search
+				double randProportion = prob(tg);
+					int rObj = randObj(tg);
 				for(int i = 0; i < hillclimbiters; i++){
 					vector<double> currFit = child->fitness;
-
-					//todo: do proportional hillclimb instead
-					correctHillClimb(tg, child, total, 500, fitnessNames);
+					
+					proportionalSearch(tg, child, total,
+	                    1, fitnessNames,
+	                    rObj, randProportion);
+					//note: 1 iter of proportionalSearch = 500 iters of hillclimb
+					//correctHillClimb(tg, child, total, 500, fitnessNames);
 					vector<double> newFit = child->fitness;
 
 					vector<double> delta(newFit.size(), 0.0);
@@ -172,11 +173,11 @@ int main(int ac, char* av[])
 					}
 					veltracker.reportDelta(delta);
 
-					if(i == 50){
+					if(i == 500){
 						initSpeed = veltracker.getRecentVel();
 					}
 
-					if(i > 5000){
+					if(i > 5000 && i % 500 == 0){
 						bool belowThresh = true;
 						vector<double> currAvgVel = veltracker.getRecentVel();
 						for(int j = 0; j < currAvgVel.size(); j++){
@@ -199,6 +200,7 @@ int main(int ac, char* av[])
                     }
                 }
                 
+
                 if(numAlnsGenerated % 100 == 0 && verbose){
                     ArchiveMutexType::scoped_lock lock(archiveMutex);
                     reportStats(archive.nonDominated, fitnessNames,

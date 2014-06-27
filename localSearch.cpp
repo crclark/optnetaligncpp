@@ -81,6 +81,11 @@ void proportionalSearch(RandGenT& prng, Alignment* aln, bool total,
 
 }
 
+void steepestAscentHillClimb(Alignment* aln, 
+							 const vector<string>& fitnessNames){
+	
+}
+
 VelocityTracker::VelocityTracker(){
 	nextSpot = 0;
 	size = 0;

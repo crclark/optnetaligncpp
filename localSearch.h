@@ -14,6 +14,8 @@ void proportionalSearch(RandGenT& prng, Alignment* aln, bool total,
 	                    int iters, const vector<string>& fitnessNames,
 	                    int obj, double proportion);
 
+void steepestAscentHillClimb(Alignment* aln, 
+							 const vector<string>& fitnessNames);
 
 class VelocityTracker{
 public:
