@@ -153,16 +153,19 @@ int main(int ac, char* av[])
 				child->computeFitness(fitnessNames);
 				vector<double> initSpeed;
 				//for proportional search, decide which way to search
-				double randProportion = prob(tg);
 					int rObj = randObj(tg);
 				for(int i = 0; i < hillclimbiters; i++){
 					vector<double> currFit = child->fitness;
 					
-					proportionalSearch(tg, child, total,
-	                    1, fitnessNames,
-	                    rObj, randProportion);
+					if(prob(tg) < 0.5){
+						proportionalSearch(tg, child, total,
+	                    	1, fitnessNames,
+	                    	rObj, 0.95);
+					}
+					else{
 					//note: 1 iter of proportionalSearch = 500 iters of hillclimb
-					//correctHillClimb(tg, child, total, 500, fitnessNames);
+					correctHillClimb(tg, child, total, 500, fitnessNames);
+					}
 					vector<double> newFit = child->fitness;
 
 					vector<double> delta(newFit.size(), 0.0);
@@ -200,7 +203,7 @@ int main(int ac, char* av[])
 				{
                     ArchiveMutexType::scoped_lock lock(archiveMutex);
                     archive.insert(child);
-                    if(archive.nonDominated.size() > 2*popsize){
+                    if(archive.nonDominated.size() > popsize){
                         archive.shrinkToSize(popsize);
                     }
                 }
