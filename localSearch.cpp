@@ -15,10 +15,10 @@ using namespace std;
 void correctHillClimb(RandGenT& prng, Alignment* aln, bool total,
 					  int maxIters, const vector<string>& fitnessNames,
 					  int obj){
-	
+	auto randNonDummyIndex = uniform_int_distribution<int>(0, aln->actualSize-1);
 	auto randIndex = uniform_int_distribution<int>(0,aln->aln.size()-2);
 	for(int i = 0; i < maxIters; i++){
-		node x = randIndex(prng);
+		node x = randNonDummyIndex(prng);
 		node y = randIndex(prng);
 		if(y >= x){
 			y++;
@@ -85,21 +85,21 @@ VelocityTracker::VelocityTracker(){
 	nextSpot = 0;
 	size = 0;
 
-	recentDeltas = vector<vector<double> >(50);
+	recentDeltas = vector<vector<double> >(500);
 
 }
 
 void VelocityTracker::reportDelta(const vector<double>& in){
 	recentDeltas[nextSpot] = vector<double>(in);
-	nextSpot = (nextSpot + 1) % 50;
+	nextSpot = (nextSpot + 1) % 500;
 
-	if(size < 50){
+	if(size < 500){
 		size++;
 	}
 }
 
 vector<double> VelocityTracker::getRecentVel() const{
-	vector<double> toReturn(recentDeltas[0].size());
+	vector<double> toReturn(recentDeltas[0].size(), 0.0);
 	
 	for(int i = 0; i < size; i++){
 		for(int j = 0; j < recentDeltas[i].size(); j++){
