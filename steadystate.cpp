@@ -92,7 +92,7 @@ int main(int ac, char* av[])
 		}
 
 		if(verbose){
-			cout<<"Launching "<<numThreads<<" threads."<<endl;
+			cout<<"Launching "<<numThreads<<" thread(s)."<<endl;
 		}
 		vector<int> randSeeds;
 		for(int i = 0; i < numThreads; i++){
