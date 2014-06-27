@@ -1334,12 +1334,15 @@ BOOST_AUTO_TEST_CASE( velTracker_rolls_over_properly2 ){
 	for(int i = 0; i < 50; i++){
 		vector<double> fakeDelta;
 		fakeDelta.push_back(double(i));
+		velTracker.reportDelta(fakeDelta);
 		sum += double(i);
 	}
 
 	sum /= 50.0;
 
 	vector<double> averaged = velTracker.getRecentVel();
+	cout<<"my avg "<<sum<<endl;
+	cout<<"velTracker avg "<<averaged[0]<<endl;
 	BOOST_CHECK(approxEqual(sum, averaged[0]));
 }
 

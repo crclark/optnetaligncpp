@@ -62,9 +62,10 @@ int main(int ac, char* av[])
 		//input time proportion.
 		//fast hill climb version
 		cout<<"starting main loop"<<endl;
-		
+		VelocityTracker velTracker;
 		int gensWithoutImprovement = 0;
 		int mutsDone = 0;
+		vector<double> initSpeed;
 		vector<double> bestFits(fitnessNames.size(),0.0);
 		for(int i = 0; i < generations; i++){
 			auto oldFit = aln->fitness;
@@ -76,6 +77,13 @@ int main(int ac, char* av[])
 					bestFits[q] = newFit[q];
 				}
 			}
+			
+			vector<double> deltaFit;
+			for(int j = 0; j < newFit.size(); j++){
+				deltaFit.push_back(newFit[j] - oldFit[j]);
+			}
+			velTracker.reportDelta(deltaFit);
+
 			if(!dominates(newFit,oldFit)){
 				gensWithoutImprovement++;
 			}
@@ -95,6 +103,33 @@ int main(int ac, char* av[])
 				    <<bestFits.at(j)<<endl;
 			}
             cout<<"EC is "<<((double)(aln->currConservedCount))/((double)(net1->edges.size()))<<endl;
+            cout<<"Velocity is ";
+            vector<double> currVel = velTracker.getRecentVel();
+            for(int j = 0; j < currVel.size(); j++){
+            	cout<<currVel[j]<<' ';
+            }
+            cout<<endl;
+            cout<<"Velocity-based optimum detected: ";
+            bool belowThresh = true;
+            if(i > 50){			
+				for(int j = 0; j < currVel.size(); j++){
+					belowThresh &= currVel[j] 
+	                                < 0.001*initSpeed[j];
+				}
+			}
+			else{
+				belowThresh = false;
+			}
+
+			if(i == 50){
+				initSpeed = velTracker.getRecentVel();
+			}
+			if(belowThresh){
+				cout<<"yes."<<endl;
+			}
+			else{
+				cout<<"no."<<endl;
+			}
             cout<<"Mutations performed: "<<mutsDone<<endl;
 			cout<<"Generation "<<i<<" complete."<<endl;
 		}
