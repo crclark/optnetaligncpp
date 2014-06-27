@@ -75,6 +75,9 @@ int main(int ac, char* av[])
 		
 		numAlnsGenerated.store(0);
 		
+		tbb::atomic<int> numNonDominatedGenerated;
+		numNonDominatedGenerated.store(0);
+
 		ArchiveMutexType archiveMutex;
 		Archive archive;
 
@@ -202,7 +205,10 @@ int main(int ac, char* av[])
                 //insert in archive
 				{
                     ArchiveMutexType::scoped_lock lock(archiveMutex);
-                    archive.insert(child);
+                    bool wasNonDominated = archive.insert(child);
+                    if(wasNonDominated){
+                    	numNonDominatedGenerated++;
+                    }
                     if(archive.nonDominated.size() > popsize){
                         archive.shrinkToSize(popsize);
                     }
@@ -215,6 +221,7 @@ int main(int ac, char* av[])
                                 verbose);
                     cout<<archive.nonDominated.size()<<" non-dominated."<<endl;
                     cout<<numAlnsGenerated<<" created total."<<endl;
+                    cout<<numNonDominatedGenerated<<" of created were non-dominated."<<endl;
                 }
                 
 				numAlnsGenerated++;

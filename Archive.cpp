@@ -9,7 +9,7 @@
 #include <random>
 
 //any aln given to Archive can be deleted at any time!
-void Archive::insert(Alignment* aln){
+bool Archive::insert(Alignment* aln){
 
 	set<Alignment*> dominatedByAln;
 
@@ -28,7 +28,7 @@ void Archive::insert(Alignment* aln){
 
 	if(alnIsDominated){
 		delete aln;
-		return;
+		return false;
 	}
 	else{
 		vector<Alignment*> newNonDominated;
@@ -43,7 +43,7 @@ void Archive::insert(Alignment* aln){
 		}
 		newNonDominated.push_back(aln);
 		nonDominated = newNonDominated;
-		return;
+		return true;
 	}
 }
 

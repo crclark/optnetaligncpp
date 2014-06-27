@@ -24,7 +24,7 @@ not needed.
 
 class Archive{
 public:
-	void insert(Alignment* aln);
+	bool insert(Alignment* aln);
 	void shrinkToSize(int size);
 	vector<Alignment*> nonDominated;
 };
