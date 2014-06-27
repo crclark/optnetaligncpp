@@ -28,7 +28,11 @@ tempubuntu:
 	icc temp.cpp Network.cpp blastinfo.cpp Alignment.cpp nsga-ii.cpp localSearch.cpp goc.cpp -o temp -prof-gen -prof-dir/home/connor/Drobox/profiled -tbb -ldl -Wall -std=c++11 -I /usr/include/ -L /usr/lib/x86_64-linux-gnu/ -lboost_filesystem -lboost_system -lboost_program_options -lboost_thread	
 
 steadystateMOGA:
-	icc steadystate.cpp Network.cpp blastinfo.cpp Alignment.cpp nsga-ii.cpp localSearch.cpp Archive.cpp goc.cpp -o steadystateMOGA -tbb -std=c++11 -I /usr/local/Cellar/boost/1.53.0/include/ -L /usr/local/Cellar/boost/1.53.0/lib -lboost_program_options-mt
+	icc steadystate.cpp Network.cpp blastinfo.cpp Alignment.cpp nsga-ii.cpp localSearch.cpp Archive.cpp goc.cpp -o steadystateMOGA -prof-use -ipo -prof-dir. -use-intel-optimized-headers -opt-mem-layout-trans=3 -opt-subscript-in-range -xHost -unroll-aggressive -O3 -tbb -std=c++11 -I /usr/local/Cellar/boost/1.53.0/include/ -L /usr/local/Cellar/boost/1.53.0/lib -lboost_program_options-mt
+
+steadystateMOGAprof:
+	icc steadystate.cpp Network.cpp blastinfo.cpp Alignment.cpp nsga-ii.cpp localSearch.cpp Archive.cpp goc.cpp -o steadystateMOGA -O2 -prof-gen -prof-dir. -tbb -std=c++11 -I /usr/local/Cellar/boost/1.53.0/include/ -L /usr/local/Cellar/boost/1.53.0/lib -lboost_program_options-mt
+
 
 steadystateMOGAUbuntu:
 	icc steadystate.cpp Network.cpp blastinfo.cpp Alignment.cpp nsga-ii.cpp localSearch.cpp Archive.cpp goc.cpp -o steadystateMOGA -g -tbb -std=c++11 -I /usr/include/ -L /usr/lib/x86_64-linux-gnu/ -lboost_program_options
