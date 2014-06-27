@@ -57,7 +57,8 @@ int main(int ac, char* av[])
 		//aln->greedyMatch(false);
 		aln->shuf(g,false,false,total);
 		aln->computeFitness(fitnessNames);
-		
+		steepestAscentHillClimb(aln, fitnessNames, nthreads, verbose);
+		/*
 		//todo: instead of just flipping obj, switch according to some
 		//input time proportion.
 		//fast hill climb version
@@ -134,6 +135,7 @@ int main(int ac, char* av[])
 			cout<<"Generation "<<i<<" complete."<<endl;
 		}
 		aln->save(outprefix + "_localTest.aln");
+		*/
 		
 	}
 	catch(exception& e){

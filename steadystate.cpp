@@ -191,6 +191,11 @@ int main(int ac, char* av[])
 					}
 				}
                 
+				//since proportional search can leave us somewhere suboptimal,
+				//do correctHillClimb thereafter
+				correctHillClimb(tg, child, total, 500*hillclimbiters,
+								 fitnessNames);
+
                 //insert in archive
 				{
                     ArchiveMutexType::scoped_lock lock(archiveMutex);

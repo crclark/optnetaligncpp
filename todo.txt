@@ -37,13 +37,9 @@ as the first population.
 try getting rid of edge set in Network class. Not really used anymore, except in slow ICS, which
 is used to initialize conserved count.
 
-ensure local search isn't trying swaps between two dummy nodes.
-
-try steepest-ascent hillclimb with multithreading
-
-steadystate getting stuck when non-dominated solutions drops to 1. Then it switches
-to all threads starting new alns from scratch until they chance upon one that dominates
-the current one, which is extremely unlikely.
+steadystate gets excellent diversity with proportional searching, but slows convergence a lot.
+Try picking objective randomly and always setting proportion to one. Then randomize how much
+time to do proportional search vs. non-decreasing hillclimb.
 
 REFACTORING
 -----------

@@ -14,8 +14,14 @@ void proportionalSearch(RandGenT& prng, Alignment* aln, bool total,
 	                    int iters, const vector<string>& fitnessNames,
 	                    int obj, double proportion);
 
+//this does a swap, computes the % change in each objective,
+//undoes the swap, and reports the length of the % change vector
+double swapNormalizedDelta(Alignment& aln, const vector<string>& 
+						   fitnessNames, node x, node y);
+
 void steepestAscentHillClimb(Alignment* aln, 
-							 const vector<string>& fitnessNames);
+							 vector<string>& fitnessNames,
+							 int nthreads, bool verbose);
 
 class VelocityTracker{
 public:

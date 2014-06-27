@@ -7,6 +7,8 @@
 #include <iostream>
 #include <vector>
 #include <string>
+#include <cmath>
+#include <thread>
 using namespace std;
 
 //instead of using the buggy hypotheticals, do an actual swap and
@@ -81,9 +83,123 @@ void proportionalSearch(RandGenT& prng, Alignment* aln, bool total,
 
 }
 
+//returns -1.0 if any objectives are worsened. 
+//Otherwise, returns magnitude of pct improvement vector
+double swapNormalizedDelta(Alignment& aln, const vector<string>& 
+						   fitnessNames, node x, node y){
+	vector<double> currFit = aln.fitness;
+
+	aln.doSwap(x,y);
+	aln.computeFitness(fitnessNames);
+	vector<double> newFit = aln.fitness;
+	aln.doSwap(x,y);
+	aln.computeFitness(fitnessNames);
+
+	vector<double> pctDeltas;
+
+	bool oneNeg = false;
+	for(int i = 0; i < newFit.size(); i++){
+		double pctDelt = (newFit[i] - currFit[i])/currFit[i];
+		pctDeltas.push_back(pctDelt);
+		if(pctDelt < 0){
+			oneNeg = true;
+		}
+	}
+
+	if(oneNeg){
+		return -1.0;
+	}
+	else{
+		double sumSq = 0.0;
+		for(int i = 0; i < pctDeltas.size(); i++){
+			sumSq += pctDeltas[i]*pctDeltas[i];
+		}
+
+		return sqrt(sumSq);
+	}
+}
+
 void steepestAscentHillClimb(Alignment* aln, 
-							 const vector<string>& fitnessNames){
-	
+							 vector<string>& fitnessNames,
+							 int nthreads, bool verbose){
+
+	vector<node> bestXs(nthreads,-1);
+	vector<node> bestYs(nthreads,-1);
+	vector<double> bestDeltas(nthreads,-1.0);
+
+	auto worker = [&](int tid, int xmin, int xmax, int ymin, int ymax){
+		Alignment localAln(*aln);
+		node bestX = -1;
+		node bestY = -1;
+		double bestDelta = -1.0;
+
+		for(node x = xmin; x < xmax; x++){
+			for(node y = ymin; y < ymax; y++){
+				double newDelta = 
+					swapNormalizedDelta(localAln, fitnessNames,
+										x,y);
+				if(newDelta > bestDelta){
+					bestDelta = newDelta;
+					bestX = x;
+					bestY = y;
+				}
+			}
+		}
+
+		bestXs[tid] = bestX;
+		bestYs[tid] = bestY;
+		bestDeltas[tid] = bestDelta;
+	};
+
+	bool done = false;
+	int numiters = 0;
+	while(!done){
+		//launch worker threads
+		int grainsize = aln->actualSize / nthreads;
+		vector<thread> ts;
+		for(int tid = 0; tid < nthreads; tid++){
+			int tminx = tid*grainsize;
+			int tmaxx;
+			if(tid == nthreads-1){
+				tmaxx = aln->actualSize;
+			}
+			else{
+				tmaxx = tminx + grainsize;
+			}
+			ts.push_back(thread(worker,tid,tminx,tmaxx,0,aln->aln.size()));
+		}
+
+		//join threads
+		for(int i = 0; i < nthreads; i++){
+			ts.at(i).join();
+		}
+
+		//find absolute best swap and commit to it
+		node bestX = -1;
+		node bestY = -1;
+		double bestDelt = -1.0;
+
+		for(int i = 0; i < bestDeltas.size(); i++){
+			if(bestDeltas.at(i) > bestDelt){
+				bestDelt = bestDeltas.at(i);
+				bestX = bestXs.at(i);
+				bestY = bestYs.at(i);
+			}
+		}
+
+		if(bestDelt <= 0.0){
+			done = true;
+		}
+		else{
+			aln->doSwap(bestX, bestY);
+			aln->computeFitness(fitnessNames);
+			if(verbose){
+				reportStats({aln}, fitnessNames, true);
+				cout<<(++numiters)<<" swaps performed."<<endl;
+			}
+		}
+
+	}
 }
 
 VelocityTracker::VelocityTracker(){
