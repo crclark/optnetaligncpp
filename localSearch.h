@@ -23,6 +23,10 @@ void steepestAscentHillClimb(Alignment* aln,
 							 vector<string>& fitnessNames,
 							 int nthreads, bool verbose);
 
+void potentialBasedSearch(RandGenT& prng, Alignment* aln, bool total,
+						  int iters, const vector<string>& fitnessNames,
+						  bool bit);
+
 class VelocityTracker{
 public:
 	VelocityTracker();

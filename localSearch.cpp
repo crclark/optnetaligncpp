@@ -9,6 +9,7 @@
 #include <string>
 #include <cmath>
 #include <thread>
+#include <algorithm>
 using namespace std;
 
 //instead of using the buggy hypotheticals, do an actual swap and
@@ -200,6 +201,101 @@ void steepestAscentHillClimb(Alignment* aln,
 		}
 
 	}
+}
+
+void potentialBasedSearch(RandGenT& prng, Alignment* aln, bool total,
+						  int iters, const vector<string>& fitnessNames,
+						  bool bit){
+	//set up whether to use goc or bit
+	if(!aln->bitscores && !aln->gocs){
+		cout<<"Error: potentialBasedSearch requires bitscores or GOC"<<endl;
+	}
+
+	auto dict = bit ? aln->bitscores : aln->gocs;
+
+	//memoize the max bitscore/goc each node could have
+	vector<double> maxBit(aln->actualSize,0.0);
+
+	for(int i = 0; i < maxBit.size(); i++){
+		if(dict->count(i)){
+			double best = 0.0;
+			for(auto pair : dict->at(i)){
+				if(pair.second > best){
+					best = pair.second;
+				}
+			}
+			maxBit.at(i) = best;
+		}
+	}
+
+	for(int i = 0; i < iters; i++){
+
+		//get current conserved count and bitscore
+		//for each aligned pair
+		//todo: lots of wasted work here between iters
+		vector<double> currConservedCounts(aln->actualSize);
+		vector<double> currBits(aln->actualSize,0.0);
+
+		for(int x = 0; x < aln->actualSize; x++){
+			double currConserved 
+				= aln->conservedCount(x,aln->aln[x],aln->alnMask[x],-1);
+			currConservedCounts.at(x) = currConserved;
+			if(dict->count(x) && dict->at(x).count(aln->aln[x])){
+				currBits.at(x) = dict->at(x).at(aln->aln[x]);
+			}
+		}
+
+		vector<node> nodes(aln->actualSize);
+		for(int j = 0; j < aln->actualSize; j++){
+			nodes.at(j) = j;
+		}
+
+		vector<double> potentials(aln->actualSize);
+
+		for(int j = 0; j < potentials.size(); j++){
+			double ecPotent = 1.0 - (currConservedCounts.at(j)/aln->net1->degree(j));
+			double bitPotent = 1.0 - (currBits.at(j)/maxBit.at(j));
+			potentials.at(j) = sqrt(ecPotent*ecPotent + bitPotent*bitPotent);
+		}
+
+		//sort nodes by potential
+		sort(nodes.begin(), nodes.end(), [&](node x, node y){
+			return potentials.at(x) > potentials.at(y);
+		});
+
+		bool goodSwap = false;
+
+		uniform_int_distribution<int> topHalf(0,potentials.size()/2 - 1);
+
+		while(!goodSwap){
+			node x = topHalf(prng);
+			node y = x;
+			while(y == x){
+				y = topHalf(prng);
+			}
+			vector<double> currFit = aln->fitness;
+			aln->doSwap(x,y);
+			aln->computeFitness(fitnessNames);
+			vector<double> newFit = aln->fitness;
+
+			bool improved = true;
+			for(int j = 0; j < newFit.size(); j++){
+				if(newFit.at(j) < currFit.at(j)){
+					improved = false;
+				}
+			}
+
+			if(!improved){
+				aln->doSwap(x,y);
+				aln->computeFitness(fitnessNames);
+			}
+			else{
+				goodSwap = true;
+			}
+		}
+
+	}
+
 }
 
 VelocityTracker::VelocityTracker(){

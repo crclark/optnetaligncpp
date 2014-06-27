@@ -57,8 +57,8 @@ int main(int ac, char* av[])
 		//aln->greedyMatch(false);
 		aln->shuf(g,false,false,total);
 		aln->computeFitness(fitnessNames);
-		steepestAscentHillClimb(aln, fitnessNames, nthreads, verbose);
-		/*
+		//steepestAscentHillClimb(aln, fitnessNames, nthreads, verbose);
+		
 		//todo: instead of just flipping obj, switch according to some
 		//input time proportion.
 		//fast hill climb version
@@ -70,8 +70,10 @@ int main(int ac, char* av[])
 		vector<double> bestFits(fitnessNames.size(),0.0);
 		for(int i = 0; i < generations; i++){
 			auto oldFit = aln->fitness;
-			correctHillClimb(g, aln, total,
-               500, fitnessNames);	
+		//	correctHillClimb(g, aln, total,
+          //     500, fitnessNames);	
+			
+			potentialBasedSearch(g, aln, total, 500, fitnessNames, false);
 			auto newFit = aln->fitness;
 			for(int q = 0; q < newFit.size(); q++){
 				if(newFit[q] > bestFits[q]){
@@ -135,7 +137,7 @@ int main(int ac, char* av[])
 			cout<<"Generation "<<i<<" complete."<<endl;
 		}
 		aln->save(outprefix + "_localTest.aln");
-		*/
+		
 		
 	}
 	catch(exception& e){
