@@ -76,7 +76,6 @@ int main(int ac, char* av[])
 		numAlnsGenerated.store(0);
 		
 		ArchiveMutexType archiveMutex;
-		cout<<"starting archive"<<endl;
 		Archive archive;
 
 
@@ -96,7 +95,6 @@ int main(int ac, char* av[])
 			cout<<"Launching "<<numThreads<<" threads."<<endl;
 		}
 		vector<int> randSeeds;
-		cout<<"setting up seeds"<<endl;
 		for(int i = 0; i < numThreads; i++){
 			randSeeds.push_back(g());
 		}
@@ -108,7 +106,6 @@ int main(int ac, char* av[])
 
 				//grab 2 existing alns from archive.
 				//if less than 2 in archive, just create a new one.
-				cout<<"fetching alns from archive"<<endl;
 				Alignment* par1;
 				Alignment* par2;
 
@@ -144,7 +141,6 @@ int main(int ac, char* av[])
 
 				Alignment* child;
 
-				cout<<"setting up child"<<endl;
 				//do crossover or mutation
 				if(prob(tg) < cxrate){
 					child = new Alignment(tg, cxswappb, *par1, *par2, total);
@@ -157,33 +153,26 @@ int main(int ac, char* av[])
 				//now, the local search...
 				//Should we do proportional or standard?
 				//And what should our stopping criterion be?
-				cout<<"setting up veltracker"<<endl;
 				VelocityTracker veltracker;
 				child->computeFitness(fitnessNames);
 				vector<double> initSpeed;
-				
-				cout<<"starting main loop"<<endl;
+
 				for(int i = 0; i < hillclimbiters; i++){
-					cout<<"iter "<<i<<endl;
 					vector<double> currFit = child->fitness;
 
 					//todo: do proportional hillclimb instead
-					cout<<"calling hillclimb"<<endl;
 					correctHillClimb(tg, child, total, 500, fitnessNames);
-					cout<<"finished hillclimb"<<endl;
 					vector<double> newFit = child->fitness;
 
 					vector<double> delta(newFit.size(), 0.0);
 
-					cout<<"computing delta"<<endl;
+
 					for(int j = 0; j < delta.size(); j++){
 						delta[j] = newFit[j] - currFit[j];
 					}
-					cout<<"reporting delta"<<endl;
 					veltracker.reportDelta(delta);
 
 					if(i == 50){
-						cout<<"setting initSpeed"<<endl;
 						initSpeed = veltracker.getRecentVel();
 					}
 
@@ -202,7 +191,6 @@ int main(int ac, char* av[])
 				}
                 
                 //insert in archive
-				cout<<"adding to archive"<<endl;
 				{
                     ArchiveMutexType::scoped_lock lock(archiveMutex);
                     archive.insert(child);
@@ -211,10 +199,12 @@ int main(int ac, char* av[])
                     }
                 }
                 
-                if(numAlnsGenerated % 500 == 0){
+                if(numAlnsGenerated % 100 == 0 && verbose){
                     ArchiveMutexType::scoped_lock lock(archiveMutex);
                     reportStats(archive.nonDominated, fitnessNames,
-                                total);
+                                verbose);
+                    cout<<archive.nonDominated.size()<<" non-dominated."<<endl;
+                    cout<<numAlnsGenerated<<" created total."<<endl;
                 }
                 
 				numAlnsGenerated++;
@@ -233,7 +223,7 @@ int main(int ac, char* av[])
         
         if(verbose){
             cout<<"Found "<<archive.nonDominated.size()
-                <<"non-dominated alignments."<<endl;
+                <<" non-dominated alignments."<<endl;
             cout<<"Writing to disk!"<<endl;
         }
         
