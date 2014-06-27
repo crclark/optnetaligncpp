@@ -13,6 +13,7 @@
 #include <sstream>
 #include <unordered_set>
 #include <limits>
+#include <queue>
 using namespace std;
 
 //todo: note these assume net2 is larger. Ensure that when loading nets.
@@ -344,6 +345,24 @@ void Alignment::greedyMatch(bool bit){
 
 	if(gocs)
 		currGOC = sumGOC();
+}
+
+void Alignment::seedExtend(bool bit){
+	//crash if called without data available
+	if(bit && bitscores == nullptr){
+		assert(1==2);
+	}
+
+	if(!bit && gocs == nullptr){
+		assert(1==2);
+	}
+
+	//for priority queue, want to compare degree difference and
+	//bit/goc. do degree diff as small degree/large degree so that
+	//the objective needs to be maximized.
+
+	//maybe make degree difference objective optional for ease of
+	//comparison to previous seed-extend methods
 }
 
 void Alignment::shuf(RandGenT& prng, bool uniformsize, 
