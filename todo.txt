@@ -37,11 +37,9 @@ as the first population.
 try getting rid of edge set in Network class. Not really used anymore, except in slow ICS, which
 is used to initialize conserved count.
 
-steadystate gets excellent diversity with proportional searching, but slows convergence a lot.
-Try picking objective randomly and always setting proportion to one. Then randomize how much
-time to do proportional search vs. non-decreasing hillclimb.
+experiment with how often to do proportional search
 
-track what % of alns created are non-dominated upon creation. Good performance metric.
+report alignment diversity in alignment space
 
 REFACTORING
 -----------

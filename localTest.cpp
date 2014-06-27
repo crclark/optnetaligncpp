@@ -70,10 +70,10 @@ int main(int ac, char* av[])
 		vector<double> bestFits(fitnessNames.size(),0.0);
 		for(int i = 0; i < generations; i++){
 			auto oldFit = aln->fitness;
-		//	correctHillClimb(g, aln, total,
-          //     500, fitnessNames);	
+			correctHillClimb(g, aln, total,
+               500, fitnessNames);	
 			
-			potentialBasedSearch(g, aln, total, 500, fitnessNames, false);
+			//potentialBasedSearch(g, aln, total, 500, fitnessNames, false);
 			auto newFit = aln->fitness;
 			for(int q = 0; q < newFit.size(); q++){
 				if(newFit[q] > bestFits[q]){

@@ -251,6 +251,9 @@ int main(int ac, char* av[])
 			cout<<'\t'<<cxswappb;
 			cout<<'\t'<<tournsel;
 			cout<<'\t'<<uniformsize;
+			cout<<'\t'<<cxrate;
+			cout<<'\t'<<hillclimbiters;
+			cout<<'\t'<<(double(numNonDominatedGenerated)/double(numAlnsGenerated));
 			reportStats(archive.nonDominated,fitnessNames,false);
 			cout<<endl;
 		}
