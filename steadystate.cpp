@@ -126,25 +126,27 @@ int main(int ac, char* av[])
 				Alignment par1(net1, net2, bitPtr, gocPtr);
 				Alignment par2(net1, net2, bitPtr, gocPtr);
 
-				bool foundAln = true;
+				bool foundAln = false;
 				bool didCx = false;
 				bool didPropSearch = false;
 				//lock and get from archive, aborting if archive too small
-				{
-					ArchiveMutexType::scoped_lock lock(archiveMutex);
-					int archsize = archive.nonDominated.size();
-					if(archsize == 0){
-						foundAln = false;
-					}
-					else{
-						uniform_int_distribution<int> r(0, archsize-1);
-						int i1 = r(tg);
-						int i2 = r(tg);
+				if(numAlnsGenerated > 50)
+					{
+						ArchiveMutexType::scoped_lock lock(archiveMutex);
+						int archsize = archive.nonDominated.size();
+						if(archsize == 0){
+							foundAln = false;
+						}
+						else{
+							uniform_int_distribution<int> r(0, archsize-1);
+							int i1 = r(tg);
+							int i2 = r(tg);
 
-						par1 = Alignment(*archive.nonDominated.at(i1));
-						par2 = Alignment(*archive.nonDominated.at(i2));
+							par1 = Alignment(*archive.nonDominated.at(i1));
+							par2 = Alignment(*archive.nonDominated.at(i2));
+							foundAln = true;
+						}
 					}
-				}
 
 				//if we didn't get 2 alns from archive, init with random ones
 				if(!foundAln){
@@ -164,9 +166,7 @@ int main(int ac, char* av[])
 					child->mutate(tg, mutswappb, total);
 				}
 
-				//now, the local search...
-				//Should we do proportional or standard?
-				//And what should our stopping criterion be?
+				//now, the local search
 				VelocityTracker veltracker;
 				child->computeFitness(fitnessNames);
 				vector<double> initSpeed;
@@ -178,48 +178,14 @@ int main(int ac, char* av[])
 					didPropSearch = true;
 				}
 
-				for(int i = 0; i < hillclimbiters; i++){
-					vector<double> currFit = child->fitness;
-					
-					if(didPropSearch){
-						//todo: used to decide whether to do proportional
-						//or standard hillclimb on each hillclimbiter.
-						//Decide whether to keep that old behavior or
-						//switch to this new behavior.
-						proportionalSearch(tg, child, total,
-	                    	1, fitnessNames,
-	                    	rObj, 0.95);
-					}
-					else{
-					//note: 1 iter of proportionalSearch = 500 iters of hillclimb
-					correctHillClimb(tg, child, total, 500, fitnessNames);
-					}
-					vector<double> newFit = child->fitness;
-
-					vector<double> delta(newFit.size(), 0.0);
-
-
-					for(int j = 0; j < delta.size(); j++){
-						delta[j] = newFit[j] - currFit[j];
-					}
-					veltracker.reportDelta(delta);
-
-					if(i == 500){
-						initSpeed = veltracker.getRecentVel();
-					}
-
-					if(i > 5000 && i % 500 == 0){
-						bool belowThresh = true;
-						vector<double> currAvgVel = veltracker.getRecentVel();
-						for(int j = 0; j < currAvgVel.size(); j++){
-							belowThresh &= currAvgVel[j] 
-                                            < 0.01*initSpeed[j];
-						}
-                        
-                        if(belowThresh){
-                            break;
-                        }
-					}
+				if(didPropSearch){
+					proportionalSearch(tg, child, total,
+                    	hillclimbiters, fitnessNames,
+                    	rObj, 0.95);
+				}
+				else{
+				//note: 1 iter of proportionalSearch = 500 iters of hillclimb
+				correctHillClimb(tg, child, total, 500*hillclimbiters, fitnessNames);
 				}
                 
 				//since proportional search can leave us somewhere suboptimal,
@@ -246,7 +212,7 @@ int main(int ac, char* av[])
                 }
                 
 
-                if(numAlnsGenerated % 100 == 0 && verbose){
+                if(numAlnsGenerated >= 10 && numAlnsGenerated % 10 == 0 && verbose){
                     ArchiveMutexType::scoped_lock lock(archiveMutex);
                     reportStats(archive.nonDominated, fitnessNames,
                                 verbose);
