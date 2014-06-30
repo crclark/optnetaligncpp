@@ -36,7 +36,8 @@ vector<Alignment*> binSel(RandGenT& prng,
 	                      const vector<Alignment*>& in, unsigned int tournSize);
 
 void reportStats(const vector<Alignment*>& in,
-                 const vector<string> fitnessNames, bool verbose);
+                 const vector<string> fitnessNames, bool verbose,
+                 bool alnDiversity);
 
 //returns 0 if the two alignments have no pairs in common, and 1.0
 //if the smaller alignment is a perfect subalignment of the other.

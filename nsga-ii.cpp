@@ -175,7 +175,7 @@ vector<Alignment*> binSel(RandGenT& prng,
 
 void reportStats(const vector<Alignment*>& in, 
 	             const vector<string> fitnessNames, 
-	             bool verbose){
+	             bool verbose, bool alnDiversity){
 
 	for(int i =0; i < in[0]->fitness.size(); i++){
 		double sum = 0.0;
@@ -211,7 +211,7 @@ void reportStats(const vector<Alignment*>& in,
 	}
 
 	//check on pairwise alignment similarity
-	if(verbose){
+	if(verbose && alnDiversity){
 		double simSum = 0.0;
 		double minSim = 100.0;
 		double maxSim = 0.0;
