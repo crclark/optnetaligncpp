@@ -78,6 +78,12 @@ int main(int ac, char* av[])
 		tbb::atomic<int> numNonDominatedGenerated;
 		numNonDominatedGenerated.store(0);
 
+		tbb::atomic<int> nonDomPropSearch;
+		nonDomPropSearch.store(0);
+
+		tbb::atominc<int> nonDomCx;
+		nonDomCx.store(0);
+
 		ArchiveMutexType archiveMutex;
 		Archive archive;
 
@@ -110,11 +116,13 @@ int main(int ac, char* av[])
 
 				//grab 2 existing alns from archive.
 				//if less than 2 in archive, just create a new one.
+				//todo: these constructors waste time except for the first iter
 				Alignment par1(net1, net2, bitPtr, gocPtr);
 				Alignment par2(net1, net2, bitPtr, gocPtr);
 
 				bool foundAln = true;
-
+				bool didCx = false;
+				bool didPropSearch = false;
 				//lock and get from archive, aborting if archive too small
 				{
 					ArchiveMutexType::scoped_lock lock(archiveMutex);
@@ -143,6 +151,7 @@ int main(int ac, char* av[])
 				//do crossover or mutation
 				if(prob(tg) < cxrate){
 					child = new Alignment(tg, cxswappb, par1, par2, total);
+					didCx = true;
 				}
 				else{
 					child = new Alignment(par1);
@@ -156,11 +165,15 @@ int main(int ac, char* av[])
 				child->computeFitness(fitnessNames);
 				vector<double> initSpeed;
 				//for proportional search, decide which way to search
-					int rObj = randObj(tg);
+				int rObj = randObj(tg);
+				if(prob(tg) < 0.5){ //todo: make this probability a param
+					didPropSearch = true;
+				}
+
 				for(int i = 0; i < hillclimbiters; i++){
 					vector<double> currFit = child->fitness;
 					
-					if(prob(tg) < 0.5){
+					if(didPropSearch){
 						proportionalSearch(tg, child, total,
 	                    	1, fitnessNames,
 	                    	rObj, 0.95);
@@ -208,6 +221,12 @@ int main(int ac, char* av[])
                     bool wasNonDominated = archive.insert(child);
                     if(wasNonDominated){
                     	numNonDominatedGenerated++;
+                    	if(didPropSearch){
+                    		nonDomPropSearch++;
+                    	}
+                    	if(didCx){
+                    		nonDomCx++;
+                    	}
                     }
                     if(archive.nonDominated.size() > popsize){
                         archive.shrinkToSize(popsize);
@@ -215,13 +234,15 @@ int main(int ac, char* av[])
                 }
                 
 
-                if(numAlnsGenerated % 100 == 0 && verbose){
+                if(numAlnsGenerated % 10 == 0 && verbose){
                     ArchiveMutexType::scoped_lock lock(archiveMutex);
                     reportStats(archive.nonDominated, fitnessNames,
                                 verbose);
                     cout<<archive.nonDominated.size()<<" non-dominated."<<endl;
                     cout<<numAlnsGenerated<<" created total."<<endl;
                     cout<<numNonDominatedGenerated<<" of created were non-dominated."<<endl;
+                    cout<<nonDomCx<<" of non-dominated were made with crossover."<<endl;
+                    cout<<nonDomPropSearch<<" of non-dominated were made with proportionalSearch"<<endl;
                 }
                 
 				numAlnsGenerated++;
