@@ -173,7 +173,7 @@ int main(int ac, char* av[])
 				//for proportional search, decide which way to search
 				int rObj = randObj(tg);
 
-				//now prefering propsearch when seeding. See if that helps.
+
 				if(!foundAln || prob(tg) < 0.01){ //todo: make this probability a param
 					didPropSearch = true;
 				}
@@ -181,7 +181,7 @@ int main(int ac, char* av[])
 				if(didPropSearch){
 					proportionalSearch(tg, child, total,
                     	hillclimbiters, fitnessNames,
-                    	rObj, 0.95);
+                    	rObj, 1.0);
 				}
 				else{
 				//note: 1 iter of proportionalSearch = 500 iters of hillclimb
@@ -211,7 +211,7 @@ int main(int ac, char* av[])
                     }
                 }
                 
-
+                //report stats if verbose mode is on
                 if(numAlnsGenerated >= 10 && numAlnsGenerated % 10 == 0 && verbose){
                     ArchiveMutexType::scoped_lock lock(archiveMutex);
                     reportStats(archive.nonDominated, fitnessNames,
