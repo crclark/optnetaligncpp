@@ -210,6 +210,35 @@ void reportStats(const vector<Alignment*>& in,
 		}
 	}
 
+	//check on pairwise alignment similarity
+	if(verbose){
+		double simSum = 0.0;
+		double minSim = 100.0;
+		double maxSim = 0.0;
+		for(auto p : in){
+			for(auto q : in){
+				if(p == q){
+					continue;
+				}
+				else{
+					double sim = alnSimilarity(p,q);
+					if(sim < minSim){
+						minSim = sim;
+					}
+					if(sim > maxSim){
+						maxSim = sim;
+					}
+					simSum += sim;
+				}
+			}
+		}
+
+		cout<<"Mean pairwise aln similarity: "<<(simSum/double(in.size()))<<endl;
+		cout<<"Max pairwise similarity: "<<maxSim<<endl;
+		cout<<"Min pairwise similarity: "<<minSim<<endl;
+	}
+
+
 }
 
 double alnSimilarity(const Alignment* aln1, const Alignment* aln2){

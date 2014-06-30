@@ -41,6 +41,10 @@ experiment with how often to do proportional search
 
 report alignment diversity in alignment space
 
+separate reporting of stats from target objectives better. In other words, report objectives
+that we aren't optimizing as well as the ones we are. At least optionally. Maybe put an
+asterisk next to the ones actually being optimized.
+
 REFACTORING
 -----------
 clean up the Makefile. Currently hideous.

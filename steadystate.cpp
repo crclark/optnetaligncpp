@@ -172,7 +172,7 @@ int main(int ac, char* av[])
 				vector<double> initSpeed;
 				//for proportional search, decide which way to search
 				int rObj = randObj(tg);
-				if(prob(tg) < 0.5){ //todo: make this probability a param
+				if(prob(tg) < 0.01){ //todo: make this probability a param
 					didPropSearch = true;
 				}
 
@@ -244,17 +244,17 @@ int main(int ac, char* av[])
                 }
                 
 
-                if(numAlnsGenerated % 10 == 0 && verbose){
+                if(numAlnsGenerated % 100 == 0 && verbose){
                     ArchiveMutexType::scoped_lock lock(archiveMutex);
                     reportStats(archive.nonDominated, fitnessNames,
                                 verbose);
                     cout<<archive.nonDominated.size()<<" non-dominated."<<endl;
                     cout<<numAlnsGenerated<<" created total."<<endl;
                     cout<<numPropSearch<<" created with proportionalSearch."<<endl;
-                    cout<<numCx<<"created with crossover."<<endl;
+                    cout<<numCx<<" created with crossover."<<endl;
                     cout<<numNonDominatedGenerated<<" of created were non-dominated."<<endl;
                     cout<<nonDomCx<<" of non-dominated were made with crossover."<<endl;
-                    cout<<nonDomPropSearch<<" of non-dominated were made with proportionalSearch"<<endl;
+                    cout<<nonDomPropSearch<<" of non-dominated were made with proportionalSearch."<<endl;
                 }
                 
 				numAlnsGenerated++;
