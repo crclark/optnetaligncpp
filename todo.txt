@@ -43,8 +43,7 @@ separate reporting of stats from target objectives better. In other words, repor
 that we aren't optimizing as well as the ones we are. At least optionally. Maybe put an
 asterisk next to the ones actually being optimized.
 
-try to set cxrate and propSearchpb equal to their historical success rate on each iter.
-Maybe make mutrate separate (non-mutually-exclusive) with cxrate and do the same there.
+test dynamic adjustment of params
 
 REFACTORING
 -----------
