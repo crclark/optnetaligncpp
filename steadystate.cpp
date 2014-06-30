@@ -174,6 +174,10 @@ int main(int ac, char* av[])
 					vector<double> currFit = child->fitness;
 					
 					if(didPropSearch){
+						//todo: used to decide whether to do proportional
+						//or standard hillclimb on each hillclimbiter.
+						//Decide whether to keep that old behavior or
+						//switch to this new behavior.
 						proportionalSearch(tg, child, total,
 	                    	1, fitnessNames,
 	                    	rObj, 0.95);
@@ -275,6 +279,8 @@ int main(int ac, char* av[])
 			cout<<'\t'<<cxrate;
 			cout<<'\t'<<hillclimbiters;
 			cout<<'\t'<<(double(numNonDominatedGenerated)/double(numAlnsGenerated));
+			cout<<'\t'<<double(nonDomPropSearch)/double(numNonDominatedGenerated);
+			cout<<'\t'<<double(nonDomCx)/double(numNonDominatedGenerated);
 			reportStats(archive.nonDominated,fitnessNames,false);
 			cout<<endl;
 		}
