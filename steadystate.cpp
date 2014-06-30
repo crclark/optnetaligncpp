@@ -172,7 +172,9 @@ int main(int ac, char* av[])
 				vector<double> initSpeed;
 				//for proportional search, decide which way to search
 				int rObj = randObj(tg);
-				if(prob(tg) < 0.01){ //todo: make this probability a param
+
+				//now prefering propsearch when seeding. See if that helps.
+				if(!foundAln || prob(tg) < 0.01){ //todo: make this probability a param
 					didPropSearch = true;
 				}
 
