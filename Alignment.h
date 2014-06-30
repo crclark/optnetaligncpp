@@ -61,12 +61,14 @@ public:
 	vector<double> fitnessNormalized; //stores fitnesses normalized so
 	                                  //that crowded comparison works right.
 	int actualSize; //number of nodes in net1
+
+	//NSGA-II helper data. Set and modified by NSGA-II functions.
 	int domRank; //which front this aln is in. 0 is best, 1 is 2nd best, etc.
 	int numThatDominate; //how many others in the population dominate this one.
 	vector<Alignment*> dominated;//set of alns this aln dominates.
 	double crowdDist;
 
-	//new fitness system
+	//framework for doing delta updates of bitscore sum
 	double currBitscore;
 	const BLASTDict* bitscores;
 	void updateBitscore(node n1, node n2old, node n2new, bool oldMask,
@@ -90,8 +92,12 @@ public:
 	double fastICSDenominator() const;
 	double fastICSNumerator() const;
 	double fastICS() const;
+
+	//pointers to our networks
 	const Network* net1;
 	const Network* net2;
+
+	//functions for incrementally updating topological fitness function data
 	int currConservedCount; //stores current number of conserved edges. Actual number.
 	                        //does not double count.
 	int conservedCount(node n1, node n2, bool mask, node ignore) const;
@@ -101,7 +107,8 @@ public:
 		            bool oldMask, bool newMask, node ignore) const;
 	void initConservedCount(node n1, node n2, bool mask);
 
-	//stuff for computing the denominator of ICS quickly
+	//tracks how many edges are in the subgraph of net2 induced on the nodes
+	//of net2 we have mapped to.
 	int currInducedCount;
 	int inducedCount(node n2, node ignore) const;
 };
