@@ -195,7 +195,7 @@ void steepestAscentHillClimb(Alignment* aln,
 			aln->doSwap(bestX, bestY);
 			aln->computeFitness(fitnessNames);
 			if(verbose){
-				reportStats({aln}, fitnessNames, true);
+				reportStats({aln}, fitnessNames, true, false);
 				cout<<(++numiters)<<" swaps performed."<<endl;
 			}
 		}

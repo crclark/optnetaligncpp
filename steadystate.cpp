@@ -43,6 +43,8 @@ int main(int ac, char* av[])
 		const float mutswappb = vm.count("mutswappb")  
 		                             ? vm["mutswappb"].as<float>()
 		                             : 0.005;
+		const float mutrate = vm.count("mutrate") ? vm["mutrate"].as<float>()
+												  : 0.1;
 		const float cxswappb = vm.count("cxswappb") ? vm["cxswappb"].as<float>()
 		                                            : 0.1;
 		const float cxrate = vm.count("cxrate") ? vm["cxrate"].as<float>() : 0.7;
@@ -53,6 +55,7 @@ int main(int ac, char* av[])
 		const bool smallstart = vm.count("smallstart");
 		const bool finalstats = vm.count("finalstats");
         const bool nooutput = vm.count("nooutput");
+        const bool dynparams = vm.count("dynparams");
 		const string outprefix = vm["outprefix"].as<string>();
 
 		const BLASTDict* bitPtr = vm.count("bitscores") ? &bitscores : nullptr;
@@ -81,6 +84,9 @@ int main(int ac, char* av[])
 		tbb::atomic<int> numCx;
 		numCx.store(0);
 
+		tbb::atomic<int> numMut;
+		numMut.store(0);
+
 		tbb::atomic<int> numNonDominatedGenerated;
 		numNonDominatedGenerated.store(0);
 
@@ -89,6 +95,9 @@ int main(int ac, char* av[])
 
 		tbb::atomic<int> nonDomCx;
 		nonDomCx.store(0);
+
+		tbb::atomic<int> nonDomMut;
+		nonDomMut.store(0);
 
 		ArchiveMutexType archiveMutex;
 		Archive archive;
@@ -120,6 +129,39 @@ int main(int ac, char* av[])
 			uniform_int_distribution<int> randObj(0, fitnessNames.size()-1);
 			while(numAlnsGenerated < popsize*generations){
 
+				double tmutrate, tcxrate, tpropsrchrate;
+
+				//if dynparams is set and we have enough data,
+				//set dynamic parameters
+				//todo: think about doing a more sophisticated
+				//method of setting these.
+				if(dynparams && numAlnsGenerated > 100){
+					if(numMut > 0){
+						tmutrate = double(nonDomMut)/double(numMut);
+					}
+					else{
+						tmutrate = mutrate;
+					}
+
+					if(numCx > 0){
+						tcxrate = double(nonDomCx)/double(numCx);
+					}
+					else{
+						tcxrate = cxrate;
+					}
+
+					if(numPropSearch > 0){
+						tpropsrchrate = double(nonDomPropSearch)/double(numPropSearch);
+					}
+					else{
+						tpropsrchrate = 0.1;
+					}
+				}
+				else{
+					tmutrate = mutrate;
+					tcxrate = cxrate;
+					tpropsrchrate = 0.1;
+				}
 				//grab 2 existing alns from archive.
 				//if less than 2 in archive, just create a new one.
 				//todo: these constructors waste time except for the first iter
@@ -128,25 +170,26 @@ int main(int ac, char* av[])
 
 				bool foundAln = false;
 				bool didCx = false;
+				bool didMut = false;
 				bool didPropSearch = false;
 				//lock and get from archive, aborting if archive too small
 				if(numAlnsGenerated > 50)
-					{
-						ArchiveMutexType::scoped_lock lock(archiveMutex);
-						int archsize = archive.nonDominated.size();
-						if(archsize == 0){
-							foundAln = false;
-						}
-						else{
-							uniform_int_distribution<int> r(0, archsize-1);
-							int i1 = r(tg);
-							int i2 = r(tg);
-
-							par1 = Alignment(*archive.nonDominated.at(i1));
-							par2 = Alignment(*archive.nonDominated.at(i2));
-							foundAln = true;
-						}
+				{
+					ArchiveMutexType::scoped_lock lock(archiveMutex);
+					int archsize = archive.nonDominated.size();
+					if(archsize == 0){
+						foundAln = false;
 					}
+					else{
+						uniform_int_distribution<int> r(0, archsize-1);
+						int i1 = r(tg);
+						int i2 = r(tg);
+
+						par1 = Alignment(*archive.nonDominated.at(i1));
+						par2 = Alignment(*archive.nonDominated.at(i2));
+						foundAln = true;
+					}
+				}
 
 				//if we didn't get 2 alns from archive, init with random ones
 				if(!foundAln){
@@ -155,15 +198,16 @@ int main(int ac, char* av[])
 				}
 
 				Alignment* child;
+				child = new Alignment(par1);
 
 				//do crossover or mutation
-				if(prob(tg) < cxrate){
+				if(prob(tg) < tcxrate){
 					child = new Alignment(tg, cxswappb, par1, par2, total);
 					didCx = true;
 				}
-				else{
-					child = new Alignment(par1);
+				if(prob(tg) < tmutrate){
 					child->mutate(tg, mutswappb, total);
+					didMut = true;
 				}
 
 				//now, the local search
@@ -174,7 +218,7 @@ int main(int ac, char* av[])
 				int rObj = randObj(tg);
 
 
-				if(!foundAln || prob(tg) < 0.01){ //todo: make this probability a param
+				if(!foundAln || prob(tg) < tpropsrchrate){ 
 					didPropSearch = true;
 				}
 
@@ -189,7 +233,7 @@ int main(int ac, char* av[])
 				}
                 
 				//since proportional search can leave us somewhere suboptimal,
-				//do correctHillClimb thereafter
+				//do correctHillClimb again regardless of which method we used.
 				correctHillClimb(tg, child, total, 500*hillclimbiters,
 								 fitnessNames);
 
@@ -205,6 +249,9 @@ int main(int ac, char* av[])
                     	if(didCx){
                     		nonDomCx++;
                     	}
+                    	if(didMut){
+                    		nonDomMut++;
+                    	}
                     }
                     if(archive.nonDominated.size() > popsize){
                         archive.shrinkToSize(popsize);
@@ -215,13 +262,15 @@ int main(int ac, char* av[])
                 if(numAlnsGenerated >= 10 && numAlnsGenerated % 10 == 0 && verbose){
                     ArchiveMutexType::scoped_lock lock(archiveMutex);
                     reportStats(archive.nonDominated, fitnessNames,
-                                verbose);
+                                verbose, false);
                     cout<<archive.nonDominated.size()<<" non-dominated."<<endl;
                     cout<<numAlnsGenerated<<" created total."<<endl;
                     cout<<numPropSearch<<" created with proportionalSearch."<<endl;
                     cout<<numCx<<" created with crossover."<<endl;
+                    cout<<numMut<<" created with mutation."<<endl;
                     cout<<numNonDominatedGenerated<<" of created were non-dominated."<<endl;
                     cout<<nonDomCx<<" of non-dominated were made with crossover."<<endl;
+                    cout<<nonDomMut<<" of non-dominated were made with mutation."<<endl;
                     cout<<nonDomPropSearch<<" of non-dominated were made with proportionalSearch."<<endl;
                 }
                 
@@ -231,6 +280,9 @@ int main(int ac, char* av[])
 				}
 				if(didCx){
 					numCx++;
+				}
+				if(didMut){
+					numMut++;
 				}
 			}
 		};
@@ -263,7 +315,7 @@ int main(int ac, char* av[])
 			cout<<'\t'<<(double(numNonDominatedGenerated)/double(numAlnsGenerated));
 			cout<<'\t'<<double(nonDomPropSearch)/double(numNonDominatedGenerated);
 			cout<<'\t'<<double(nonDomCx)/double(numNonDominatedGenerated);
-			reportStats(archive.nonDominated,fitnessNames,false);
+			reportStats(archive.nonDominated,fitnessNames,false, false);
 			cout<<endl;
 		}
 		

@@ -96,16 +96,19 @@ argRetVals handleArgs(int ac, char* av[]){
         	        "alignment objective to be minimized.")
 		("verbose", "When set, extra information about the progress of the "
 			        "alignment is printed to stdout.")
-		("mutswappb", po::value<float>(), "Sets the probability of swap "
-			                              "mutation. See documentation."
+		("mutswappb", po::value<float>(), "Sets the probability of perturbing an "
+			                              "aligned pair when performing mutation. "
+			                              "See documentation."
 			                              " Default: 0.005")
+		("mutrate", po::value<float>(), "Sets the probability mutation will be "
+										"performed when creating a new alignment. "
+										"Default: 0.1.")
 		("cxswappb", po::value<float>(), "Sets the probability of swapping "
 			                             "during crossover. See documentation."
 			                             " Default: 0.1")
 		("cxrate", po::value<float>(), "Sets the probability that crossover "
 			                           "will be performed when creating a new "
-			                           "alignment. Otherwise, mutation will be "
-			                           "performed. Default: 0.7.")
+			                           "alignment. Default: 0.7.")
 		("finalstats", "When set, prints comma-separated stats to stdout "
 			           "when execution completes. Used to find good parameter "
 			           "values through experimentation.")
@@ -125,6 +128,8 @@ argRetVals handleArgs(int ac, char* av[]){
         ("nthreads", po::value<int>(), "Sets number of threads to use. "
                                        "Default: number of cores on "
                                        "your machine.")
+        ("dynparams", "When set, automatically adjust some parameters based on their "
+        			  "success rate. See documentation for more information.")
 	;
 	
 	po::variables_map vm;

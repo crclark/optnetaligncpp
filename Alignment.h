@@ -12,6 +12,10 @@
 
 class Alignment{
 public:	
+	//default constructor for efficiency purposes.
+	//does NO initialization. Do not use unless you
+	//know exactly what you are doing.
+	Alignment(){}; //todo: use this in steadystate.cpp
     //simplest constructor creates an arbitrary non-random alignment
 	Alignment(const Network* n1, const Network* n2, 
 		      const BLASTDict* bit, const GOCDict* goc);
