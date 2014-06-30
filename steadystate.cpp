@@ -75,13 +75,19 @@ int main(int ac, char* av[])
 		
 		numAlnsGenerated.store(0);
 		
+		tbb::atomic<int> numPropSearch;
+		numPropSearch.store(0);
+
+		tbb::atomic<int> numCx;
+		numCx.store(0);
+
 		tbb::atomic<int> numNonDominatedGenerated;
 		numNonDominatedGenerated.store(0);
 
 		tbb::atomic<int> nonDomPropSearch;
 		nonDomPropSearch.store(0);
 
-		tbb::atominc<int> nonDomCx;
+		tbb::atomic<int> nonDomCx;
 		nonDomCx.store(0);
 
 		ArchiveMutexType archiveMutex;
@@ -244,12 +250,20 @@ int main(int ac, char* av[])
                                 verbose);
                     cout<<archive.nonDominated.size()<<" non-dominated."<<endl;
                     cout<<numAlnsGenerated<<" created total."<<endl;
+                    cout<<numPropSearch<<" created with proportionalSearch."<<endl;
+                    cout<<numCx<<"created with crossover."<<endl;
                     cout<<numNonDominatedGenerated<<" of created were non-dominated."<<endl;
                     cout<<nonDomCx<<" of non-dominated were made with crossover."<<endl;
                     cout<<nonDomPropSearch<<" of non-dominated were made with proportionalSearch"<<endl;
                 }
                 
 				numAlnsGenerated++;
+				if(didPropSearch){
+					numPropSearch++;
+				}
+				if(didCx){
+					numCx++;
+				}
 			}
 		};
 
