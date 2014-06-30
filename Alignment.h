@@ -24,7 +24,7 @@ public:
 		             const Alignment& p2,
 		             bool total = true);
 	void greedyMatch(bool bit);
-	void seedExtend(bool bit);
+	void seedExtend(bool bit, bool degdiff);
 	void shuf(RandGenT& prng, bool uniformsize,
 	          bool smallstart, bool total); //shuffles the alignment to make it completely random
 	void mutate(RandGenT& prng, float mutswappb, bool total = true);

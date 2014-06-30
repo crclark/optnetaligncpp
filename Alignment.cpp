@@ -14,6 +14,7 @@
 #include <unordered_set>
 #include <limits>
 #include <queue>
+#include <utility>
 using namespace std;
 
 //todo: note these assume net2 is larger. Ensure that when loading nets.
@@ -347,7 +348,7 @@ void Alignment::greedyMatch(bool bit){
 		currGOC = sumGOC();
 }
 
-void Alignment::seedExtend(bool bit){
+void Alignment::seedExtend(bool bit, bool degdiff){
 	//crash if called without data available
 	if(bit && bitscores == nullptr){
 		assert(1==2);
@@ -357,12 +358,37 @@ void Alignment::seedExtend(bool bit){
 		assert(1==2);
 	}
 
+	auto dict = bit ? bitscores : gocs;
+
 	//for priority queue, want to compare degree difference and
 	//bit/goc. do degree diff as small degree/large degree so that
 	//the objective needs to be maximized.
 
 	//maybe make degree difference objective optional for ease of
 	//comparison to previous seed-extend methods
+
+	auto comp = [&](pair<node,node> x, pair<node,node> y){
+		double sim1 = 0.0;
+		double sim2 = 0.0;
+		if(dict->count(x.first) && dict->at(x.first).count(x.second)){
+			sim1 = dict->at(x.first).at(x.second);
+		}
+		if(dict->count(y.first) && dict->at(y.first).count(y.second)){
+			sim2 = dict->at(y.first).at(y.second);
+		}
+
+		//todo: add some sort of optional degree difference comparison
+		return sim1 > sim2;
+	};
+
+	priority_queue<pair<node,node>, vector<pair<node,node>>, decltype(comp) > q(comp);
+
+	//throw everything into the queue
+	for(int i = 0; i < net1->nodeToNodeName.size(); i++){
+		for(int j = 0; j < net2->nodeToNodeName.size(); j++){
+			q.push(pair<node,node>(i,j));
+		}
+	}
 }
 
 void Alignment::shuf(RandGenT& prng, bool uniformsize, 
