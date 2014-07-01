@@ -39,6 +39,7 @@ int main(int ac, char* av[])
 		GOCDict gocs = get<5>(vals);
 		vector<string> fitnessNames = get<6>(vals);
 
+
 		const int nthreads = vm.count("nthreads") ? vm["nthreads"].as<int>()
 		                                          : 1;
 		const float mutswappb = vm.count("mutswappb")  
@@ -57,7 +58,7 @@ int main(int ac, char* av[])
 		const bool finalstats = vm.count("finalstats");
         const bool nooutput = vm.count("nooutput");
         const bool dynparams = vm.count("dynparams");
-		const string outprefix = vm["outprefix"].as<string>();
+		const string outprefix = nooutput ? "null" : vm["outprefix"].as<string>();
 
 		const BLASTDict* bitPtr = vm.count("bitscores") ? &bitscores : nullptr;
 		const GOCDict* gocPtr = vm.count("annotations1") ? &gocs : nullptr;
@@ -181,8 +182,8 @@ int main(int ac, char* av[])
 				//grab 2 existing alns from archive.
 				//if less than 2 in archive, just create a new one.
 				//todo: these constructors waste time except for the first iter
-				Alignment par1(net1, net2, bitPtr, gocPtr);
-				Alignment par2(net1, net2, bitPtr, gocPtr);
+				Alignment par1;
+				Alignment par2;
 
 				bool foundAln = false;
 				bool didCx = false;
@@ -209,6 +210,8 @@ int main(int ac, char* av[])
 
 				//if we didn't get 2 alns from archive, init with random ones
 				if(!foundAln){
+					par1 = Alignment(net1, net2, bitPtr, gocPtr);
+					par2 = Alignment(net1, net2, bitPtr, gocPtr);
 					par1.shuf(tg, uniformsize, smallstart, total);
 					par2.shuf(tg, uniformsize, smallstart, total);
 				}
