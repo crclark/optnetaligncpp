@@ -10,6 +10,7 @@
 #include <assert.h>
 #include <boost/program_options.hpp>
 #include <thread>
+#include <time.h>
 
 #include "Alignment.h"
 #include "argParsing.h"
@@ -68,6 +69,7 @@ int main(int ac, char* av[])
 		                             ? vm["popsize"].as<int>()
 		                             : 100;
 		const int randseed = vm.count("randseed") ? vm["randseed"].as<int>() : clock();
+		const int timelimit = vm.count("timelimit") ? vm["timelimit"].as<int>() : 0;
 			
 		RandGenT g(randseed);
 
@@ -99,6 +101,10 @@ int main(int ac, char* av[])
 		tbb::atomic<int> nonDomMut;
 		nonDomMut.store(0);
 
+		time_t start;
+
+		time(&start);
+
 		ArchiveMutexType archiveMutex;
 		Archive archive;
 
@@ -127,7 +133,17 @@ int main(int ac, char* av[])
 			RandGenT tg(randSeeds[threadNum] + clock());
 			uniform_real_distribution<double> prob(0.0,1.0);
 			uniform_int_distribution<int> randObj(0, fitnessNames.size()-1);
+			time_t now;
 			while(numAlnsGenerated < popsize*generations){
+
+				//todo: test this
+				if(timelimit){
+					time(&now);
+					double minsElapsed = difftime(now,start)/60.0;
+					if(minsElapsed >= timelimit){
+						break;
+					}
+				}
 
 				double tmutrate, tcxrate, tpropsrchrate;
 
@@ -311,10 +327,13 @@ int main(int ac, char* av[])
 			cout<<'\t'<<tournsel;
 			cout<<'\t'<<uniformsize;
 			cout<<'\t'<<cxrate;
+			cout<<'\t'<<mutrate;
 			cout<<'\t'<<hillclimbiters;
 			cout<<'\t'<<(double(numNonDominatedGenerated)/double(numAlnsGenerated));
 			cout<<'\t'<<double(nonDomPropSearch)/double(numNonDominatedGenerated);
 			cout<<'\t'<<double(nonDomCx)/double(numNonDominatedGenerated);
+			cout<<'\t'<<double(nonDomMut)/double(numNonDominatedGenerated);
+			cout<<'\t'<<dynparams;
 			reportStats(archive.nonDominated,fitnessNames,false, false);
 			cout<<endl;
 		}

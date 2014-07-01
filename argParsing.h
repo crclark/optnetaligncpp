@@ -130,6 +130,7 @@ argRetVals handleArgs(int ac, char* av[]){
                                        "your machine.")
         ("dynparams", "When set, automatically adjust some parameters based on their "
         			  "success rate. See documentation for more information.")
+        ("timelimit", po::value<int>(), "Sets a time limit in minutes. Default: not set.")
 	;
 	
 	po::variables_map vm;
