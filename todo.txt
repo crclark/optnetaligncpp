@@ -11,10 +11,6 @@ add logging of mean and max over time for plotting purposes
 
 make sure asserts are turned off in optimized version
 
-consider adding archive
-
-consider self-adaptive mutation probabilities
-
 write tests for v1Unaligned being correct after all modifying ops.
 
 consider abandoning size optimization if total alignment optimization
