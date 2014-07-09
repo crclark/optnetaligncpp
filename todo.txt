@@ -31,6 +31,11 @@ as the first population.
 try getting rid of edge set in Network class. Not really used anymore, except in slow ICS, which
 is used to initialize conserved count.
 
+figure out why best s3denom is always reported as 0
+
+GOC table is already non-sparse so turn it into a constant-time lookup data structure.
+Same with bitscore.
+
 REFACTORING
 -----------
 clean up the Makefile. Currently hideous.

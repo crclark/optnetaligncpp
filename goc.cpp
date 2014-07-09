@@ -21,20 +21,6 @@ GOCDict loadGOC(Network* net1, Network* net2,
     GOCDict toReturn;
     for(auto pair1 : anns1){
         for(auto pair2 : anns2){
-            /*
-            vector<int> un;
-            set_union(pair1.second.begin(),pair1.second.end(),
-                      pair2.second.begin(),pair2.second.end(),
-                      back_inserter(un, un.begin()));
-                      
-            vector<int> in;
-            set_intersection(pair1.second.begin(),pair1.second.end(),
-                             pair2.second.begin(),pair2.second.end(),
-                             back_inserter(in,in.begin()));
-                             
-            double toStore = double(in.size())/double(un.size());
-            toReturn[pair1.first][pair2.first] = toStore;
-            */
             int intersect_size = 0;
             set<int>* smaller;
             set<int>* larger;
