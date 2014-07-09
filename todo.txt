@@ -1,7 +1,5 @@
 add more checks to arg parsing
 
-ensure net1 < net2 in size
-
 start thinking about how to combine alignments from the Pareto front
 to create local ones. Should try to take from the best representatives of
 the whole front-- might want to look at distance in alignment space as well
@@ -33,10 +31,6 @@ as the first population.
 try getting rid of edge set in Network class. Not really used anymore, except in slow ICS, which
 is used to initialize conserved count.
 
-separate reporting of stats from target objectives better. In other words, report objectives
-that we aren't optimizing as well as the ones we are. At least optionally. Maybe put an
-asterisk next to the ones actually being optimized.
-
 REFACTORING
 -----------
 clean up the Makefile. Currently hideous.
@@ -46,7 +40,3 @@ LOCAL SEARCH ALONE
 
  Can get ICS up to .92 while EC is just .33! ICS appears to thus be misleading.
  Switching to S3, but need to think more about these topological fitness functions.
-
-SEEDING
--------
-After seeding, the GA portion of the program appears to go much more slowly than otherwise, although the diversity of the results is much better. It could be that the hillclimbers all found their own hills and the space between them is completely flat, so combining them isn't helping much. Unfortunately, though, it seems bitscore sum is not increasing much either, even though we are also seeding with a greedy matching based on bitscore.
