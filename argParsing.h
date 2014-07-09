@@ -86,6 +86,13 @@ argRetVals handleArgs(int ac, char* av[]){
 			                                  "an objective to guide the "
 			                                  "alignment.")
 		("annotations2", po::value<string>(), "Path to GO annotations for net 2.")
+		("goc", "When set, GOC will be used as an aligment objective. If set, "
+			    "annotations1 and annotations2 must also be provided.")
+		("blastsum", "When set, the sum of bitscores or E-values of aligned pairs "
+			            "will be used as an alignment objective. If set, "
+			            "the path to the bitscores must be provided with "
+			            "the --bitscores switch, or the path to E-values "
+			            "must be provided with the --evalues switch.")
 		("ics", "When set, integrated conserved structure score will be used as "
 			    "an alignment objective.")
 		("ec", "When set, edge correctness score will be used as an "
@@ -174,6 +181,17 @@ argRetVals handleArgs(int ac, char* av[]){
 			           " can be optimized, not both.");
 	}
 
+	if(vm.count("blastsum") && !(vm.count("bitscores") || vm.count("evalues"))){
+		throw ArgError("Cannot specify blastsum objective without providing a "
+			           "path to either bitscores or E-values.");
+	}
+
+	if(vm.count("goc") && !(vm.count("annotations1") && vm.count("annotations2"))){
+		throw ArgError("Cannot specify GOC objective without providing paths to "
+			           "GO annotations using the --annotations1 and --annotations2 "
+			           "parameters.");
+	}
+
 	net1 = new Network(vm["net1"].as<string>());
 	net2 = new Network(vm["net2"].as<string>());
 
@@ -204,6 +222,10 @@ argRetVals handleArgs(int ac, char* av[]){
 
 	if(vm.count("bitscores")){
 		bitscores = loadBLASTInfo(net1,net2,vm["bitscores"].as<string>());
+		
+	}
+
+	if(vm.count("blastsum") && vm.count("bitscores")){
 		fitnessNames.push_back("BitscoreSum");
 	}
 
@@ -211,6 +233,9 @@ argRetVals handleArgs(int ac, char* av[]){
 
 	if(vm.count("evalues")){
 		evalues = loadBLASTInfo(net1,net2,vm["evalues"].as<string>());
+	}
+
+	if(vm.count("blastsum") && vm.count("evalues")){
 		fitnessNames.push_back("EvalsSum");
 	}
     
@@ -219,7 +244,9 @@ argRetVals handleArgs(int ac, char* av[]){
     if(vm.count("annotations1") && vm.count("annotations2")){
         gocs = loadGOC(net1,net2,vm["annotations1"].as<string>(),
                            vm["annotations2"].as<string>());
-        fitnessNames.push_back("GOC");
+        if(vm.count("goc")){
+        	fitnessNames.push_back("GOC");
+        }
     }
 
 	if(!vm.count("total")){

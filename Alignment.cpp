@@ -625,6 +625,16 @@ vector<double> Alignment::onBitHypothetical(node x) const{
 	return toReturn;
 }
 
+double Alignment::fastEC() const{
+	return double(currConservedCount)/double(net1->edges.size());
+}
+
+double Alignment::fastS3() const{
+	double num = (double)currConservedCount;
+    double denom = double(net1->edges.size() 
+                          + currInducedCount) - num;
+    return num/denom;
+}
 
 //todo: maybe something more principled than fitnessNames (so ad hoc!)
 void Alignment::computeFitness(const vector<string>& fitnessNames){

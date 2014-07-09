@@ -137,7 +137,7 @@ int main(int ac, char* av[])
 			time_t now;
 			while(numAlnsGenerated < popsize*generations){
 
-				//todo: test this
+
 				if(timelimit){
 					time(&now);
 					double minsElapsed = difftime(now,start)/60.0;
@@ -347,24 +347,46 @@ int main(int ac, char* av[])
 
             //make infoFile column labels
             infoFile << "filename";
-
-            for(auto str : fitnessNames){
-                infoFile << '\t' << str;
-            }
-
+            bool bitOn = find(fitnessNames.begin(),fitnessNames.end(),"BitscoreSum") != fitnessNames.end();
+            bool evalsOn = find(fitnessNames.begin(),fitnessNames.end(),"EvalsSum") != fitnessNames.end();
+            vector<string> allFitnessNames {"EC","ICS","S3","GOC","BitscoreSum","EvalsSum","Size"};
+			for(auto str : allFitnessNames){
+				infoFile <<'\t'<<str;
+	            if(find(fitnessNames.begin(),fitnessNames.end(), str) != fitnessNames.end()){
+	            	infoFile<<"*";
+	            }
+			}
             infoFile << endl;
 
-            //output all alignments in the first front
+            //output all alignments in the archive
             for(int i = 0; i < archive.nonDominated.size(); i++){
                 string filename = outprefix + "_" + to_string(i) + ".aln";
                 archive.nonDominated[i]->save(filename);
 
-                infoFile << filename;
+                infoFile << filename << '\t';
 
                 //write summary info to infoFile
-                for(int j = 0; j < archive.nonDominated[i]->fitness.size(); j++){
-                    infoFile << '\t' << archive.nonDominated[i]->fitness[j];
+                infoFile<<archive.nonDominated[i]->fastEC()<<'\t';
+                infoFile<<archive.nonDominated[i]->fastICS()<<'\t';
+                infoFile<<archive.nonDominated[i]->fastS3()<<'\t';
+                if(gocPtr){
+                	infoFile<<archive.nonDominated[i]->currGOC<<'\t';
                 }
+                else{
+                	infoFile<<'?'<<'\t';
+                }
+                //todo: this will emit gibberish for whichever BLAST metric is not being optimized!
+                //note this in documentation or fix it.
+                if(bitPtr){
+                	infoFile<<archive.nonDominated[i]->currBitscore<<'\t';
+                	infoFile<<archive.nonDominated[i]->currBitscore<<'\t';
+                }
+                else{
+                	infoFile<<'?'<<'\t';
+                	infoFile<<'?'<<'\t';
+                }
+
+                infoFile<<archive.nonDominated[i]->alnSize();
 
                 infoFile << endl;
             }

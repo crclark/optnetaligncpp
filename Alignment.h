@@ -97,6 +97,8 @@ public:
 	double fastICSNumerator() const;
 	double fastICS() const;
 
+	double fastEC() const;
+	double fastS3() const;
 	//pointers to our networks
 	const Network* net1;
 	const Network* net2;
