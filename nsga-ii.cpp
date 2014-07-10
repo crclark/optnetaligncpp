@@ -203,9 +203,10 @@ void reportStats(const vector<Alignment*>& in,
 		std_dev /= double(in.size());
 		std_dev = sqrt(std_dev);
 		if(verbose){
-			cout<<"Max of objective "<<fitnessNames[i]<<" is "<<max<<endl;
-			cout<<"Mean of objective "<<fitnessNames[i]<<" is "<<mean<<endl;
-			cout<<"Std. Dev. of objective "<<fitnessNames[i]
+			cout<<"Max of objective "<<fitnessNameToStr(fitnessNames[i])<<" is "<<max<<endl;
+			cout<<"Min of objective "<<fitnessNameToStr(fitnessNames[i])<<" is "<<min<<endl;
+			cout<<"Mean of objective "<<fitnessNameToStr(fitnessNames[i])<<" is "<<mean<<endl;
+			cout<<"Std. Dev. of objective "<<fitnessNameToStr(fitnessNames[i])
 			    <<" is "<<std_dev<<endl;
 		}
 		else{
