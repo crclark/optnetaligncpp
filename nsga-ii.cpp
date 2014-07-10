@@ -180,12 +180,15 @@ void reportStats(const vector<Alignment*>& in,
 	for(int i =0; i < in[0]->fitness.size(); i++){
 		double sum = 0.0;
 		double max = 0.0;
+		double min = numeric_limits<double>::max();
 		double mean;
 
 		for(auto p : in){
 			double temp = p->fitness[i];
 			if(temp > max)
 				max = temp;
+			if(temp < min)
+				min = temp;
 			sum += p->fitness[i];
 		}
 
@@ -206,7 +209,7 @@ void reportStats(const vector<Alignment*>& in,
 			    <<" is "<<std_dev<<endl;
 		}
 		else{
-			cout<<'\t'<<max<<'\t'<<mean<<'\t'<<std_dev;
+			cout<<'\t'<<min<<'\t'<<max<<'\t'<<mean<<'\t'<<std_dev;
 		}
 	}
 
