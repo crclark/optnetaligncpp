@@ -174,7 +174,7 @@ vector<Alignment*> binSel(RandGenT& prng,
 }
 
 void reportStats(const vector<Alignment*>& in, 
-	             const vector<string> fitnessNames, 
+	             const vector<fitnessName> fitnessNames, 
 	             bool verbose, bool alnDiversity){
 
 	for(int i =0; i < in[0]->fitness.size(); i++){

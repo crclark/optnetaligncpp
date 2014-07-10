@@ -28,7 +28,7 @@ int main(int ac, char* av[])
 		BLASTDict* bitPtr = get<3>(vals);
 		BLASTDict* evalues = nullptr;
 		GOCDict* gocPtr = get<5>(vals);
-		vector<string> fitnessNames = get<6>(vals);
+		vector<fitnessName> fitnessNames = get<6>(vals);
 
 		const int nthreads = vm.count("nthreads") ? vm["nthreads"].as<int>()
 		                                          : 1;
@@ -43,7 +43,8 @@ int main(int ac, char* av[])
 		const bool uniformsize = vm.count("uniformsize");
 		const bool smallstart = vm.count("smallstart");
 		const bool finalstats = vm.count("finalstats");
-		const string outprefix = vm["outprefix"].as<string>();
+		const bool nooutput = vm.count("nooutput");
+		const string outprefix = nooutput ? "" : vm["outprefix"].as<string>();
 
 		const int generations = vm["generations"].as<int>();
 
@@ -72,7 +73,9 @@ int main(int ac, char* av[])
             cout<<"EC is "<<((double)(aln->currConservedCount))/((double)(net1->edges.size()))<<endl;
 			cout<<"Generation "<<i<<" complete."<<endl;
 		}
-		aln->save(outprefix + "_localTest.aln");
+
+		if(!nooutput)
+			aln->save(outprefix + "_localTest.aln");
 		
 		
 	}

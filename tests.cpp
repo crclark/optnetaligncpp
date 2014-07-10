@@ -703,8 +703,8 @@ BOOST_AUTO_TEST_CASE( hypothetical_swap_correct ){
 	Network net2("../optnetalign/tests/lccstest2.net");
 	Alignment aln1(&net1,&net2,"../optnetalign/tests/lccstest.aln",nullptr,nullptr);
 	mt19937 g1(123);
-	vector<string> fitnessNames;
-	fitnessNames.push_back("ICS");
+	vector<fitnessName> fitnessNames;
+	fitnessNames.push_back(ICSFit);
 	aln1.computeFitness(fitnessNames);
 
 	uniform_int_distribution<int> randIndex(0,aln1.aln.size()-1);
@@ -884,8 +884,8 @@ BOOST_AUTO_TEST_CASE( GOC_after_cx ){
 		                   "../optnetalign/tests/lccstest1.annos");
 	Alignment aln(&net1,&net2,"../optnetalign/tests/lccstest1iso.aln",nullptr,gocs);
 	Alignment aln2(&net1,&net2,"../optnetalign/tests/lccstest1other.aln",nullptr,gocs);
-	vector<string> fitnessNames;
-	fitnessNames.push_back("GOC");
+	vector<fitnessName> fitnessNames;
+	fitnessNames.push_back(GOCFit);
 	aln.computeFitness(fitnessNames);
 	aln2.computeFitness(fitnessNames);
 	mt19937 g(1);
@@ -906,8 +906,8 @@ BOOST_AUTO_TEST_CASE( GOC_after_mut ){
 		                   "../optnetalign/tests/lccstest1.annos",
 		                   "../optnetalign/tests/lccstest1.annos");
 	Alignment aln(&net1,&net2,"../optnetalign/tests/lccstest1iso.aln",nullptr,gocs);
-	vector<string> fitnessNames;
-	fitnessNames.push_back("GOC");
+	vector<fitnessName> fitnessNames;
+	fitnessNames.push_back(GOCFit);
 	aln.computeFitness(fitnessNames);
 	mt19937 g(1);
 	aln.mutate(g,0.5,true);
@@ -926,8 +926,8 @@ BOOST_AUTO_TEST_CASE( GOC_after_mut_partial ){
 		                   "../optnetalign/tests/lccstest1.annos",
 		                   "../optnetalign/tests/lccstest1.annos");
 	Alignment aln(&net1,&net2,nullptr,gocs);
-	vector<string> fitnessNames;
-	fitnessNames.push_back("GOC");
+	vector<fitnessName> fitnessNames;
+	fitnessNames.push_back(GOCFit);
 	aln.computeFitness(fitnessNames);
 	mt19937 g(1);
 	aln.shuf(g,false,false,false);
@@ -945,8 +945,8 @@ BOOST_AUTO_TEST_CASE( GOC_after_cx_partial ){
 		                   "../optnetalign/tests/lccstest1.annos");
 	Alignment aln(&net1,&net2,nullptr,gocs);
 	Alignment aln2(&net1,&net2,nullptr,gocs);
-	vector<string> fitnessNames;
-	fitnessNames.push_back("GOC");
+	vector<fitnessName> fitnessNames;
+	fitnessNames.push_back(GOCFit);
 	aln.computeFitness(fitnessNames);
 	aln2.computeFitness(fitnessNames);
 	mt19937 g(1);

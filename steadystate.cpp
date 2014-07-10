@@ -36,7 +36,7 @@ int main(int ac, char* av[])
 		Network* net2 = get<2>(vals);
 		const BLASTDict* bitPtr = get<3>(vals);
 		const GOCDict* gocPtr = get<5>(vals);
-		vector<string> fitnessNames = get<6>(vals);
+		vector<fitnessName> fitnessNames = get<6>(vals);
 
 
 		const int nthreads = vm.count("nthreads") ? vm["nthreads"].as<int>()
@@ -344,12 +344,13 @@ int main(int ac, char* av[])
 
             //make infoFile column labels
             infoFile << "filename";
-            bool bitOn = find(fitnessNames.begin(),fitnessNames.end(),"BitscoreSum") != fitnessNames.end();
-            bool evalsOn = find(fitnessNames.begin(),fitnessNames.end(),"EvalsSum") != fitnessNames.end();
-            vector<string> allFitnessNames {"EC","ICS","S3","GOC","BitscoreSum","EvalsSum","Size"};
-			for(auto str : allFitnessNames){
-				infoFile <<'\t'<<str;
-	            if(find(fitnessNames.begin(),fitnessNames.end(), str) != fitnessNames.end()){
+            bool bitOn = find(fitnessNames.begin(),fitnessNames.end(),BitscoreSumFit) != fitnessNames.end();
+            bool evalsOn = find(fitnessNames.begin(),fitnessNames.end(),EvalsSumFit) != fitnessNames.end();
+            vector<fitnessName> allFitnessNames {ECFit,ICSFit,S3Fit,GOCFit,
+            									 BitscoreSumFit,EvalsSumFit,SizeFit};
+			for(auto fitnm : allFitnessNames){
+				infoFile <<'\t'<<fitnessNameToStr(fitnm);
+	            if(find(fitnessNames.begin(),fitnessNames.end(), fitnm) != fitnessNames.end()){
 	            	infoFile<<"*";
 	            }
 			}

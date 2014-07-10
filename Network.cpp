@@ -9,6 +9,29 @@
 using namespace std;
 
 
+string fitnessNameToStr(fitnessName x){
+	switch(x){
+		case ICSFit:
+			return "ICS";
+		case ECFit:
+			return "EC";
+		case BitscoreSumFit:
+			return "BitscoreSum";
+		case EvalsSumFit:
+			return "EvalsSum";
+		case SizeFit:
+			return "Size";
+		case GOCFit:
+			return "GOC";
+		case S3Fit:
+			return "S3";
+		case S3DenomFit:
+			return "S3Denom";
+		default:
+			return "invalid fitness name";
+	}
+}
+
 Network::Network(string filename){
 	unsigned int count = 0;
 	unordered_set<string> alreadySeen;

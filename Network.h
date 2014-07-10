@@ -27,6 +27,12 @@ public:
 	string wt;
 };
 
+//for keeping track of what we are optimizing
+enum fitnessName {ICSFit, ECFit, BitscoreSumFit, EvalsSumFit, SizeFit,
+                  GOCFit, S3Fit, S3DenomFit};
+
+string fitnessNameToStr(fitnessName x);
+
 //Edges are undirected, so they are always normalized such that
 //the first node is a smaller int than the second.
 class Edge{

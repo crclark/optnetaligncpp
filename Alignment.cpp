@@ -629,9 +629,43 @@ double Alignment::fastS3() const{
 }
 
 //todo: maybe something more principled than fitnessNames (so ad hoc!)
-void Alignment::computeFitness(const vector<string>& fitnessNames){
-	fitness = vector<double>(fitnessNames.size(),0.0);
+void Alignment::computeFitness(const vector<fitnessName>& fitnessNames){
+
+	if(fitness.size() == 0){
+		fitness = vector<double>(fitnessNames.size(),0.0);
+	}
+
 	for(int i = 0; i < fitnessNames.size(); i++){
+
+		switch(fitnessNames[i]){
+			case ICSFit:
+				fitness[i] = fastICS();
+				break;
+			case ECFit:
+				fitness[i] =fastEC();
+				break;
+			case BitscoreSumFit:
+				fitness[i] = currBitscore;
+				break;
+			case EvalsSumFit:
+				fitness[i] = -1.0*currBitscore;
+				break;
+			case SizeFit:
+				fitness[i] = alnSize();
+				break;
+			case GOCFit:
+				fitness[i] = currGOC;
+				break;
+			case S3Fit:
+				fitness[i] = fastS3();
+				break;
+			case S3DenomFit:
+				fitness[i] = -(double(net1->edges.size() + currInducedCount)
+        		              -currConservedCount);
+				break;
+		}
+
+		/*
 		if(fitnessNames.at(i) == "ICS"){
 			fitness.at(i) = fastICS(); //ics();
 		}
@@ -661,7 +695,7 @@ void Alignment::computeFitness(const vector<string>& fitnessNames){
         	fitness.at(i) = -(double(net1->edges.size() + currInducedCount)
         		              -currConservedCount);
         }
-        
+        */
 	}
 	fitnessValid = true;
 }

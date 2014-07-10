@@ -28,7 +28,7 @@ private:
 
 typedef tuple<po::variables_map, Network*, Network*,
               BLASTDict*, BLASTDict*, GOCDict*, 
-              vector<string> > argRetVals; 
+              vector<fitnessName> > argRetVals; 
 
 
 argRetVals handleArgs(int ac, char* av[]){
@@ -202,22 +202,22 @@ argRetVals handleArgs(int ac, char* av[]){
 			           "or equal to the number of nodes in net2.");
 	}
 	
-	vector<string> fitnessNames;
+	vector<fitnessName> fitnessNames;
 
 	if(vm.count("ics")){
-		fitnessNames.push_back("ICS");
+		fitnessNames.push_back(ICSFit);
 	}
 
 	if(vm.count("ec")){
-		fitnessNames.push_back("EC");
+		fitnessNames.push_back(ECFit);
 	}
 
     if(vm.count("s3")){
-        fitnessNames.push_back("S3");
+        fitnessNames.push_back(S3Fit);
     }
 
     if(vm.count("s3denom")){
-    	fitnessNames.push_back("S3Denom");
+    	fitnessNames.push_back(S3DenomFit);
     }
 
 	BLASTDict* bitscores = nullptr;
@@ -228,7 +228,7 @@ argRetVals handleArgs(int ac, char* av[]){
 	}
 
 	if(vm.count("blastsum") && vm.count("bitscores")){
-		fitnessNames.push_back("BitscoreSum");
+		fitnessNames.push_back(BitscoreSumFit);
 	}
 
 	BLASTDict* evalues = nullptr;
@@ -238,7 +238,7 @@ argRetVals handleArgs(int ac, char* av[]){
 	}
 
 	if(vm.count("blastsum") && vm.count("evalues")){
-		fitnessNames.push_back("EvalsSum");
+		fitnessNames.push_back(EvalsSumFit);
 	}
     
     GOCDict* gocs = nullptr;
@@ -247,12 +247,12 @@ argRetVals handleArgs(int ac, char* av[]){
         gocs = loadGOC(net1,net2,vm["annotations1"].as<string>(),
                            vm["annotations2"].as<string>());
         if(vm.count("goc")){
-        	fitnessNames.push_back("GOC");
+        	fitnessNames.push_back(GOCFit);
         }
     }
 
 	if(!vm.count("total")){
-		fitnessNames.push_back("Size");
+		fitnessNames.push_back(SizeFit);
 	}
 
 	if(!vm.count("generations")){

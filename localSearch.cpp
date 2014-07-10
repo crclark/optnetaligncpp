@@ -16,7 +16,7 @@ using namespace std;
 //check for improvement, undoing if worse.
 //when obj is specified, only checks for improvement in objective obj
 void correctHillClimb(RandGenT& prng, Alignment* aln, bool total,
-					  int maxIters, const vector<string>& fitnessNames,
+					  int maxIters, const vector<fitnessName>& fitnessNames,
 					  int obj){
 	auto randNonDummyIndex = uniform_int_distribution<int>(0, aln->actualSize-1);
 	auto randIndex = uniform_int_distribution<int>(0,aln->aln.size()-2);
@@ -31,18 +31,16 @@ void correctHillClimb(RandGenT& prng, Alignment* aln, bool total,
 		aln->doSwap(x,y);
 		aln->computeFitness(fitnessNames);
 
-		vector<double> newFit = aln->fitness;
-
 		bool improved = true;
 		if(obj == -1){
 			for(int j = 0; j < currFit.size(); j++){
-				if(newFit[j] < currFit[j]){
+				if(aln->fitness[j] < currFit[j]){
 					improved = false;
 				}
 			}
 		}
 		else{
-			if(newFit[obj] <= currFit[obj]){
+			if(aln->fitness[obj] <= currFit[obj]){
 				improved = false;
 			}
 		}
@@ -59,7 +57,7 @@ void correctHillClimb(RandGenT& prng, Alignment* aln, bool total,
 //and evenly distributes the rest of hillclimbing time to the other
 //objectives.
 void proportionalSearch(RandGenT& prng, Alignment* aln, bool total,
-	                    int iters, const vector<string>& fitnessNames,
+	                    int iters, const vector<fitnessName>& fitnessNames,
 	                    int obj, double proportion){
 
 	auto prob = uniform_real_distribution<double>(0,1);
@@ -86,7 +84,7 @@ void proportionalSearch(RandGenT& prng, Alignment* aln, bool total,
 
 //returns -1.0 if any objectives are worsened. 
 //Otherwise, returns magnitude of pct improvement vector
-double swapNormalizedDelta(Alignment& aln, const vector<string>& 
+double swapNormalizedDelta(Alignment& aln, const vector<fitnessName>& 
 						   fitnessNames, node x, node y){
 	vector<double> currFit = aln.fitness;
 
@@ -121,7 +119,7 @@ double swapNormalizedDelta(Alignment& aln, const vector<string>&
 }
 
 void steepestAscentHillClimb(Alignment* aln, 
-							 vector<string>& fitnessNames,
+							 vector<fitnessName>& fitnessNames,
 							 int nthreads, bool verbose){
 
 	vector<node> bestXs(nthreads,-1);

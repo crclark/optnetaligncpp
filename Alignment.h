@@ -36,7 +36,7 @@ public:
 	vector<double> doSwapHypothetical(node x, node y) const;
 	void onBit(node x);
 	vector<double> onBitHypothetical(node x) const;
-	void computeFitness(const vector<string>& fitnessNames);
+	void computeFitness(const vector<fitnessName>& fitnessNames);
 	void save(string filename) const;
 	double ics() const;
 	

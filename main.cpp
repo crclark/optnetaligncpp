@@ -31,7 +31,7 @@ int main(int ac, char* av[])
 		Network* net2 = get<2>(vals);
 		const BLASTDict* bitPtr = get<3>(vals);
         const GOCDict* gocsPtr = get<5>(vals);
-		vector<string> fitnessNames = get<6>(vals);
+		vector<fitnessName> fitnessNames = get<6>(vals);
 
 		
 		const float mutswappb = vm.count("mutswappb")  
