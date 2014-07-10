@@ -49,6 +49,8 @@ int main(int ac, char* av[])
 		const float cxswappb = vm.count("cxswappb") ? vm["cxswappb"].as<float>()
 		                                            : 0.1;
 		const float cxrate = vm.count("cxrate") ? vm["cxrate"].as<float>() : 0.7;
+		const float oneobjrate = vm.count("oneobjrate") ? vm["oneobjrate"].as<float>() 
+														: 0.1;
 		const bool verbose = vm.count("verbose");
 		const bool tournsel = vm.count("tournsel");
 		const bool total = vm.count("total");
@@ -168,13 +170,13 @@ int main(int ac, char* av[])
 						tpropsrchrate = double(nonDomPropSearch)/double(numPropSearch);
 					}
 					else{
-						tpropsrchrate = 0.1;
+						tpropsrchrate = oneobjrate;
 					}
 				}
 				else{
 					tmutrate = mutrate;
 					tcxrate = cxrate;
-					tpropsrchrate = 0.1;
+					tpropsrchrate = oneobjrate;
 				}
 				//grab 2 existing alns from archive.
 				//if less than 2 in archive, just create a new one.
@@ -280,13 +282,13 @@ int main(int ac, char* av[])
                                 verbose, false);
                     cout<<archive.nonDominated.size()<<" non-dominated."<<endl;
                     cout<<numAlnsGenerated<<" created total."<<endl;
-                    cout<<numPropSearch<<" created with proportionalSearch."<<endl;
+                    cout<<numPropSearch<<" created with oneObjHillClimb."<<endl;
                     cout<<numCx<<" created with crossover."<<endl;
                     cout<<numMut<<" created with mutation."<<endl;
                     cout<<numNonDominatedGenerated<<" of created were non-dominated."<<endl;
                     cout<<nonDomCx<<" of non-dominated were made with crossover."<<endl;
                     cout<<nonDomMut<<" of non-dominated were made with mutation."<<endl;
-                    cout<<nonDomPropSearch<<" of non-dominated were made with proportionalSearch."<<endl;
+                    cout<<nonDomPropSearch<<" of non-dominated were made with oneObjHillClimb."<<endl;
                 }
                 
 				numAlnsGenerated++;

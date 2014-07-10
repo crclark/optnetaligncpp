@@ -116,6 +116,10 @@ argRetVals handleArgs(int ac, char* av[]){
 		("cxrate", po::value<float>(), "Sets the probability that crossover "
 			                           "will be performed when creating a new "
 			                           "alignment. Default: 0.7.")
+		("oneobjrate", po::value<float>(), "Sets the probability that one "
+										   "objective hillclimbing will be "
+										   "used instead of non-dominated "
+										   "hillclimbing. Default: 0.1")
 		("finalstats", "When set, prints comma-separated stats to stdout "
 			           "when execution completes. Used to find good parameter "
 			           "values through experimentation.")
