@@ -948,21 +948,18 @@ int Alignment::conservedCount(node n1, node n2, bool mask, node ignore) const{
 		return 0;
 	}
 	else{
-		for(auto i : net1->adjList.at(n1)){
-			if(i == ignore){
-				continue;
-			}
-			if(alnMask[i]){
-				if(net2->adjMatrix[n2][aln[i]]){
-						toReturn++;
-				}
+		for(int ix = 0; ix < net1->adjList[n1].size(); ix++){
+			int i = net1->adjList[n1][ix];
+			if(i != ignore && alnMask[i] && net2->adjMatrix[n2][aln[i]]){
+				toReturn++;
 			}
 		}
-		
-		return toReturn;
 	}
-
+		
+	return toReturn;
 }
+
+
 
 
 int Alignment::hypotheticalConservedCountDelta(node n1, node n2old, node n2new, 
@@ -981,7 +978,8 @@ int Alignment::inducedCount(node n2, node ignore) const{
 	}
 	else{
 		int toReturn = 0;
-		for(node x : net2->adjList.at(n2)){
+		for(int ix = 0; ix < net2->adjList[n2].size(); ix++){
+			node x = net2->adjList[n2][ix];
 			if(alnInv[x] < actualSize && alnMask[alnInv[x]] && x != ignore){
 				toReturn++;
 			}

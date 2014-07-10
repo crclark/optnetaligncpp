@@ -22,7 +22,7 @@ localTest:
 	icc localTest.cpp Network.cpp blastinfo.cpp Alignment.cpp nsga-ii.cpp localSearch.cpp goc.cpp -o localTest -stdlib=libc++ -O3 -Wall -tbb -std=c++11 -I /usr/local/Cellar/boost/1.53.0/include/ -L /usr/local/Cellar/boost/1.53.0/lib -lboost_thread-mt -lboost_filesystem-mt -lboost_system-mt -lboost_program_options-mt -pthread
 
 localTestUbuntu:
-	icc localTest.cpp Network.cpp blastinfo.cpp Alignment.cpp nsga-ii.cpp localSearch.cpp goc.cpp -o localTest -stdlib=libc++ -O3 -Wall -tbb -std=c++11 -I /usr/include/ -L /usr/lib/x86_64-linux-gnu/ -lboost_filesystem -lboost_system -lboost_program_options -lboost_thread
+	icc localTest.cpp Network.cpp blastinfo.cpp Alignment.cpp nsga-ii.cpp localSearch.cpp goc.cpp -o localTest -stdlib=libc++ -O2 -Wall -tbb -g -std=c++11 -I /usr/include/ -L /usr/lib/x86_64-linux-gnu/ -lboost_filesystem -lboost_system -lboost_program_options -lboost_thread
 
 tempubuntu:
 	icc temp.cpp Network.cpp blastinfo.cpp Alignment.cpp nsga-ii.cpp localSearch.cpp goc.cpp -o temp -prof-gen -prof-dir/home/connor/Drobox/profiled -tbb -ldl -Wall -std=c++11 -I /usr/include/ -L /usr/lib/x86_64-linux-gnu/ -lboost_filesystem -lboost_system -lboost_program_options -lboost_thread	
