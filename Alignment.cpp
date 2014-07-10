@@ -293,10 +293,9 @@ void Alignment::greedyMatch(bool bit){
 		node bestN2 = -1;
 		double bestScore = 0.0;
 		for(auto n2 : v2Unaligned){
-			if(dict->count(n1) && dict->at(n1).count(n2)
-			   && dict->at(n1).at(n2) > bestScore ){
+			if((*dict)[n1][n2] > bestScore ){
 				bestN2 = n2;
-				bestScore = dict->at(n1).at(n2);
+				bestScore = (*dict)[n1][n2];
 			}
 			else if(bestN2 == -1){
 				bestN2 = n2;
@@ -368,15 +367,8 @@ void Alignment::seedExtend(bool bit, bool degdiff){
 	//comparison to previous seed-extend methods
 
 	auto comp = [&](pair<node,node> x, pair<node,node> y){
-		double sim1 = 0.0;
-		double sim2 = 0.0;
-		if(dict->count(x.first) && dict->at(x.first).count(x.second)){
-			sim1 = dict->at(x.first).at(x.second);
-		}
-		if(dict->count(y.first) && dict->at(y.first).count(y.second)){
-			sim2 = dict->at(y.first).at(y.second);
-		}
-
+		double sim1 = (*dict)[x.first][x.second];
+		double sim2 = (*dict)[y.first][y.second];
 		//todo: add some sort of optional degree difference comparison
 		return sim1 > sim2;
 	};
@@ -775,9 +767,8 @@ double Alignment::sumBLAST() const{
 	double toReturn = 0.0;
 
 	for(node i = 0; i < actualSize; i++){
-		if(bitscores->count(i) && bitscores->at(i).count(aln[i]) &&
-		   alnMask[i]){
-			toReturn += bitscores->at(i).at(aln[i]);
+		if(alnMask[i]){
+			toReturn += (*bitscores)[i][aln[i]];
 		}
 	}
 	return toReturn;
@@ -787,8 +778,8 @@ double Alignment::sumGOC() const{
     double toReturn = 0.0;
     
     for(node i = 0; i < actualSize; i++){
-        if(gocs->count(i) && gocs->at(i).count(aln[i]) && alnMask[i]){
-            toReturn += gocs->at(i).at(aln.at(i));
+        if(alnMask[i]){
+            toReturn += (*gocs)[i][aln.at(i)];
         }
     }
     
@@ -826,14 +817,14 @@ inline void Alignment::updateBitscore(node n1, node n2old, node n2new,
 	double oldScore = 0.0;
 
 	//set oldScore
-	if(bitscores->count(n1) && bitscores->at(n1).count(n2old) && oldMask)
-		oldScore = bitscores->at(n1).at(n2old);
+	if(oldMask)
+		oldScore = (*bitscores)[n1][n2old];
 
 	double newScore = 0.0;
 
 	//set newScore
-	if(bitscores->count(n1) && bitscores->at(n1).count(n2new) && newMask)
-		newScore = bitscores->at(n1).at(n2new);
+	if(newMask)
+		newScore = (*bitscores)[n1][n2new];
 
 	double delta = newScore - oldScore;
 	currBitscore += delta;
@@ -855,14 +846,14 @@ double Alignment::hypotheticalBitscoreDelta(node n1, node n2old, node n2new,
 	double oldScore = 0.0;
 
 	//set oldScore
-	if(bitscores->count(n1) && bitscores->at(n1).count(n2old) && oldMask)
-		oldScore = bitscores->at(n1).at(n2old);
+	if(oldMask)
+		oldScore = (*bitscores)[n1][n2old];
 
 	double newScore = 0.0;
 
 	//set newScore
-	if(bitscores->count(n1) && bitscores->at(n1).count(n2new) && newMask)
-		newScore = bitscores->at(n1).at(n2new);
+	if(newMask)
+		newScore = (*bitscores)[n1][n2new];
 
 	return newScore - oldScore;	
 }
@@ -877,13 +868,13 @@ double Alignment::hypotheticalGOCDelta(node n1, node n2old, node n2new,
         
     double oldScore = 0.0;
     
-    if(gocs->count(n1) && gocs->at(n1).count(n2old) && oldMask)
-        oldScore = gocs->at(n1).at(n2old);
+    if(oldMask)
+        oldScore = (*gocs)[n1][n2old];
         
     double newScore = 0.0;
     
-    if(gocs->count(n1) && gocs->at(n1).count(n2new) && newMask)
-        newScore = gocs->at(n1).at(n2new);
+    if(newMask)
+        newScore = (*gocs)[n1][n2new];
         
     return newScore - oldScore;
 }
@@ -894,23 +885,19 @@ double Alignment::hypotheticalGOCSwap(node x, node y) const{
 
 	double oldScore = 0.0;
 
-	if(x < actualSize && gocs->count(x) && gocs->at(x).count(aln[x])
-		&& alnMask[x])
-		oldScore += gocs->at(x).at(aln[x]);
+	if(x < actualSize && alnMask[x])
+		oldScore += (*gocs)[x][aln[x]];
 
-	if(y < actualSize && gocs->count(y) && gocs->at(y).count(aln[y])
-		&& alnMask[y])
-		oldScore += gocs->at(y).at(aln[y]);
+	if(y < actualSize && alnMask[y])
+		oldScore += (*gocs)[y][aln[y]];
 
 	double newScore = 0.0;
 
-	if(x < actualSize && gocs->count(x) && gocs->at(x).count(aln[y])
-		&& alnMask[y])
-		newScore += gocs->at(x).at(aln[y]);
+	if(x < actualSize && alnMask[y])
+		newScore += (*gocs)[x][aln[y]];
 
-	if(y < actualSize && gocs->count(y) && gocs->at(y).count(aln[x])
-		&& alnMask[x])
-		newScore += gocs->at(y).at(aln[x]);
+	if(y < actualSize && alnMask[x])
+		newScore += (*gocs)[y][aln[x]];
 
 	return newScore - oldScore;
 }
@@ -920,14 +907,10 @@ double Alignment::hypotheticalGOCSwap(node x, node y) const{
 //in case conservedCount has been previously called where n1 == ignore
 //so we want to avoid double-counting.
 int Alignment::conservedCount(node n1, node n2, bool mask, node ignore) const{
-	//cout<<"Begin conservedCount call"<<endl;
-	//cout<<"n1 is "<<net1->nodeToNodeName.at(n1)<<endl;
-	//cout<<"n2 is "<<net2->nodeToNodeName.at(n2)<<endl;
 
 	int toReturn = 0;
 
 	if(!mask || n1 >= actualSize || n1 == ignore){
-		//cout<<"end conservedCount call"<<endl;
 		return 0;
 	}
 	else{
@@ -935,22 +918,13 @@ int Alignment::conservedCount(node n1, node n2, bool mask, node ignore) const{
 			if(i == ignore){
 				continue;
 			}
-			//cout<<"checking edge: "<<net1->nodeToNodeName.at(n1)
-			//	<<" "<<net1->nodeToNodeName.at(i)<<endl;
 			if(alnMask[i]){
 				if(net2->adjMatrix[n2][aln[i]]){
 						toReturn++;
-					//cout<<"conserved"<<endl;
 				}
-				else{
-					//cout<<"not conserved"<<endl;
-				}
-			}
-			else{
-				//cout<<"mask not on"<<endl;
 			}
 		}
-		//cout<<"end conservedCount call"<<endl;
+		
 		return toReturn;
 	}
 

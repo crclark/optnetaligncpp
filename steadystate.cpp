@@ -34,9 +34,8 @@ int main(int ac, char* av[])
 		po::variables_map vm = get<0>(vals);
 		Network* net1 = get<1>(vals);
 		Network* net2 = get<2>(vals);
-		BLASTDict bitscores = get<3>(vals);
-		BLASTDict evalues = get<4>(vals);
-		GOCDict gocs = get<5>(vals);
+		const BLASTDict* bitPtr = get<3>(vals);
+		const GOCDict* gocPtr = get<5>(vals);
 		vector<string> fitnessNames = get<6>(vals);
 
 
@@ -60,8 +59,6 @@ int main(int ac, char* av[])
         const bool dynparams = vm.count("dynparams");
 		const string outprefix = nooutput ? "null" : vm["outprefix"].as<string>();
 
-		const BLASTDict* bitPtr = vm.count("bitscores") ? &bitscores : nullptr;
-		const GOCDict* gocPtr = vm.count("annotations1") ? &gocs : nullptr;
 		const int generations = vm["generations"].as<int>();
 		const int hillclimbiters = vm.count("hillclimbiters") 
 		                           ? vm["hillclimbiters"].as<int>() 
@@ -230,9 +227,8 @@ int main(int ac, char* av[])
 				}
 
 				//now, the local search
-				VelocityTracker veltracker;
 				child->computeFitness(fitnessNames);
-				vector<double> initSpeed;
+
 				//for proportional search, decide which way to search
 				int rObj = randObj(tg);
 
@@ -319,7 +315,6 @@ int main(int ac, char* av[])
         if(verbose){
             cout<<"Found "<<archive.nonDominated.size()
                 <<" non-dominated alignments."<<endl;
-            cout<<"Writing to disk!"<<endl;
         }
         
         if(finalstats){
@@ -342,6 +337,8 @@ int main(int ac, char* av[])
 		}
 		
         if(!nooutput){
+        	if(verbose)
+        		cout<<"Writing to disk!"<<endl;
             string infoFilename = outprefix + ".info";
             ofstream infoFile(infoFilename);
 

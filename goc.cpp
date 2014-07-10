@@ -8,17 +8,19 @@
 #include <iterator>
 #include <cmath>
 #include <assert.h>
-using namespace std;
-
+#include "boost/multi_array.hpp"
 #include "goc.h"
 #include "Network.h"
-GOCDict loadGOC(Network* net1, Network* net2,
+using namespace std;
+
+GOCDict* loadGOC(Network* net1, Network* net2,
                         string file1, string file2){
 
     auto anns1 = loadAnnotations(net1,file1);
     auto anns2 = loadAnnotations(net2,file2);
-    
-    GOCDict toReturn;
+    int net1Size = net1->nodeToNodeName.size();
+    int net2Size = net2->nodeToNodeName.size();
+    GOCDict* toReturn = new GOCDict(boost::extents[net1Size][net2Size]);
     for(auto pair1 : anns1){
         for(auto pair2 : anns2){
             int intersect_size = 0;
@@ -43,7 +45,7 @@ GOCDict loadGOC(Network* net1, Network* net2,
                              + (smaller->size() - intersect_size);
 
             double toStore = double(intersect_size)/double(union_size);
-            toReturn[pair1.first][pair2.first] = toStore;
+            (*toReturn)[pair1.first][pair2.first] = toStore;
         }
     }
     return toReturn;

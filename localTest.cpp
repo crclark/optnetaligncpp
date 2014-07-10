@@ -25,9 +25,9 @@ int main(int ac, char* av[])
 		po::variables_map vm = get<0>(vals);
 		Network* net1 = get<1>(vals);
 		Network* net2 = get<2>(vals);
-		BLASTDict bitscores = get<3>(vals);
-		BLASTDict evalues = get<4>(vals);
-		GOCDict gocs = get<5>(vals);
+		BLASTDict* bitPtr = get<3>(vals);
+		BLASTDict* evalues = nullptr;
+		GOCDict* gocPtr = get<5>(vals);
 		vector<string> fitnessNames = get<6>(vals);
 
 		const int nthreads = vm.count("nthreads") ? vm["nthreads"].as<int>()
@@ -45,15 +45,13 @@ int main(int ac, char* av[])
 		const bool finalstats = vm.count("finalstats");
 		const string outprefix = vm["outprefix"].as<string>();
 
-		const BLASTDict* bitPtr = vm.count("bitscores") ? &bitscores : nullptr;
-		const GOCDict* gocPtr = vm.count("annotations1") ? &gocs : nullptr;
 		const int generations = vm["generations"].as<int>();
 
 		mt19937 g(14);
 		//initialize population
 		
 		
-		Alignment* aln = new Alignment(net1,net2, &bitscores, &gocs);
+		Alignment* aln = new Alignment(net1,net2, bitPtr, gocPtr);
 		//aln->greedyMatch(false);
 		aln->shuf(g,false,false,total);
 		aln->computeFitness(fitnessNames);

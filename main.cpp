@@ -29,9 +29,8 @@ int main(int ac, char* av[])
 		po::variables_map vm = get<0>(vals);
 		Network* net1 = get<1>(vals);
 		Network* net2 = get<2>(vals);
-		BLASTDict bitscores = get<3>(vals);
-		BLASTDict evalues = get<4>(vals);
-        GOCDict gocs = get<5>(vals);
+		const BLASTDict* bitPtr = get<3>(vals);
+        const GOCDict* gocsPtr = get<5>(vals);
 		vector<string> fitnessNames = get<6>(vals);
 
 		
@@ -56,10 +55,6 @@ int main(int ac, char* av[])
 		                           ? vm["hillclimbiters"].as<int>() 
 		                           : 0; 
 
-		const BLASTDict* bitPtr = vm.count("bitscores") ? &bitscores 
-                                  : nullptr;
-        const GOCDict* gocsPtr = vm.count("annotations1") ? &gocs 
-                                 : nullptr;
 		RandGenT g(14);
 		//initialize population
 		if(verbose){
@@ -245,7 +240,7 @@ int main(int ac, char* av[])
 			
 			if(verbose){
 				cout<<"Finished generation "<<gen<<endl;
-				reportStats(pop,fitnessNames,true);
+				reportStats(pop,fitnessNames,verbose,false);
 				cout<<endl;
 			}
 		}
@@ -261,7 +256,7 @@ int main(int ac, char* av[])
 			cout<<'\t'<<cxswappb;
 			cout<<'\t'<<tournsel;
 			cout<<'\t'<<uniformsize;
-			reportStats(pop,fitnessNames,false);
+			reportStats(pop,fitnessNames,verbose,false);
 			cout<<endl;
 		}
 		vector <Alignment*> allAlns;

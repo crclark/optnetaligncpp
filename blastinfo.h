@@ -1,12 +1,12 @@
 #pragma once
 
-#include<unordered_map>
-#include<tuple>
-#include<string>
+#include <unordered_map>
+#include <tuple>
+#include <string>
+#include "boost/multi_array.hpp"
+#include "Network.h"
 using namespace std;
 
-#include "Network.h"
+typedef boost::multi_array<double,2> BLASTDict;
 
-typedef unordered_map<node, unordered_map<node,double> > BLASTDict;
-
-BLASTDict loadBLASTInfo(Network* net1, Network* net2, string filename);
+BLASTDict* loadBLASTInfo(Network* net1, Network* net2, string filename);

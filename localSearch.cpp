@@ -202,7 +202,7 @@ void steepestAscentHillClimb(Alignment* aln,
 
 	}
 }
-
+/*
 void potentialBasedSearch(RandGenT& prng, Alignment* aln, bool total,
 						  int iters, const vector<string>& fitnessNames,
 						  bool bit){
@@ -217,15 +217,13 @@ void potentialBasedSearch(RandGenT& prng, Alignment* aln, bool total,
 	vector<double> maxBit(aln->actualSize,0.0);
 
 	for(int i = 0; i < maxBit.size(); i++){
-		if(dict->count(i)){
-			double best = 0.0;
-			for(auto pair : dict->at(i)){
-				if(pair.second > best){
-					best = pair.second;
-				}
+		double best = 0.0;
+		for(auto pair : dict->at(i)){
+			if(pair.second > best){
+				best = pair.second;
 			}
-			maxBit.at(i) = best;
 		}
+		maxBit.at(i) = best;
 	}
 
 	for(int i = 0; i < iters; i++){
@@ -297,7 +295,7 @@ void potentialBasedSearch(RandGenT& prng, Alignment* aln, bool total,
 	}
 
 }
-
+*/
 VelocityTracker::VelocityTracker(){
 	nextSpot = 0;
 	size = 0;

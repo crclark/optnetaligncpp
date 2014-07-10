@@ -27,7 +27,7 @@ private:
 };
 
 typedef tuple<po::variables_map, Network*, Network*,
-              BLASTDict, BLASTDict, GOCDict, 
+              BLASTDict*, BLASTDict*, GOCDict*, 
               vector<string> > argRetVals; 
 
 
@@ -194,7 +194,8 @@ argRetVals handleArgs(int ac, char* av[]){
 
 	net1 = new Network(vm["net1"].as<string>());
 	net2 = new Network(vm["net2"].as<string>());
-
+	int net1Size = net1->nodeToNodeName.size();
+	int net2Size = net2->nodeToNodeName.size();
 	
 	if(net1->nodeToNodeName.size() > net2->nodeToNodeName.size()){
 		throw ArgError("Number of nodes in net1 must be less than "
@@ -219,7 +220,7 @@ argRetVals handleArgs(int ac, char* av[]){
     	fitnessNames.push_back("S3Denom");
     }
 
-	BLASTDict bitscores;
+	BLASTDict* bitscores = nullptr;
 
 	if(vm.count("bitscores")){
 		bitscores = loadBLASTInfo(net1,net2,vm["bitscores"].as<string>());
@@ -230,7 +231,7 @@ argRetVals handleArgs(int ac, char* av[]){
 		fitnessNames.push_back("BitscoreSum");
 	}
 
-	BLASTDict evalues;
+	BLASTDict* evalues = nullptr;
 
 	if(vm.count("evalues")){
 		evalues = loadBLASTInfo(net1,net2,vm["evalues"].as<string>());
@@ -240,7 +241,7 @@ argRetVals handleArgs(int ac, char* av[]){
 		fitnessNames.push_back("EvalsSum");
 	}
     
-    GOCDict gocs;
+    GOCDict* gocs = nullptr;
     
     if(vm.count("annotations1") && vm.count("annotations2")){
         gocs = loadGOC(net1,net2,vm["annotations1"].as<string>(),
