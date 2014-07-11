@@ -58,8 +58,7 @@ public:
 		                  // but if we separate searching through permutations
 	                      //from searching through masks, it should be 
 	                      //workable.
-	unordered_set<node> v1Unaligned; //tracks which nodes are unaligned
-	                                 //DANGER: tracks dummy nodes, too!
+	
 	bool fitnessValid;
 	vector<double> fitness; //all fitnesses stored s.t. larger is better.
 	vector<double> fitnessNormalized; //stores fitnesses normalized so

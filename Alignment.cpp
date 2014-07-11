@@ -27,8 +27,7 @@ Alignment::Alignment(const Network* n1, const Network* n2,
 	alnInv = vector<node>(size,-1);
 	alnMask = vector<bool>(size,true);
 	fitnessValid = false;
-	v1Unaligned = unordered_set<node>();
-	v1Unaligned.reserve(n2->nodeToNodeName.size());
+
 	for(int i = 0; i < size; i++){
 		aln[i] = i;
 		alnInv[i] = i;
@@ -72,6 +71,7 @@ Alignment::Alignment(const Network* n1, const Network* n2,
 	string line;
 	//keep track of which nodes in V2 aren't aligned so we can
 	//add them to the permutation somewhere after loading the file.
+	unordered_set<node> v1Unaligned;
 	unordered_set<node> v2Unaligned;
 	for(int i = 0; i < net2->nodeToNodeName.size(); i++){
 		v2Unaligned.insert(i);
@@ -190,7 +190,7 @@ Alignment::Alignment(RandGenT& prng, float cxswappb,
 	currInducedCount = par1->currInducedCount;
 	net1 = par1->net1;
 	net2 = par1->net2;
-	v1Unaligned = par1->v1Unaligned;
+
 
 
 	//do crossover
@@ -220,15 +220,9 @@ Alignment::Alignment(RandGenT& prng, float cxswappb,
 				alnMask[par1Indices[temp2]] = temp1Mask;
 				if(coinFlip(prng)){
 					alnMask[i] = par1bool && par2bool;
-					if(!alnMask[i]){
-						v1Unaligned.insert(i);
-					}
 				}
 				else{
 					alnMask[i] = par1bool || par2bool;
-					if(!alnMask[i]){
-						v1Unaligned.insert(i);
-					}
 				}
 			}
 
@@ -276,7 +270,7 @@ void Alignment::greedyMatch(bool bit){
 
 	aln = vector<node>(net2->nodeToNodeName.size(), -1);
 	alnInv = aln;
-	v1Unaligned = unordered_set<node>();
+	unordered_set<node> v1Unaligned;
 
 	for(int i = 0; i < net1->nodeToNodeName.size(); i++){
 		v1Unaligned.insert(i);
@@ -396,7 +390,6 @@ void Alignment::shuf(RandGenT& prng, bool uniformsize,
 			for(int i =0; i < alnMask.size(); i++){
 				if(coinFlip(prng)){
 					alnMask[i] = false;
-					v1Unaligned.insert(i);
 				}
 			}
 		}
@@ -414,12 +407,10 @@ void Alignment::shuf(RandGenT& prng, bool uniformsize,
 					index = indexDist(prng);
 				}
 				alnMask[index] = false;
-				v1Unaligned.insert(index);
 			}
 			//deactivate all unaligned nodes aligned to dummy nodes
 			for(int i = actualSize; i < aln.size(); i++){
 				alnMask[i] = false;
-				v1Unaligned.insert(i);
 			}
 		}
 		else{ //smallsize
@@ -436,12 +427,10 @@ void Alignment::shuf(RandGenT& prng, bool uniformsize,
 					index = indexDist(prng);
 				}
 				alnMask[index] = false;
-				v1Unaligned.insert(index);
 			}
 			//deactivate all unaligned nodes aligned to dummy nodes
 			for(int i = actualSize; i < aln.size(); i++){
 				alnMask[i] = false;
-				v1Unaligned.insert(i);
 			}
 		}
 	}
@@ -481,12 +470,7 @@ void Alignment::mutate(RandGenT& prng, float mutswappb, bool total){
 			int oldConserved = conservedCount(i, aln[i], alnMask[i],-1);
 			int oldInduced = inducedCount(aln[i],-1);
 			alnMask[i] = !alnMask[i];
-			if(alnMask[i]){
-				v1Unaligned.erase(i);
-			}
-			else{
-				v1Unaligned.insert(i);
-			}
+
 			int newConserved = conservedCount(i, aln[i], alnMask[i],-1);
 			int newInduced = inducedCount(aln[i],-1);
 			updateBitscore(i, aln[i], aln[i], !alnMask[i],
@@ -518,20 +502,6 @@ void Alignment::doSwap(node x, node y){
 	bool tempb = alnMask[x];
 	alnMask[x] = alnMask[y];
 	alnMask[y] = tempb;
-
-	if(alnMask[x]){
-		v1Unaligned.erase(x);
-	}
-	else{
-		v1Unaligned.insert(x);
-	}
-
-	if(alnMask[y]){
-		v1Unaligned.erase(x);
-	}
-	else{
-		v1Unaligned.insert(x);
-	}
 
 	int newConservedX = conservedCount(x,aln[x],alnMask[x],-1);
 	int newConservedY = conservedCount(y,aln[y],alnMask[y],x);
@@ -588,7 +558,6 @@ void Alignment::onBit(node x){
 	int oldInduced = inducedCount(aln[x],-1);
 	bool old = alnMask[x];
 	alnMask[x] = true;
-	v1Unaligned.erase(x);
 	updateBitscore(x,aln[x],aln[x],old, alnMask[x]);
     updateGOC(x, aln[x], aln[x], old, alnMask[x]);
     int newConserved = conservedCount(x, aln[x], alnMask[x],-1);
