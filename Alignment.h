@@ -33,9 +33,7 @@ public:
 	          bool smallstart, bool total); //shuffles the alignment to make it completely random
 	void mutate(RandGenT& prng, float mutswappb, bool total = true);
 	void doSwap(node x, node y);
-	vector<double> doSwapHypothetical(node x, node y) const;
 	void onBit(node x);
-	vector<double> onBitHypothetical(node x) const;
 	void computeFitness(const vector<fitnessName>& fitnessNames);
 	void save(string filename) const;
 	double ics() const;
@@ -77,18 +75,12 @@ public:
 	void updateBitscore(node n1, node n2old, node n2new, bool oldMask,
 		                bool newMask);
 
-	//returns by how much updateBitscore would change currBitscore
-	double hypotheticalBitscoreDelta(node n1, node n2old, node n2new,
-		                             bool oldMask, bool newMask) const;
     
     //same stuff for GOC
     double currGOC;
     const GOCDict* gocs;
     void updateGOC(node n1, node n2old, node n2new, bool oldMask,
                    bool newMask);
-    double hypotheticalGOCDelta(node n1, node n2old, node n2new,
-                                bool oldMask, bool newMask) const;
-    double hypotheticalGOCSwap(node x, node y) const;
     
 	//stored info version of ICS for fast computation
 	//(incrementally update as the alignment changes)
@@ -108,8 +100,6 @@ public:
 	int conservedCount(node n1, node n2, bool mask, node ignore) const;
 	void updateConservedCount(node n1, node n2old, node n2new, bool oldMask,
 		                     bool newMask, node ignore);
-	int hypotheticalConservedCountDelta(node n1, node n2old, node n2new, 
-		            bool oldMask, bool newMask, node ignore) const;
 	void initConservedCount(node n1, node n2, bool mask);
 
 	//tracks how many edges are in the subgraph of net2 induced on the nodes

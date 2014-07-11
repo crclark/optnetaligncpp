@@ -696,112 +696,11 @@ BOOST_AUTO_TEST_CASE( do_swap_consistent_ics ){
 	BOOST_CHECK(approxEqual(ics,fastICS));	
 }
 
-
-BOOST_AUTO_TEST_CASE( hypothetical_swap_correct ){
-	cout<<endl<<"BEGIN hypothetical_swap_correct"<<endl;
-	Network net1("../optnetalign/tests/lccstest1.net");
-	Network net2("../optnetalign/tests/lccstest2.net");
-	Alignment aln1(&net1,&net2,"../optnetalign/tests/lccstest.aln",nullptr,nullptr);
-	mt19937 g1(123);
-	vector<fitnessName> fitnessNames;
-	fitnessNames.push_back(ICSFit);
-	aln1.computeFitness(fitnessNames);
-
-	uniform_int_distribution<int> randIndex(0,aln1.aln.size()-1);
-    
-	for(int i = 0; i < 100; i++){
-		node x = randIndex(g1);
-		node y = x;
-		while(y == x){
-			y = randIndex(g1);
-		}
-		vector<double> delta = aln1.doSwapHypothetical(x,y);
-
-		//get sum of conservedCounts before swapping
-		int sumBefore = aln1.currConservedCount;
-    
-		aln1.doSwap(x,y);
-		int sumAfter = aln1.currConservedCount;
-
-		int diff = sumAfter - sumBefore;
-		if(diff != delta[0]){
-			cout<<"diff: "<<diff<<endl;
-			cout<<"delta[0]: "<<delta[0]<<endl;
-			cout<<"x: "<<x<<endl;
-			cout<<"y: "<<y<<endl;
-		}
-	}
-
-
-}
-
-
-BOOST_AUTO_TEST_CASE( v1unaligned_consistent_after_load ){
-	Network net1("../optnetalign/tests/cg1a.net");
-	Network net2("../optnetalign/tests/cg1b.net");
-	Alignment aln(&net1, &net2, "../optnetalign/tests/cg1partial.aln", nullptr,nullptr);
-
-	for(int i = 0; i < aln.alnMask.size(); i++){
-		if(!aln.alnMask[i])
-			BOOST_CHECK(aln.v1Unaligned.count(i));
-		else
-			BOOST_CHECK(!aln.v1Unaligned.count(i));
-	}
-}
-
-BOOST_AUTO_TEST_CASE( v1unaligned_consistent_after_shuf ){
-	Network net1("../optnetalign/tests/cg1a.net");
-	Network net2("../optnetalign/tests/cg1b.net");
-	Alignment aln(&net1, &net2, nullptr,nullptr);
-	mt19937 g(12);
-	aln.shuf(g, false, false, false);
-
-	for(int i = 0; i < aln.alnMask.size(); i++){
-		if(!aln.alnMask[i])
-			BOOST_CHECK(aln.v1Unaligned.count(i));
-		else
-			BOOST_CHECK(!aln.v1Unaligned.count(i));
-	}
-}
-
-BOOST_AUTO_TEST_CASE( v1unaligned_consistent_after_onBit ){
-	Network net1("../optnetalign/tests/cg1a.net");
-	Network net2("../optnetalign/tests/cg1b.net");
-	Alignment aln(&net1, &net2, nullptr,nullptr);
-	mt19937 g(12);
-	aln.shuf(g, false, false, false);
-
-	int offbit = 0;
-	for(; offbit < aln.alnMask.size(); offbit++){
-		if(!aln.alnMask[offbit])
-			break;
-	}
-
-	aln.onBit(offbit);
-
-	for(int i = 0; i < aln.alnMask.size(); i++){
-		if(!aln.alnMask[i])
-			BOOST_CHECK(aln.v1Unaligned.count(i));
-		else
-			BOOST_CHECK(!aln.v1Unaligned.count(i));
-	}
-}
-
 BOOST_AUTO_TEST_CASE( greedy_match_aln_consistent ){
 	Network net1("../optnetalign/tests/cg1a.net");
 	Network net2("../optnetalign/tests/cg1b.net");
 	BLASTDict* b = loadBLASTInfo(&net1,&net2,"../optnetalign/tests/cg1.sim");
 	Alignment aln(&net1,&net2,b,nullptr);
-
-	//check that if a node is in v1Unaligned, then it is unaligned
-	for(auto n : aln.v1Unaligned){
-		BOOST_CHECK(!aln.alnMask[n]);
-	}
-
-	//check that if a node is unaligned, it is in v1Unaligned
-	for(int i = 0; i < aln.alnMask.size(); i++){
-		BOOST_CHECK_EQUAL(aln.v1Unaligned.count(i),!aln.alnMask[i]);
-	}
 
 	//check that the aln is a permutation
 	unordered_set<node> alnv2;

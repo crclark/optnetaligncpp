@@ -519,40 +519,6 @@ void Alignment::doSwap(node x, node y){
     	                 (newInducedY - oldInducedY));
 }
 
-//todo: test this
-vector<double> Alignment::doSwapHypothetical(node x, node y) const{
-	vector<double> toReturn;
-    
-	node hypAlnx = aln[y];
-	node hypAlny = aln[x];
-    
-	bool hypAlnMskx = alnMask[y];
-	bool hypAlnMsky = alnMask[x];
-    
-    double ccDelt = 0.0;
-	ccDelt += hypotheticalConservedCountDelta(x, hypAlny, hypAlnx,
-	               hypAlnMsky, hypAlnMskx, -1);
-	ccDelt += hypotheticalConservedCountDelta(y,hypAlnx,hypAlny,
-		           hypAlnMskx, hypAlnMsky, x);
-    toReturn.push_back(ccDelt);
-	if(bitscores != nullptr){
-        double bitDelt = 0.0;
-		bitDelt += hypotheticalBitscoreDelta(x, hypAlny, hypAlnx,
-			           hypAlnMsky, hypAlnMskx);
-		bitDelt += hypotheticalBitscoreDelta(y, hypAlnx, hypAlny,
-			           hypAlnMskx, hypAlnMsky);
-        toReturn.push_back(bitDelt);
-	}
-    
-    if(gocs != nullptr){
-        double gocDelt = 0.0;
-        gocDelt = hypotheticalGOCSwap(x,y);
-        toReturn.push_back(gocDelt);
-    }
-
-	return toReturn;
-}
-
 void Alignment::onBit(node x){
 	int oldConserved = conservedCount(x, aln[x], alnMask[x],-1);
 	int oldInduced = inducedCount(aln[x],-1);
@@ -564,26 +530,6 @@ void Alignment::onBit(node x){
     int newInduced = inducedCount(aln[x],-1);
 	currConservedCount += (newConserved - oldConserved);
 	currInducedCount += (newInduced - oldInduced);
-}
-
-//todo: test this
-vector<double> Alignment::onBitHypothetical(node x) const{
-	vector<double> toReturn;
-
-	toReturn.push_back(hypotheticalConservedCountDelta(x, aln[x], aln[x],
-		           false, true, -1));
-
-	if(bitscores != nullptr){
-		toReturn.push_back(hypotheticalBitscoreDelta(x, aln[x], aln[x],
-			           false, true));
-	}
-    
-    if(gocs != nullptr){
-        toReturn.push_back(hypotheticalGOCDelta(x,aln[x],aln[x],
-                           false, true));
-    }
-
-	return toReturn;
 }
 
 double Alignment::fastEC() const{
@@ -836,38 +782,8 @@ inline void Alignment::updateBitscore(node n1, node n2old, node n2new,
 inline void Alignment::updateGOC(node n1, node n2old, node n2new,
                                  bool oldMask, bool newMask){
     
-    currGOC += hypotheticalGOCDelta(n1, n2old, n2new, oldMask, newMask);
-}
-
-double Alignment::hypotheticalBitscoreDelta(node n1, node n2old, node n2new,
-		                             bool oldMask, bool newMask) const{
-	if(!bitscores)
-		return 0.0;
-	if(n1 >= actualSize)
-		return 0.0;
-
-	double oldScore = 0.0;
-
-	//set oldScore
-	if(oldMask)
-		oldScore = (*bitscores)[n1][n2old];
-
-	double newScore = 0.0;
-
-	//set newScore
-	if(newMask)
-		newScore = (*bitscores)[n1][n2new];
-
-	return newScore - oldScore;	
-}
-
-double Alignment::hypotheticalGOCDelta(node n1, node n2old, node n2new,
-                                       bool oldMask, bool newMask) const
-{
-    if(!gocs)
-        return 0.0;
-    if(n1 >= actualSize)
-        return 0.0;
+    if(!gocs || n1 >= actualSize)
+        return;
         
     double oldScore = 0.0;
     
@@ -879,30 +795,7 @@ double Alignment::hypotheticalGOCDelta(node n1, node n2old, node n2new,
     if(newMask)
         newScore = (*gocs)[n1][n2new];
         
-    return newScore - oldScore;
-}
-
-double Alignment::hypotheticalGOCSwap(node x, node y) const{
-	if(!gocs)
-		return 0.0;
-
-	double oldScore = 0.0;
-
-	if(x < actualSize && alnMask[x])
-		oldScore += (*gocs)[x][aln[x]];
-
-	if(y < actualSize && alnMask[y])
-		oldScore += (*gocs)[y][aln[y]];
-
-	double newScore = 0.0;
-
-	if(x < actualSize && alnMask[y])
-		newScore += (*gocs)[x][aln[y]];
-
-	if(y < actualSize && alnMask[x])
-		newScore += (*gocs)[y][aln[x]];
-
-	return newScore - oldScore;
+    currGOC += newScore - oldScore;
 }
 
 //takes: n1 in V1, n2 in V2 that n1 is aligned to, mask that indicates
@@ -927,17 +820,6 @@ int Alignment::conservedCount(node n1, node n2, bool mask, node ignore) const{
 		
 	return toReturn;
 }
-
-
-
-
-int Alignment::hypotheticalConservedCountDelta(node n1, node n2old, node n2new, 
-	                    bool oldMask, bool newMask, node ignore) const{
-	int before = conservedCount(n1,n2old,oldMask,ignore);
-	int after = conservedCount(n1,n2new,newMask,ignore);
-	return after - before;
-}
-
 
 //returns the number of edges in the subgraph induced by our alignment that
 //are incident to n2 but not incident to ignore.
