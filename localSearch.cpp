@@ -26,14 +26,15 @@ void correctHillClimb(RandGenT& prng, Alignment* aln, bool total,
 		if(y >= x){
 			y++;
 		}
-		vector<double> currFit = aln->fitness;
+		double currFit[aln->fitness.size()];
+		copy(aln->fitness.begin(), aln->fitness.end(), currFit);
 
 		aln->doSwap(x,y);
 		aln->computeFitness(fitnessNames);
 
 		bool improved = true;
 		if(obj == -1){
-			for(int j = 0; j < currFit.size(); j++){
+			for(int j = 0; j < aln->fitness.size(); j++){
 				if(aln->fitness[j] < currFit[j]){
 					improved = false;
 				}

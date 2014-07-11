@@ -240,9 +240,7 @@ int main(int ac, char* av[])
 				}
 
 				if(didPropSearch){
-					proportionalSearch(tg, child, total,
-                    	hillclimbiters, fitnessNames,
-                    	rObj, 1.0);
+					correctHillClimb(tg, child, total, 500*hillclimbiters, fitnessNames,rObj);
 				}
 				else{
 				//note: 1 iter of proportionalSearch = 500 iters of hillclimb
