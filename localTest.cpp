@@ -67,7 +67,7 @@ int main(int ac, char* av[])
                500, fitnessNames);	
 			
 			for(int j = 0; j <fitnessNames.size();j++){
-				cout<<"current "<<fitnessNames.at(j)<<" is "
+				cout<<"current "<<fitnessNameToStr(fitnessNames.at(j))<<" is "
 				    <<aln->fitness.at(j)<<endl;
 			}
             cout<<"EC is "<<((double)(aln->currConservedCount))/((double)(net1->edges.size()))<<endl;

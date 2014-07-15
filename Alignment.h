@@ -90,6 +90,10 @@ public:
 
 	double fastEC() const;
 	double fastS3() const;
+
+	//experimental metrics suggested by Rob Patro:
+	double icsTimesEC() const;
+	double s3Variant() const;
 	//pointers to our networks
 	const Network* net1;
 	const Network* net2;

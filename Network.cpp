@@ -27,6 +27,10 @@ string fitnessNameToStr(fitnessName x){
 			return "S3";
 		case S3DenomFit:
 			return "S3Denom";
+		case ICSTimesEC:
+			return "ICS*EC";
+		case S3Variant:
+			return "S3Variant";
 		default:
 			return "invalid fitness name";
 	}

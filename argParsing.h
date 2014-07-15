@@ -142,6 +142,8 @@ argRetVals handleArgs(int ac, char* av[]){
         ("dynparams", "When set, automatically adjust some parameters based on their "
         			  "success rate. See documentation for more information.")
         ("timelimit", po::value<int>(), "Sets a time limit in minutes. Default: not set.")
+        ("icstimesec", "When set, uses the product of ICS and EC as an alignment objective.")
+        ("s3variant", "When set, uses a variant on S^3 as an alignment objective.")
 	;
 	
 	po::variables_map vm;
@@ -155,7 +157,8 @@ argRetVals handleArgs(int ac, char* av[]){
 
 
 	if(!(vm.count("ics") || vm.count("bitscores") || vm.count("evalues")
-		|| vm.count("ec") || vm.count("s3") || vm.count("s3denom"))
+		|| vm.count("ec") || vm.count("s3") || vm.count("s3denom")
+		|| vm.count("icstimesec") || vm.count("s3variant"))
 		&& !(vm.count("annotations1") && vm.count("annotations2")) ){
 		throw ArgError("At least one objective must be specified!");
 	}
@@ -222,6 +225,14 @@ argRetVals handleArgs(int ac, char* av[]){
 
     if(vm.count("s3denom")){
     	fitnessNames.push_back(S3DenomFit);
+    }
+
+    if(vm.count("icstimesec")){
+    	fitnessNames.push_back(ICSTimesEC);
+    }
+
+    if(vm.count("s3variant")){
+    	fitnessNames.push_back(S3Variant);
     }
 
 	BLASTDict* bitscores = nullptr;

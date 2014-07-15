@@ -29,7 +29,7 @@ public:
 
 //for keeping track of what we are optimizing
 enum fitnessName {ICSFit, ECFit, BitscoreSumFit, EvalsSumFit, SizeFit,
-                  GOCFit, S3Fit, S3DenomFit};
+                  GOCFit, S3Fit, S3DenomFit, ICSTimesEC, S3Variant};
 
 string fitnessNameToStr(fitnessName x);
 

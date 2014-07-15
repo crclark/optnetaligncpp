@@ -543,6 +543,18 @@ double Alignment::fastS3() const{
     return num/denom;
 }
 
+inline double Alignment::icsTimesEC() const{
+	return fastICS()*fastEC();
+}
+
+double Alignment::s3Variant() const{
+	double a = (double)currConservedCount;
+	double b = (double)(net1->edges.size());
+	double c = (double)currInducedCount;
+	double denom = max(b,c) -a;
+	return a/denom;
+}
+
 //todo: maybe something more principled than fitnessNames (so ad hoc!)
 void Alignment::computeFitness(const vector<fitnessName>& fitnessNames){
 
@@ -578,39 +590,13 @@ void Alignment::computeFitness(const vector<fitnessName>& fitnessNames){
 				fitness[i] = -(double(net1->edges.size() + currInducedCount)
         		              -currConservedCount);
 				break;
+			case ICSTimesEC:
+				fitness[i] = icsTimesEC();
+				break;
+			case S3Variant:
+				fitness[i] = s3Variant();
+				break;
 		}
-
-		/*
-		if(fitnessNames.at(i) == "ICS"){
-			fitness.at(i) = fastICS(); //ics();
-		}
-		if(fitnessNames.at(i) == "EC"){
-			fitness.at(i) = (double(currConservedCount)) / 
-			                double(net1->edges.size());
-		}
-		if(fitnessNames.at(i) == "BitscoreSum"){
-			fitness.at(i) = currBitscore; //sumBLAST();
-		}
-		if(fitnessNames.at(i) == "EvalsSum"){
-			fitness.at(i) = -1.0*sumBLAST();
-		}
-		if(fitnessNames.at(i) == "Size"){
-			fitness.at(i) = alnSize();
-		}
-        if(fitnessNames.at(i) == "GOC"){
-            fitness.at(i) = currGOC;
-        }
-        if(fitnessNames.at(i) == "S3"){
-            double num = (double)currConservedCount;
-            double denom = double(net1->edges.size() 
-                                  + currInducedCount) - num;
-            fitness.at(i) = num/denom;
-        }
-        if(fitnessNames.at(i) == "S3Denom"){
-        	fitness.at(i) = -(double(net1->edges.size() + currInducedCount)
-        		              -currConservedCount);
-        }
-        */
 	}
 	fitnessValid = true;
 }

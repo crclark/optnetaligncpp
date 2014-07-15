@@ -153,21 +153,21 @@ int main(int ac, char* av[])
 				//method of setting these.
 				if(dynparams && numAlnsGenerated > 100){
 					if(numMut > 0){
-						tmutrate = double(nonDomMut)/double(numMut);
+						tmutrate = min(double(nonDomMut)/double(numMut),mutrate);
 					}
 					else{
 						tmutrate = mutrate;
 					}
 
 					if(numCx > 0){
-						tcxrate = double(nonDomCx)/double(numCx);
+						tcxrate = min(double(nonDomCx)/double(numCx),cxrate);
 					}
 					else{
 						tcxrate = cxrate;
 					}
 
 					if(numPropSearch > 0){
-						tpropsrchrate = double(nonDomPropSearch)/double(numPropSearch);
+						tpropsrchrate = min(double(nonDomPropSearch)/double(numPropSearch),oneobjrate);
 					}
 					else{
 						tpropsrchrate = oneobjrate;
@@ -347,7 +347,7 @@ int main(int ac, char* av[])
             bool bitOn = find(fitnessNames.begin(),fitnessNames.end(),BitscoreSumFit) != fitnessNames.end();
             bool evalsOn = find(fitnessNames.begin(),fitnessNames.end(),EvalsSumFit) != fitnessNames.end();
             vector<fitnessName> allFitnessNames {ECFit,ICSFit,S3Fit,GOCFit,
-            									 BitscoreSumFit,EvalsSumFit,SizeFit};
+            									 BitscoreSumFit,EvalsSumFit,SizeFit, ICSTimesEC, S3Variant};
 			for(auto fitnm : allFitnessNames){
 				infoFile <<'\t'<<fitnessNameToStr(fitnm);
 	            if(find(fitnessNames.begin(),fitnessNames.end(), fitnm) != fitnessNames.end()){
@@ -384,7 +384,11 @@ int main(int ac, char* av[])
                 	infoFile<<'?'<<'\t';
                 }
 
-                infoFile<<archive.nonDominated[i]->alnSize();
+                infoFile<<archive.nonDominated[i]->alnSize()<<'\t';
+
+                infoFile<<archive.nonDominated[i]->icsTimesEC()<<'\t';
+
+                infoFile<<archive.nonDominated[i]->s3Variant();
 
                 infoFile << endl;
             }
