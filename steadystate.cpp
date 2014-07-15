@@ -153,21 +153,21 @@ int main(int ac, char* av[])
 				//method of setting these.
 				if(dynparams && numAlnsGenerated > 100){
 					if(numMut > 0){
-						tmutrate = min(double(nonDomMut)/double(numMut),mutrate);
+						tmutrate = min(double(nonDomMut)/double(numMut),double(mutrate));
 					}
 					else{
 						tmutrate = mutrate;
 					}
 
 					if(numCx > 0){
-						tcxrate = min(double(nonDomCx)/double(numCx),cxrate);
+						tcxrate = min(double(nonDomCx)/double(numCx),double(cxrate));
 					}
 					else{
 						tcxrate = cxrate;
 					}
 
 					if(numPropSearch > 0){
-						tpropsrchrate = min(double(nonDomPropSearch)/double(numPropSearch),oneobjrate);
+						tpropsrchrate = min(double(nonDomPropSearch)/double(numPropSearch),double(oneobjrate));
 					}
 					else{
 						tpropsrchrate = oneobjrate;
