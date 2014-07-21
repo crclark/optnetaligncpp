@@ -47,8 +47,9 @@ int main(int ac, char* av[])
 		const string outprefix = nooutput ? "" : vm["outprefix"].as<string>();
 
 		const int generations = vm["generations"].as<int>();
+		const int randseed = vm.count("randseed") ? vm["randseed"].as<int>() : clock();
 
-		mt19937 g(14);
+		mt19937 g(randseed);
 		//initialize population
 		
 		
