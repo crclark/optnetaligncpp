@@ -332,7 +332,7 @@ int main(int ac, char* av[])
 			cout<<'\t'<<double(nonDomCx)/double(numCx);
 			cout<<'\t'<<double(nonDomMut)/double(numMut);
 			cout<<'\t'<<dynparams;
-			reportStats(archive.nonDominated,fitnessNames,false, false);
+			reportStats(archive.nonDominated,fitnessNames,false, true);
 			cout<<endl;
 		}
 		

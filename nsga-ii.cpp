@@ -215,7 +215,7 @@ void reportStats(const vector<Alignment*>& in,
 	}
 
 	//check on pairwise alignment similarity
-	if(verbose && alnDiversity){
+	if(alnDiversity){
 		double simSum = 0.0;
 		double minSim = 100.0;
 		double maxSim = 0.0;
@@ -237,9 +237,16 @@ void reportStats(const vector<Alignment*>& in,
 			}
 		}
 
-		cout<<"Mean pairwise aln similarity: "<<(simSum/double(in.size()*(in.size()-1)))<<endl;
-		cout<<"Max pairwise similarity: "<<maxSim<<endl;
-		cout<<"Min pairwise similarity: "<<minSim<<endl;
+		if(verbose){
+			cout<<"Mean pairwise aln similarity: "<<(simSum/double(in.size()*(in.size()-1)))<<endl;
+			cout<<"Max pairwise similarity: "<<maxSim<<endl;
+			cout<<"Min pairwise similarity: "<<minSim<<endl;
+		}
+		else{
+			cout<<'\t'<<(simSum/double(in.size()*(in.size()-1)));
+			cout<<'\t'<<maxSim;
+			cout<<'\t'<<minSim;
+		}
 	}
 
 

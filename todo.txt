@@ -33,12 +33,8 @@ is used to initialize conserved count.
 
 figure out why best s3denom is always reported as 0
 
+add swapping alnMask values to local search when partial alignment is enabled
+
 REFACTORING
 -----------
 clean up the Makefile. Currently hideous.
-
-LOCAL SEARCH ALONE
-------------------
-
- Can get ICS up to .92 while EC is just .33! ICS appears to thus be misleading.
- Switching to S3, but need to think more about these topological fitness functions.
