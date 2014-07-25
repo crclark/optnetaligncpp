@@ -543,7 +543,7 @@ double Alignment::fastS3() const{
     return num/denom;
 }
 
-inline double Alignment::icsTimesEC() const{
+double Alignment::icsTimesEC() const{
 	return fastICS()*fastEC();
 }
 
