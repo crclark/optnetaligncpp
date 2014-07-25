@@ -125,7 +125,7 @@ The following is a list of the arguments that can (or must) be passed to our pro
 \item \textbf{randseed} Specifies a random seed for the program. When not set, the current system clock is used to seed the program.
 \item \textbf{nthreads} Specifies how many threads to use in NSGA-II and Optnetalign. No effect on Hillclimber, which is single-threaded. It is recommended to set this to the number of logical cores on your machine for best performance.
 \item \textbf{dynparams} For Optnetalign, dynamically adjusts \textbf{mutrate, cxrate, oneobjrate} to match their success rates in producing non-dominated alignments. Never sets these rates higher than their initial user-specified rates, however, so when this is set, the rate switches are interpreted as maximums. This switch tends to dramatically improve performance. Has no effect on NSGA-II or Hillclimber.
-\item \textbf{timelimit} For Optnetalign, sets the maximum time to run. Has no effect on NSGA-II or Hillclimber, since their running time can be controlled in a more straight-forward way by specifying \textbf{generations}.
+\item \textbf{timelimit} For Optnetalign, sets the maximum time to run. Has no effect on NSGA-II or Hillclimber, since their running time can be controlled in a more straight-forward way by specifying \textbf{generations}. When Optnetalign is not given a time limit, it works until \(popsize \times generations\) total alignments have been created. When a time limit is given, if \(popsize \times generations\) total alignments have been created, it will terminate early.
 \end{itemize}
 
 \section{Example invocations}
@@ -137,9 +137,9 @@ Experiment two used the following invocation.
 
 \texttt{./optnetalign --net1 scere.net --net2 dmela.net --total --s3 --bitscores sc-dm.sim --annotations1 scere.annos --annotations2 dmela.annos --goc --cxrate 0.05 --cxswappb 0.75 --mutrate 0.05 --mutswappb 0.0001 --oneobjrate 0.75 --dynparams --popsize 200 --generations 1000000000 --hillclimbiters 10000  --timelimit 720 --outprefix sc-dm2 --finalstats >> sc-dm2.finalstats}
 
-A simple example invocation optimizing \(GOC\), \(S^3\) and sum of bit scores for our example networks follows.
+A simple example invocation optimizing \(GOC\), \(S^3\) and sum of bit scores for our example networks follows. 
 
-\texttt{./optnetalign --net1 example1.net --net2 example2.net --bitscores example.sim --annotations1 example1.annos --annotations2 example2.annos --total --goc --s3 --blastsum --outprefix example-s3-goc-sumblast --verbose}
+\texttt{./optnetalign --net1 example1.net --net2 example2.net --bitscores example.sim --annotations1 example1.annos --annotations2 example2.annos --total --goc --s3 --blastsum --outprefix example-s3-goc-sumblast --verbose --popsize 100 --generations 100}
 
 \section{Compiling the programs}
 The only external dependencies of our programs are the BOOST library \footnote{\url{http://www.boost.org}} and the Intel Threading Building Blocks library, version 4.2 \footnote{\url{http://www.threadingbuildingblocks.org}}. Both of these libraries are freely available and easy to install on most UNIX systems. We recommend simply modifying our included Makefile to point to the proper library locations on your system, and to replace our compiler with whichever you prefer. We have tested our program at various points with the Intel C Compiler, Clang, and GCC, and we have compiled the programs on both Ubuntu and OS X. Since we only use stable, well-documented libraries, we imagine the programs should be easy to compile on Windows as well, but we have not yet attempted this. 
