@@ -34,4 +34,4 @@ optnetalignprof:
 
 
 optnetalignbuntu:
-	icc steadystate.cpp Network.cpp blastinfo.cpp Alignment.cpp nsga-ii.cpp localSearch.cpp Archive.cpp goc.cpp -o optnetalign -g -tbb -std=c++11 -I /usr/include/ -L /usr/lib/x86_64-linux-gnu/ -lboost_program_options
+	g++ steadystate.cpp Network.cpp blastinfo.cpp Alignment.cpp nsga-ii.cpp localSearch.cpp Archive.cpp goc.cpp -o optnetalign -g -std=c++11 -I /usr/include/ -L /usr/lib/x86_64-linux-gnu/ -lboost_program_options -lpthread
