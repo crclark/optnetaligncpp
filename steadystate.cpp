@@ -19,7 +19,7 @@
 #include "Archive.h"
 
 #include "tbb/spin_mutex.h"
-#include "tbb/atomic.h"
+#include <atomic>
 using namespace std;
 using namespace tbb;
 namespace po = boost::program_options;
@@ -73,32 +73,32 @@ int main(int ac, char* av[])
 			
 		RandGenT g(randseed);
 
-		tbb::atomic<int> numAlnsGenerated; //this will be our stopping condition
+		std::atomic<int> numAlnsGenerated; //this will be our stopping condition
 		                                  //also use this as condition to shrink archive
 										  //todo: perhaps make this count only
 										  //non-dominated alns generated, instead of all.
 		
 		numAlnsGenerated.store(0);
 		
-		tbb::atomic<int> numPropSearch;
+		std::atomic<int> numPropSearch;
 		numPropSearch.store(0);
 
-		tbb::atomic<int> numCx;
+		std::atomic<int> numCx;
 		numCx.store(0);
 
-		tbb::atomic<int> numMut;
+		std::atomic<int> numMut;
 		numMut.store(0);
 
-		tbb::atomic<int> numNonDominatedGenerated;
+		std::atomic<int> numNonDominatedGenerated;
 		numNonDominatedGenerated.store(0);
 
-		tbb::atomic<int> nonDomPropSearch;
+		std::atomic<int> nonDomPropSearch;
 		nonDomPropSearch.store(0);
 
-		tbb::atomic<int> nonDomCx;
+		std::atomic<int> nonDomCx;
 		nonDomCx.store(0);
 
-		tbb::atomic<int> nonDomMut;
+		std::atomic<int> nonDomMut;
 		nonDomMut.store(0);
 
 		time_t start;
