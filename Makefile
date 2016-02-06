@@ -33,5 +33,5 @@ optnetalignprof:
 	icc steadystate.cpp Network.cpp blastinfo.cpp Alignment.cpp nsga-ii.cpp localSearch.cpp Archive.cpp goc.cpp -o optnetalign -O2 -prof-gen -prof-dir. -tbb -std=c++11 -I /usr/local/Cellar/boost/1.53.0/include/ -L /usr/local/Cellar/boost/1.53.0/lib -lboost_program_options-mt
 
 
-optnetalignbuntu:
+optnetalignubuntu:
 	g++ steadystate.cpp Network.cpp blastinfo.cpp Alignment.cpp nsga-ii.cpp localSearch.cpp Archive.cpp goc.cpp -o optnetalign -g -std=c++11 -I /usr/include/ -L /usr/lib/x86_64-linux-gnu/ -lboost_program_options -lpthread
