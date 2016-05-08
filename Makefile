@@ -20,8 +20,7 @@ hillclimber:
 	icc hillclimber.cpp Network.cpp blastinfo.cpp Alignment.cpp nsga-ii.cpp localSearch.cpp goc.cpp -o hillclimber -stdlib=libc++ -O3 -Wall -tbb -std=c++11 -I /usr/local/Cellar/boost/1.53.0/include/ -L /usr/local/Cellar/boost/1.53.0/lib -lboost_thread-mt -lboost_filesystem-mt -lboost_system-mt -lboost_program_options-mt -pthread
 
 hillclimberUbuntu:
-	icc hillclimber.cpp Network.cpp blastinfo.cpp Alignment.cpp nsga-ii.cpp localSearch.cpp goc.cpp -o hillclimber -stdlib=libc++ -unroll-aggressive -xHost -use-intel-optimized-headers -O3 -DNDEBUG -DBOOST_DISABLE_ASSERTS -Wall -tbb -g -std=c++11 -I /usr/include/ -L /usr/lib/x86_64-linux-gnu/ -lboost_filesystem -lboost_system -lboost_program_options -lboost_thread
-
+	 g++ hillclimber.cpp Network.cpp blastinfo.cpp Alignment.cpp nsga-ii.cpp localSearch.cpp goc.cpp -o hillclimber -O3 -DNDEBUG -DBOOST_DISABLE_ASSERTS -Wall -g -std=c++11 -I /usr/include/ -L /usr/lib/x86_64-linux-gnu/ -lboost_filesystem -lboost_system -lboost_program_options -lboost_thread
 
 optnetalign:
 	icc steadystate.cpp Network.cpp blastinfo.cpp Alignment.cpp nsga-ii.cpp localSearch.cpp Archive.cpp goc.cpp -o optnetalign  -use-intel-optimized-headers -opt-mem-layout-trans=3 -opt-subscript-in-range -xHost -unroll-aggressive -O3 -DNDEBUG -tbb -std=c++11 -I /usr/local/Cellar/boost/1.53.0/include/ -L /usr/local/Cellar/boost/1.53.0/lib -lboost_program_options-mt
